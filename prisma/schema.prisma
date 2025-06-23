@@ -134,3 +134,22 @@ model ActivityLog {
   @@index([createdAt])
   @@map("activity_logs")
 }
+
+model Attachment {
+  id         String   @id @default(uuid())
+  entityType String   // 'service', 'task', 'client', etc.
+  entityId   String
+  fileName   String
+  filePath   String   // Supabase storage path
+  fileSize   Int      // Size in bytes
+  mimeType   String
+  metadata   Json?    // Additional metadata like dimensions for images
+  uploadedBy String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([uploadedBy])
+  @@index([createdAt])
+  @@map("attachments")
+}

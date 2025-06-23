@@ -10,8 +10,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ServiceTasks } from "./service-tasks";
-import { Calendar, DollarSign } from "lucide-react";
+import { AttachmentManager } from "@/components/features/attachment-manager";
+import { Calendar, DollarSign, Paperclip } from "lucide-react";
 import { format } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ServiceDetailDialogProps {
   serviceId: string | null;
@@ -112,14 +114,35 @@ export function ServiceDetailDialog({
               </div>
             </div>
 
-            {/* Tasks Section */}
+            {/* Tabs for Tasks and Service Attachments */}
             <div className="border-t pt-6">
-              <ServiceTasks
-                serviceId={service.id}
-                clientName={service.client.name}
-                serviceName={service.template.name}
-                isReadOnly={isReadOnly}
-              />
+              <Tabs defaultValue="tasks" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  <TabsTrigger value="attachments">
+                    <Paperclip className="mr-2 h-4 w-4" />
+                    Service Files
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="tasks" className="mt-4">
+                  <ServiceTasks
+                    serviceId={service.id}
+                    clientName={service.client.name}
+                    serviceName={service.template.name}
+                    isReadOnly={isReadOnly}
+                  />
+                </TabsContent>
+                <TabsContent value="attachments" className="mt-4">
+                  <AttachmentManager
+                    entityType="service"
+                    entityId={service.id}
+                    canDelete={!isReadOnly}
+                    canUpload={!isReadOnly}
+                    multiple={true}
+                    maxFiles={10}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         ) : null}

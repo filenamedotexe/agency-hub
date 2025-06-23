@@ -13,6 +13,7 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
+  Paperclip,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { AttachmentManager } from "@/components/features/attachment-manager";
 
 interface Task {
   id: string;
@@ -79,6 +81,10 @@ export function ServiceTasks({
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [attachmentCounts, setAttachmentCounts] = useState<
+    Record<string, number>
+  >({});
   const [newTask, setNewTask] = useState({
     name: "",
     description: "",
@@ -94,6 +100,28 @@ export function ServiceTasks({
       if (!response.ok) throw new Error("Failed to fetch tasks");
       return response.json();
     },
+  });
+
+  // Fetch attachment counts for all tasks
+  useQuery({
+    queryKey: ["task-attachment-counts", serviceId],
+    queryFn: async () => {
+      if (tasks.length === 0) return {};
+
+      const counts: Record<string, number> = {};
+      for (const task of tasks) {
+        const response = await fetch(
+          `/api/attachments?entityType=task&entityId=${task.id}`
+        );
+        if (response.ok) {
+          const attachments = await response.json();
+          counts[task.id] = attachments.length;
+        }
+      }
+      setAttachmentCounts(counts);
+      return counts;
+    },
+    enabled: tasks.length > 0,
   });
 
   const updateTaskMutation = useMutation({
@@ -287,38 +315,70 @@ export function ServiceTasks({
                         </div>
                       </div>
 
-                      {!isReadOnly && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              handleVisibilityToggle(
-                                task.id,
-                                !task.clientVisible
-                              )
-                            }
-                            className="text-gray-500 hover:text-gray-700"
-                            title={
-                              task.clientVisible
-                                ? "Visible to client"
-                                : "Hidden from client"
-                            }
-                          >
-                            {task.clientVisible ? (
-                              <Eye className="h-4 w-4" />
-                            ) : (
-                              <EyeOff className="h-4 w-4" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => deleteTaskMutation.mutate(task.id)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Delete task"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() =>
+                            setExpandedTaskId(
+                              expandedTaskId === task.id ? null : task.id
+                            )
+                          }
+                          className="text-gray-500 hover:text-gray-700"
+                          title="Manage attachments"
+                        >
+                          <Paperclip className="h-4 w-4" />
+                          {attachmentCounts[task.id] > 0 && (
+                            <span className="ml-1 text-xs">
+                              ({attachmentCounts[task.id]})
+                            </span>
+                          )}
+                        </button>
+                        {!isReadOnly && (
+                          <>
+                            <button
+                              onClick={() =>
+                                handleVisibilityToggle(
+                                  task.id,
+                                  !task.clientVisible
+                                )
+                              }
+                              className="text-gray-500 hover:text-gray-700"
+                              title={
+                                task.clientVisible
+                                  ? "Visible to client"
+                                  : "Hidden from client"
+                              }
+                            >
+                              {task.clientVisible ? (
+                                <Eye className="h-4 w-4" />
+                              ) : (
+                                <EyeOff className="h-4 w-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => deleteTaskMutation.mutate(task.id)}
+                              className="text-red-500 hover:text-red-700"
+                              title="Delete task"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Attachment Manager */}
+                    {expandedTaskId === task.id && (
+                      <div className="mt-4 border-t pt-4">
+                        <AttachmentManager
+                          entityType="task"
+                          entityId={task.id}
+                          canDelete={!isReadOnly}
+                          canUpload={!isReadOnly}
+                          multiple={true}
+                          maxFiles={5}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               );
