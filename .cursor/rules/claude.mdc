@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+always read claude.md before every response
+always read app_build_plan.md before every response

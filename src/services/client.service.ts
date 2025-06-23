@@ -101,7 +101,6 @@ export async function createClient(
     },
     data: {
       entityId: client.id,
-      clientId: client.id,
     },
   });
 
@@ -126,7 +125,6 @@ export async function updateClient(
           userId,
           entityType: "client",
           entityId: id,
-          clientId: id,
           action: "updated",
           metadata: { changes: data },
         },
@@ -153,7 +151,6 @@ export async function deleteClient(id: string, userId: string): Promise<void> {
       userId,
       entityType: "client",
       entityId: id,
-      clientId: id,
       action: "deleted",
       metadata: { clientName: client.name },
     },

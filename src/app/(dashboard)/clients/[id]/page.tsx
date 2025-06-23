@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ActivityLogComponent } from "@/components/activity/activity-log";
+import { ClientServices } from "@/components/services/client-services";
 import type { Client } from "@/types/client";
 import { toast } from "sonner";
 
@@ -216,21 +217,11 @@ export default function ClientDetailPage() {
           </CardContent>
         </Card>
 
+        {/* Services */}
+        <ClientServices clientId={clientId} />
+
         {/* Activity Log */}
         <ActivityLogComponent clientId={clientId} limit={20} />
-
-        {/* Services Placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Services</CardTitle>
-            <CardDescription>Services assigned to this client</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Services will be available in Phase 3
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Delete Confirmation Dialog */}

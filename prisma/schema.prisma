@@ -41,8 +41,78 @@ model Client {
   updatedAt    DateTime @updatedAt
 
   activityLogs ActivityLog[]
+  services     Service[]
 
   @@map("clients")
+}
+
+enum ServiceType {
+  GOOGLE_ADS
+  FACEBOOK_ADS
+  WEBSITE_DESIGN
+}
+
+enum ServiceStatus {
+  TO_DO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskStatus {
+  TO_DO
+  IN_PROGRESS
+  DONE
+}
+
+model ServiceTemplate {
+  id           String      @id @default(uuid())
+  name         String
+  type         ServiceType
+  defaultTasks Json[]      @default([])
+  price        Float?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  services Service[]
+
+  @@map("service_templates")
+}
+
+model Service {
+  id         String        @id @default(uuid())
+  templateId String
+  clientId   String
+  status     ServiceStatus @default(TO_DO)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  template ServiceTemplate @relation(fields: [templateId], references: [id])
+  client   Client          @relation(fields: [clientId], references: [id])
+  tasks    Task[]
+
+  @@index([clientId])
+  @@index([templateId])
+  @@index([status])
+  @@map("services")
+}
+
+model Task {
+  id            String     @id @default(uuid())
+  serviceId     String
+  name          String
+  description   String?
+  dueDate       DateTime?
+  clientVisible Boolean    @default(false)
+  status        TaskStatus @default(TO_DO)
+  metadata      Json?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+  @@index([status])
+  @@map("tasks")
 }
 
 model ActivityLog {
