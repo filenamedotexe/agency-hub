@@ -19,7 +19,10 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "analyze": "ANALYZE=true next build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "git:push": "git push origin editing-branch",
+    "git:merge-main": "git checkout main && git merge editing-branch && git push origin main && git checkout editing-branch",
+    "git:status": "git status && git branch -v"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

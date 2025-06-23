@@ -350,10 +350,34 @@ interface DudaWebhook {
 
 ### Git Workflow
 
-- Feature branches from 'develop'
-- Conventional commits
-- templates with checklist
-- Protect main branch
+- **Development Branch**: `editing-branch` (primary development branch)
+- **Production Branch**: `main` (stable releases only)
+- **Conventional commits**: Use clear, descriptive commit messages
+- **Protected main branch**: All changes go through editing-branch first
+
+#### GitHub Push Process
+
+**ALWAYS push to editing-branch first:**
+
+```bash
+# 1. Make your changes and commit
+git add .
+git commit -m "feat: descriptive commit message"
+
+# 2. Push to editing-branch (primary development branch)
+git push origin editing-branch
+
+# 3. Assistant will prompt: "Do you want to merge with main?"
+# If YES:
+git checkout main
+git merge editing-branch
+git push origin main
+git checkout editing-branch
+
+# If NO: Continue working on editing-branch
+```
+
+**Important**: Never push directly to main. Always use editing-branch → main workflow.
 
 ## CRITICAL: Server Verification Protocol
 

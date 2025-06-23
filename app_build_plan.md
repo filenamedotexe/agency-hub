@@ -350,3 +350,61 @@
    - **Never assume server works** - always HTTP verify connectivity first
 
 This approach ensures each feature is thoroughly tested before moving on, preventing error accumulation and maintaining confidence in the codebase.
+
+## GitHub Workflow & Version Control
+
+### Development Process
+
+All development work happens on the `editing-branch`:
+
+1. **Make Changes**: Implement features, fix bugs, update documentation
+2. **Commit Changes**: Use conventional commit messages
+3. **Push to editing-branch**: `git push origin editing-branch`
+4. **Merge Decision**: Assistant prompts whether to merge with main
+
+### Branch Strategy
+
+- **editing-branch**: Primary development branch
+  - All day-to-day development
+  - Feature implementation
+  - Bug fixes
+  - Documentation updates
+- **main**: Production/stable branch
+  - Only stable, tested code
+  - Major milestone releases
+  - Deployable versions
+
+### Automated GitHub Push Process
+
+```bash
+# Standard development workflow
+git add .
+git commit -m "feat: implement client search functionality"
+git push origin editing-branch
+
+# When ready for production release
+git checkout main
+git merge editing-branch
+git push origin main
+git checkout editing-branch
+```
+
+### Commit Message Conventions
+
+- `feat:` - New features
+- `fix:` - Bug fixes
+- `docs:` - Documentation updates
+- `style:` - Code style changes
+- `refactor:` - Code refactoring
+- `test:` - Test additions/updates
+- `chore:` - Maintenance tasks
+
+### Release Process
+
+1. Complete feature on `editing-branch`
+2. Run all tests and verify functionality
+3. Assistant asks: "Do you want to merge with main?"
+4. If YES: Merge to main and push (creates release)
+5. If NO: Continue development on editing-branch
+
+This ensures main always contains stable, production-ready code while allowing continuous development on editing-branch.
