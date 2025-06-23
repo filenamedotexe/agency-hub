@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  ADMIN
+  SERVICE_MANAGER
+  COPYWRITER
+  EDITOR
+  VA
+  CLIENT
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  role        UserRole
+  profileData Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  activityLogs ActivityLog[]
+
+  @@map("users")
+}
+
+model Client {
+  id           String   @id @default(uuid())
+  name         String
+  businessName String
+  address      String?
+  dudaSiteId   String?  @unique
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  activityLogs ActivityLog[]
+
+  @@map("clients")
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  userId     String
+  entityType String
+  entityId   String
+  clientId   String?
+  action     String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id])
+  client Client? @relation(fields: [clientId], references: [id])
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([clientId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
