@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "@/lib/auth";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const {
-      data: { user },
-    } = await auth();
-
-    if (!user) {
+    const session = await getServerSession();
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const clientId = searchParams.get("clientId");
 
     // Fetch generated content for this tool

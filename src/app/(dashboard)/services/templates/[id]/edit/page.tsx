@@ -393,9 +393,11 @@ export default function EditServiceTemplatePage({
                                   </FormLabel>
                                   <FormDescription>
                                     Allow clients to see this task
-                                    {form.watch(
-                                      `defaultTasks.${index}.checklist`
-                                    )?.length > 0 && (
+                                    {(
+                                      form.watch(
+                                        `defaultTasks.${index}.checklist`
+                                      ) || []
+                                    ).length > 0 && (
                                       <span className="mt-1 block text-xs text-orange-600">
                                         Note: Checklists are never visible to
                                         clients
@@ -437,91 +439,84 @@ export default function EditServiceTemplatePage({
                               </Button>
                             </div>
 
-                            {form
-                              .watch(`defaultTasks.${index}.checklist`)
-                              ?.map((item, checklistIndex) => {
-                                const isEditing =
-                                  editingChecklistItem?.taskIndex === index &&
-                                  editingChecklistItem?.checklistIndex ===
-                                    checklistIndex;
+                            {(
+                              form.watch(`defaultTasks.${index}.checklist`) ||
+                              []
+                            ).map((item, checklistIndex) => {
+                              const isEditing =
+                                editingChecklistItem?.taskIndex === index &&
+                                editingChecklistItem?.checklistIndex ===
+                                  checklistIndex;
 
-                                return (
-                                  <div
-                                    key={checklistIndex}
-                                    className="flex items-center gap-2 rounded-md bg-gray-50 p-2"
-                                  >
-                                    {isEditing ? (
-                                      <FormField
-                                        control={form.control}
-                                        name={`defaultTasks.${index}.checklist.${checklistIndex}.text`}
-                                        render={({ field }) => (
-                                          <FormItem className="flex-1">
-                                            <FormControl>
-                                              <Input
-                                                placeholder="e.g., Verify campaign settings"
-                                                {...field}
-                                                className="bg-white"
-                                                autoFocus
-                                                onBlur={() =>
-                                                  setEditingChecklistItem(null)
+                              return (
+                                <div
+                                  key={checklistIndex}
+                                  className="flex items-center gap-2 rounded-md bg-gray-50 p-2"
+                                >
+                                  {isEditing ? (
+                                    <FormField
+                                      control={form.control}
+                                      name={`defaultTasks.${index}.checklist.${checklistIndex}.text`}
+                                      render={({ field }) => (
+                                        <FormItem className="flex-1">
+                                          <FormControl>
+                                            <Input
+                                              placeholder="e.g., Verify campaign settings"
+                                              {...field}
+                                              className="bg-white"
+                                              autoFocus
+                                              onBlur={() =>
+                                                setEditingChecklistItem(null)
+                                              }
+                                              onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                  setEditingChecklistItem(null);
                                                 }
-                                                onKeyDown={(e) => {
-                                                  if (e.key === "Enter") {
-                                                    setEditingChecklistItem(
-                                                      null
-                                                    );
-                                                  }
-                                                  if (e.key === "Escape") {
-                                                    setEditingChecklistItem(
-                                                      null
-                                                    );
-                                                  }
-                                                }}
-                                              />
-                                            </FormControl>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                    ) : (
-                                      <div className="flex flex-1 items-center gap-2">
-                                        <span className="text-sm">
-                                          {item.text ||
-                                            "Click edit to add text"}
-                                        </span>
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-6 w-6 text-gray-500 hover:text-gray-700"
-                                          onClick={() =>
-                                            setEditingChecklistItem({
-                                              taskIndex: index,
-                                              checklistIndex,
-                                            })
-                                          }
-                                        >
-                                          <Edit className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    )}
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-red-600 hover:text-red-700"
-                                      onClick={() =>
-                                        removeChecklistItem(
-                                          index,
-                                          checklistIndex
-                                        )
-                                      }
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                );
-                              })}
+                                                if (e.key === "Escape") {
+                                                  setEditingChecklistItem(null);
+                                                }
+                                              }}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  ) : (
+                                    <div className="flex flex-1 items-center gap-2">
+                                      <span className="text-sm">
+                                        {item.text || "Click edit to add text"}
+                                      </span>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-gray-500 hover:text-gray-700"
+                                        onClick={() =>
+                                          setEditingChecklistItem({
+                                            taskIndex: index,
+                                            checklistIndex,
+                                          })
+                                        }
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-red-600 hover:text-red-700"
+                                    onClick={() =>
+                                      removeChecklistItem(index, checklistIndex)
+                                    }
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -586,7 +581,7 @@ export default function EditServiceTemplatePage({
                                       onCheckedChange={(checked) => {
                                         return checked
                                           ? field.onChange([
-                                              ...field.value,
+                                              ...(field.value || []),
                                               formItem.id,
                                             ])
                                           : field.onChange(

@@ -1,7 +1,9 @@
-import React from "react";
-import { Copy } from "lucide-react";
+import React, { useState } from "react";
+import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface DynamicFieldProps {
   field: string;
@@ -16,16 +18,17 @@ export function DynamicField({
   showCopyIcon = false,
   variant = "code",
 }: DynamicFieldProps) {
-  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
 
-  const handleCopy = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigator.clipboard.writeText(field);
-    toast({
-      title: "Copied to clipboard",
-      description: `Dynamic field ${field} copied to clipboard`,
-      duration: 2000,
-    });
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(field);
+      setCopied(true);
+      toast.success("Copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error("Failed to copy to clipboard");
+    }
   };
 
   const baseClasses = "cursor-pointer transition-colors";
@@ -41,7 +44,7 @@ export function DynamicField({
     return (
       <span
         className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-        onClick={handleCopy}
+        onClick={copyToClipboard}
         title="Click to copy"
       >
         {field}
@@ -53,7 +56,7 @@ export function DynamicField({
   return (
     <code
       className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-      onClick={handleCopy}
+      onClick={copyToClipboard}
       title="Click to copy"
     >
       {field}

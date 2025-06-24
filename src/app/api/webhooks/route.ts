@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "@/lib/auth";
 import { z } from "zod";
 
 const createWebhookSchema = z.object({
@@ -11,10 +12,18 @@ const createWebhookSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 // GET /api/webhooks - List all webhooks
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get("type");
 
     const webhooks = await prisma.webhook.findMany({

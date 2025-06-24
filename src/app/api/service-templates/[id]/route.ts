@@ -91,7 +91,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateServiceTemplateSchema.parse(body);
 
-    const updateData = { ...validatedData };
+    const updateData: any = { ...validatedData };
     if (validatedData.requiredForms) {
       updateData.requiredFormIds = validatedData.requiredForms;
       delete updateData.requiredForms;

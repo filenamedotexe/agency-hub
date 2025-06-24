@@ -66,10 +66,13 @@ function ContentToolsPageOriginal() {
     url: "",
     headers: "",
   });
+  const [clients, setClients] = useState<any[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTools();
     fetchWebhooks();
+    fetchClients();
 
     // Fallback timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
@@ -79,6 +82,19 @@ function ContentToolsPageOriginal() {
 
     return () => clearTimeout(timeoutId);
   }, []);
+
+  const fetchClients = async () => {
+    try {
+      const response = await fetch("/api/clients");
+      if (response.ok) {
+        const data = await response.json();
+        setClients(data.clients || []);
+      }
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      setClients([]);
+    }
+  };
 
   const fetchTools = async () => {
     console.log("🧪 Fetching content tools...");
@@ -199,7 +215,9 @@ function ContentToolsPageOriginal() {
     return (
       <ContentGenerator
         tool={selectedTool}
-        onBack={() => setSelectedTool(null)}
+        clients={clients}
+        selectedClientId={selectedClientId}
+        onClientSelect={setSelectedClientId}
       />
     );
   }

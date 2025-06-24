@@ -10,6 +10,9 @@ const createRequestSchema = z.object({
   clientVisible: z.boolean().optional(),
 });
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 // GET /api/requests - List all requests
 export async function GET(request: NextRequest) {
   try {
@@ -17,7 +20,8 @@ export async function GET(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const { searchParams } = new URL(request.url);
+
+    const searchParams = request.nextUrl.searchParams;
     const clientId = searchParams.get("clientId");
     const status = searchParams.get("status");
 

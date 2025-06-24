@@ -4,6 +4,9 @@ import { getServerSession } from "@/lib/auth";
 import { z } from "zod";
 import { logActivity } from "@/lib/activity-logger";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 const createServiceSchema = z.object({
   templateId: z.string().uuid(),
   clientId: z.string().uuid(),
@@ -16,7 +19,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const clientId = searchParams.get("clientId");
     const status = searchParams.get("status");
 

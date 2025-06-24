@@ -4,6 +4,9 @@ import { getServerSession } from "@/lib/auth";
 import { z } from "zod";
 import { logActivity } from "@/lib/activity-logger";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 const createServiceTemplateSchema = z.object({
   name: z.string().min(1).max(255),
   type: z.enum(["GOOGLE_ADS", "FACEBOOK_ADS", "WEBSITE_DESIGN"]),
@@ -36,7 +39,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get("type");
 
     const where = type ? { type: type as any } : {};

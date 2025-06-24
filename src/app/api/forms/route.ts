@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "@/lib/auth";
 import { z } from "zod";
+import { logActivity } from "@/lib/activity-logger";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
 const createFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -57,7 +62,12 @@ const createFormSchema = z.object({
 // GET /api/forms - List all forms
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
     const serviceId = searchParams.get("serviceId");
 
     const forms = await prisma.form.findMany({

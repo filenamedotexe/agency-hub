@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActivityLogs } from "@/services/activity.service";
 import { z } from "zod";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 const querySchema = z.object({
   clientId: z.string().optional(),
   entityType: z.string().optional(),
@@ -12,7 +15,7 @@ const querySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const params = querySchema.parse({
       clientId: searchParams.get("clientId") || undefined,
       entityType: searchParams.get("entityType") || undefined,

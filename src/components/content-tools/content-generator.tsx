@@ -46,18 +46,23 @@ import {
 } from "@/components/ui/dialog";
 import { ContentTool, ContentToolField } from "@/types/content-tools";
 import { DynamicField } from "@/components/ui/dynamic-field";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface ContentGeneratorProps {
   tool: ContentTool;
-  onBack: () => void;
+  clients: any[];
+  selectedClientId: string | null;
+  onClientSelect: (clientId: string | null) => void;
 }
 
-export function ContentGenerator({ tool, onBack }: ContentGeneratorProps) {
-  const [clients, setClients] = useState<any[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState("");
+export function ContentGenerator({
+  tool,
+  clients,
+  selectedClientId,
+  onClientSelect,
+}: ContentGeneratorProps) {
+  const [generatedContent, setGeneratedContent] = useState<string>("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
-  const [generatedContent, setGeneratedContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [dynamicFields, setDynamicFields] = useState<Record<string, any>>({});
   const [allDynamicFields, setAllDynamicFields] = useState<Record<string, any>>(
@@ -70,67 +75,6 @@ export function ContentGenerator({ tool, onBack }: ContentGeneratorProps) {
     any[]
   >([]);
   const [sortBy, setSortBy] = useState<"date" | "client">("date");
-  const { toast } = useToast();
-
-  useEffect(() => {
-    fetchClients();
-    fetchAllDynamicFields();
-    initializeToolFields();
-    fetchPreviousContent();
-  }, [initializeToolFields, fetchPreviousContent]);
-
-  useEffect(() => {
-    fetchPreviousContent();
-  }, [selectedClientId, fetchPreviousContent]);
-
-  useEffect(() => {
-    if (selectedClientId) {
-      fetchDynamicFields(selectedClientId);
-    }
-  }, [selectedClientId]);
-
-  // Check for missing dynamic fields when client is selected
-  useEffect(() => {
-    if (selectedClientId && Object.keys(allDynamicFields).length > 0) {
-      const availableFormFields = Object.values(allDynamicFields).flatMap(
-        (formData: any) => formData.fields.map((field: any) => field.name)
-      );
-
-      const missingFields = availableFormFields.filter(
-        (fieldName) =>
-          !dynamicFields[fieldName] || !dynamicFields[fieldName].value
-      );
-
-      if (missingFields.length > 0 && Object.keys(dynamicFields).length === 0) {
-        const selectedClient = clients.find((c) => c.id === selectedClientId);
-        toast({
-          title: "No dynamic field data available",
-          description: `${selectedClient?.businessName || selectedClient?.name || "This client"} hasn't filled out any forms yet. You can still generate content, but dynamic fields won't be replaced with actual values.`,
-          duration: 5000,
-          variant: "default",
-        });
-      } else if (missingFields.length > 0) {
-        toast({
-          title: "Some fields missing data",
-          description: `${missingFields.length} dynamic field(s) don't have values for this client. They'll appear as placeholders in the generated content.`,
-          duration: 4000,
-          variant: "default",
-        });
-      }
-    }
-  }, [selectedClientId, dynamicFields, allDynamicFields, clients, toast]);
-
-  const initializeToolFields = useCallback(() => {
-    // Initialize with default fields if none exist
-    if (!tool.fields || tool.fields.length === 0) {
-      const defaultFields: ContentToolField[] = getDefaultFieldsForTool(
-        tool.type
-      );
-      setToolFields(defaultFields);
-    } else {
-      setToolFields(tool.fields);
-    }
-  }, [tool.fields, tool.type]);
 
   const getDefaultFieldsForTool = (type: string): ContentToolField[] => {
     const baseFields: ContentToolField[] = [
@@ -190,40 +134,53 @@ export function ContentGenerator({ tool, onBack }: ContentGeneratorProps) {
     }
   };
 
-  const fetchClients = async () => {
-    try {
-      const response = await fetch("/api/clients");
-      if (!response.ok) throw new Error("Failed to fetch clients");
-      const data = await response.json();
-      setClients(data.clients || []);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-      setClients([]);
-    }
-  };
+  const fetchPreviousContent = useCallback(async () => {
+    if (!tool.id) return;
 
-  const fetchAllDynamicFields = async () => {
+    try {
+      const response = await fetch(
+        `/api/content-tools/${tool.id}/generated-content${selectedClientId ? `?clientId=${selectedClientId}` : ""}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setPreviousGeneratedContent(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch previous content:", error);
+    }
+  }, [tool.id, selectedClientId]);
+
+  const initializeToolFields = useCallback(() => {
+    // Initialize with default fields if none exist
+    if (!tool.fields || tool.fields.length === 0) {
+      const defaultFields: ContentToolField[] = getDefaultFieldsForTool(
+        tool.type
+      );
+      setToolFields(defaultFields);
+    } else {
+      setToolFields(tool.fields);
+    }
+  }, [tool.fields, tool.type]);
+
+  const fetchClients = useCallback(async () => {
+    // This function is handled by parent component
+  }, []);
+
+  const fetchAllDynamicFields = useCallback(async () => {
     try {
       const response = await fetch("/api/forms");
-      if (!response.ok) throw new Error("Failed to fetch forms");
-      const forms = await response.json();
+      if (response.ok) {
+        const forms = await response.json();
+        const fieldsByForm: Record<string, any> = {};
 
-      // Organize fields by form
-      const fieldsByForm: Record<string, any> = {};
-      forms.forEach((form: any) => {
-        if (form.schema && Array.isArray(form.schema)) {
-          const formFields: any[] = [];
-          form.schema.forEach((field: any) => {
-            if (field.name) {
-              formFields.push({
-                name: field.name,
-                label: field.label || field.name,
-                type: field.type || "text",
-                placeholder: field.placeholder || "",
-                variable: `{{${field.name}}}`,
-              });
-            }
-          });
+        forms.forEach((form: any) => {
+          const formFields = form.fields.map((field: any) => ({
+            name: field.name,
+            label: field.label,
+            type: field.type || "text",
+            placeholder: field.placeholder || "",
+            variable: `{{${field.name}}}`,
+          }));
 
           if (formFields.length > 0) {
             fieldsByForm[form.name] = {
@@ -231,24 +188,23 @@ export function ContentGenerator({ tool, onBack }: ContentGeneratorProps) {
               fields: formFields,
             };
           }
-        }
-      });
+        });
 
-      setAllDynamicFields(fieldsByForm);
+        setAllDynamicFields(fieldsByForm);
+      }
     } catch (error) {
-      console.error("Error fetching all dynamic fields:", error);
-      setAllDynamicFields({});
+      console.error("Error fetching forms:", error);
     }
-  };
+  }, []);
 
-  const fetchDynamicFields = async (clientId: string) => {
+  const fetchClientDynamicFields = useCallback(async (clientId: string) => {
     try {
       const response = await fetch(`/api/clients/${clientId}/form-responses`);
-      if (!response.ok) throw new Error("Failed to fetch form responses");
-      const formResponses = await response.json();
+      if (!response.ok) return;
 
-      // Extract all dynamic fields from form responses
+      const formResponses = await response.json();
       const fields: Record<string, any> = {};
+
       formResponses.forEach((response: any) => {
         if (response.responseData) {
           Object.entries(response.responseData).forEach(
@@ -268,27 +224,55 @@ export function ContentGenerator({ tool, onBack }: ContentGeneratorProps) {
 
       setDynamicFields(fields);
     } catch (error) {
-      console.error("Error fetching dynamic fields:", error);
+      console.error("Error fetching client dynamic fields:", error);
       setDynamicFields({});
     }
-  };
+  }, []);
 
-  const fetchPreviousContent = useCallback(async () => {
-    try {
-      let url = `/api/content-tools/${tool.id}/generated-content`;
-      if (selectedClientId) {
-        url += `?clientId=${selectedClientId}`;
-      }
+  useEffect(() => {
+    initializeToolFields();
+  }, [initializeToolFields]);
 
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch previous content");
-      const content = await response.json();
-      setPreviousGeneratedContent(content);
-    } catch (error) {
-      console.error("Error fetching previous content:", error);
-      setPreviousGeneratedContent([]);
+  useEffect(() => {
+    fetchPreviousContent();
+  }, [fetchPreviousContent]);
+
+  useEffect(() => {
+    fetchClients();
+    fetchAllDynamicFields();
+  }, [fetchClients, fetchAllDynamicFields]);
+
+  useEffect(() => {
+    if (selectedClientId) {
+      fetchClientDynamicFields(selectedClientId);
+    } else {
+      setDynamicFields({});
     }
-  }, [tool.id, selectedClientId]);
+  }, [selectedClientId, fetchClientDynamicFields]);
+
+  useEffect(() => {
+    if (selectedClientId && Object.keys(allDynamicFields).length > 0) {
+      const availableFormFields = Object.values(allDynamicFields).flatMap(
+        (formData: any) => formData.fields.map((field: any) => field.name)
+      );
+
+      const missingFields = availableFormFields.filter(
+        (fieldName) =>
+          !dynamicFields[fieldName] || !dynamicFields[fieldName].value
+      );
+
+      if (missingFields.length > 0 && Object.keys(dynamicFields).length === 0) {
+        const selectedClient = clients.find((c) => c.id === selectedClientId);
+        toast.info(
+          `${selectedClient?.businessName || selectedClient?.name || "This client"} hasn't filled out any forms yet. You can still generate content, but dynamic fields won't be replaced with actual values.`
+        );
+      } else if (missingFields.length > 0) {
+        toast.warning(
+          `${missingFields.length} dynamic field(s) don't have values for this client. They'll appear as placeholders in the generated content.`
+        );
+      }
+    }
+  }, [selectedClientId, allDynamicFields, dynamicFields, clients, toast]);
 
   const handleGenerate = async () => {
     if (!selectedClientId) {
@@ -452,7 +436,7 @@ export function ContentGenerator({ tool, onBack }: ContentGeneratorProps) {
           <h2 className="text-2xl font-bold">{tool.name}</h2>
           <p className="text-muted-foreground">{tool.description}</p>
         </div>
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={() => onClientSelect(null)}>
           Back to Tools
         </Button>
       </div>
@@ -469,8 +453,10 @@ export function ContentGenerator({ tool, onBack }: ContentGeneratorProps) {
             <div>
               <Label htmlFor="client">Select Client</Label>
               <Select
-                value={selectedClientId}
-                onValueChange={setSelectedClientId}
+                value={selectedClientId || ""}
+                onValueChange={(value) =>
+                  onClientSelect(value === "" ? null : value)
+                }
               >
                 <SelectTrigger id="client">
                   <SelectValue placeholder="Choose a client" />

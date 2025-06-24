@@ -36,44 +36,39 @@ interface ApiKey {
 export function ApiKeyManager() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showKey, setShowKey] = useState<Record<string, boolean>>({});
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [deleteKey, setDeleteKey] = useState<string | null>(null);
-
   const [newKey, setNewKey] = useState({
     service: "anthropic" as "anthropic" | "openai",
-    apiKey: "",
+    key: "",
   });
+  const [deleteKeyId, setDeleteKeyId] = useState<string | null>(null);
 
   const [editValue, setEditValue] = useState("");
-  const [showKey, setShowKey] = useState<Record<string, boolean>>({});
+  const [editingKey, setEditingKey] = useState<string | null>(null);
 
   const { toast } = useToast();
+
+  const fetchApiKeys = useCallback(async () => {
+    try {
+      const response = await fetch("/api/settings/api-keys");
+      if (response.ok) {
+        const data = await response.json();
+        setApiKeys(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch API keys:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchApiKeys();
   }, [fetchApiKeys]);
 
-  const fetchApiKeys = useCallback(async () => {
-    try {
-      const response = await fetch("/api/settings/api-keys");
-      if (!response.ok) throw new Error("Failed to fetch API keys");
-      const data = await response.json();
-      setApiKeys(data.keys || []);
-    } catch (error) {
-      console.error("Error fetching API keys:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch API keys",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
   const handleAddKey = async () => {
-    if (!newKey.apiKey) {
+    if (!newKey.key) {
       toast({
         title: "Error",
         description: "Please enter an API key",
@@ -97,7 +92,7 @@ export function ApiKeyManager() {
         description: data.message,
       });
 
-      setNewKey({ service: "anthropic", apiKey: "" });
+      setNewKey({ service: "anthropic", key: "" });
       setShowAddForm(false);
       fetchApiKeys();
     } catch (error) {
@@ -162,7 +157,7 @@ export function ApiKeyManager() {
         description: data.message,
       });
 
-      setDeleteKey(null);
+      setDeleteKeyId(null);
       fetchApiKeys();
     } catch (error) {
       console.error("Error deleting API key:", error);
@@ -255,7 +250,7 @@ export function ApiKeyManager() {
                     variant="ghost"
                     className="text-destructive"
                     aria-label="Delete API key"
-                    onClick={() => setDeleteKey(key.id)}
+                    onClick={() => setDeleteKeyId(key.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -291,13 +286,13 @@ export function ApiKeyManager() {
           </div>
 
           <div>
-            <Label htmlFor="apiKey">API Key</Label>
+            <Label htmlFor="key">API Key</Label>
             <Input
-              id="apiKey"
-              name="apiKey"
+              id="key"
+              name="key"
               type="password"
-              value={newKey.apiKey}
-              onChange={(e) => setNewKey({ ...newKey, apiKey: e.target.value })}
+              value={newKey.key}
+              onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
               placeholder={`Enter your ${newKey.service} API key`}
             />
           </div>
@@ -308,7 +303,7 @@ export function ApiKeyManager() {
               variant="outline"
               onClick={() => {
                 setShowAddForm(false);
-                setNewKey({ service: "anthropic", apiKey: "" });
+                setNewKey({ service: "anthropic", key: "" });
               }}
             >
               Cancel
@@ -328,7 +323,10 @@ export function ApiKeyManager() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteKey} onOpenChange={() => setDeleteKey(null)}>
+      <AlertDialog
+        open={!!deleteKeyId}
+        onOpenChange={() => setDeleteKeyId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete API Key</AlertDialogTitle>
@@ -340,7 +338,7 @@ export function ApiKeyManager() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteKey && handleDeleteKey(deleteKey)}
+              onClick={() => deleteKeyId && handleDeleteKey(deleteKeyId)}
               className="bg-destructive text-destructive-foreground"
             >
               Delete

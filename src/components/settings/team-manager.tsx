@@ -67,39 +67,33 @@ const ROLES = [
 export function TeamManager() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [deleteUser, setDeleteUser] = useState<string | null>(null);
-  const [editingUser, setEditingUser] = useState<TeamMember | null>(null);
-
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [deleteMemberId, setDeleteMemberId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
-    role: "SERVICE_MANAGER",
+    role: "COPYWRITER",
   });
 
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchTeamMembers();
-  }, [fetchTeamMembers]);
-
   const fetchTeamMembers = useCallback(async () => {
     try {
       const response = await fetch("/api/settings/team");
-      if (!response.ok) throw new Error("Failed to fetch team members");
-      const data = await response.json();
-      setTeamMembers(data.users || []);
+      if (response.ok) {
+        const data = await response.json();
+        setTeamMembers(data);
+      }
     } catch (error) {
-      console.error("Error fetching team members:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch team members",
-        variant: "destructive",
-      });
+      console.error("Failed to fetch team members:", error);
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
+
+  useEffect(() => {
+    fetchTeamMembers();
+  }, [fetchTeamMembers]);
 
   const handleAddMember = async () => {
     try {
@@ -116,7 +110,7 @@ export function TeamManager() {
         description: "Team member added successfully",
       });
 
-      setShowAddDialog(false);
+      setShowAddForm(false);
       setFormData({ email: "", role: "SERVICE_MANAGER" });
       fetchTeamMembers();
     } catch (error) {
@@ -130,10 +124,10 @@ export function TeamManager() {
   };
 
   const handleUpdateMember = async () => {
-    if (!editingUser) return;
+    if (!editingMember) return;
 
     try {
-      const response = await fetch(`/api/settings/team/${editingUser.id}`, {
+      const response = await fetch(`/api/settings/team/${editingMember.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: formData.role }),
@@ -146,8 +140,8 @@ export function TeamManager() {
         description: "Team member updated successfully",
       });
 
-      setShowEditDialog(false);
-      setEditingUser(null);
+      setShowAddForm(false);
+      setEditingMember(null);
       fetchTeamMembers();
     } catch (error) {
       console.error("Error updating team member:", error);
@@ -172,7 +166,7 @@ export function TeamManager() {
         description: "Team member removed successfully",
       });
 
-      setDeleteUser(null);
+      setDeleteMemberId(null);
       fetchTeamMembers();
     } catch (error) {
       console.error("Error deleting team member:", error);
@@ -233,9 +227,9 @@ export function TeamManager() {
                 size="sm"
                 variant="ghost"
                 onClick={() => {
-                  setEditingUser(member);
+                  setEditingMember(member);
                   setFormData({ email: member.email, role: member.role });
-                  setShowEditDialog(true);
+                  setShowAddForm(true);
                 }}
               >
                 <Edit className="h-4 w-4" />
@@ -244,7 +238,7 @@ export function TeamManager() {
                 size="sm"
                 variant="ghost"
                 className="text-destructive"
-                onClick={() => setDeleteUser(member.id)}
+                onClick={() => setDeleteMemberId(member.id)}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -253,16 +247,13 @@ export function TeamManager() {
         ))}
       </div>
 
-      <Button
-        onClick={() => setShowAddDialog(true)}
-        className="w-full sm:w-auto"
-      >
+      <Button onClick={() => setShowAddForm(true)} className="w-full sm:w-auto">
         <Plus className="mr-2 h-4 w-4" />
         Add Team Member
       </Button>
 
       {/* Add Member Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Team Member</DialogTitle>
@@ -313,7 +304,7 @@ export function TeamManager() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+            <Button variant="outline" onClick={() => setShowAddForm(false)}>
               Cancel
             </Button>
             <Button onClick={handleAddMember}>Add Member</Button>
@@ -321,53 +312,11 @@ export function TeamManager() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Member Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Team Member</DialogTitle>
-            <DialogDescription>
-              Update the role for {editingUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div>
-            <Label htmlFor="edit-role">Role</Label>
-            <Select
-              value={formData.role}
-              onValueChange={(value) =>
-                setFormData({ ...formData, role: value })
-              }
-            >
-              <SelectTrigger id="edit-role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ROLES.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    <div>
-                      <p>{role.label}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {role.description}
-                      </p>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateMember}>Update Role</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
+      <AlertDialog
+        open={!!deleteMemberId}
+        onOpenChange={() => setDeleteMemberId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
@@ -379,7 +328,9 @@ export function TeamManager() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteUser && handleDeleteMember(deleteUser)}
+              onClick={() =>
+                deleteMemberId && handleDeleteMember(deleteMemberId)
+              }
               className="bg-destructive text-destructive-foreground"
             >
               Remove Member

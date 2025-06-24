@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "@/lib/auth";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
 // GET /api/forms/[id]/responses - Get form responses
 export async function GET(
@@ -7,7 +11,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { searchParams } = new URL(request.url);
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
     const clientId = searchParams.get("clientId");
 
     const responses = await prisma.formResponse.findMany({

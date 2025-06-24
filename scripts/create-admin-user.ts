@@ -48,8 +48,8 @@ async function createAdminUser() {
         return;
       }
     } else {
-      console.log("✅ Created auth user:", authData.user.email);
-      await createDatabaseUser(userId, authData.user.email!);
+      console.log("✅ Created auth user:", authData.user?.email);
+      await createDatabaseUser(userId, authData.user?.email!);
     }
   } catch (error) {
     console.error("❌ Error:", error);

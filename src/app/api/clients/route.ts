@@ -3,6 +3,9 @@ import { getClients, createClient } from "@/services/client.service";
 import { clientSchema } from "@/types/client";
 import { z } from "zod";
 import { auth } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-logger";
 
 const querySchema = z.object({
   page: z.coerce.number().min(1).optional(),
@@ -12,9 +15,17 @@ const querySchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).optional(),
 });
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
     const params = querySchema.parse({
       page: searchParams.get("page") || undefined,
       pageSize: searchParams.get("pageSize") || undefined,
