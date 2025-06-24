@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "@/lib/auth";
+import { z } from "zod";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
 // Pre-populate content tools if they don't exist
 const DEFAULT_TOOLS = [

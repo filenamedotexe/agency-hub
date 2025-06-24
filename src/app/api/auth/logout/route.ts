@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 

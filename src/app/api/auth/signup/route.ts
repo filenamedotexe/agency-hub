@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { signUpSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/server";

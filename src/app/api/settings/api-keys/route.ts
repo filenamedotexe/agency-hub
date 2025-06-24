@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   encryptApiKey,
@@ -6,6 +7,9 @@ import {
   getLastFourChars,
 } from "@/lib/encryption";
 import { z } from "zod";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
 const apiKeySchema = z.object({
   service: z.enum(["anthropic", "openai"]),

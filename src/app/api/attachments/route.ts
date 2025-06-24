@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { createAttachmentSchema } from "@/lib/validations/file";
 import { z } from "zod";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const {

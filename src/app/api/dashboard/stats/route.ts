@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 
 // Cache the response for 10 seconds to improve performance
 export const revalidate = 10;
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

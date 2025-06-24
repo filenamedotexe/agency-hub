@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { logActivity } from "@/lib/activity-logger";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 
 const createUserSchema = z.object({
   email: z.string().email("Invalid email address"),

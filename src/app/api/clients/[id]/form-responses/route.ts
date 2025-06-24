@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 import { auth } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
