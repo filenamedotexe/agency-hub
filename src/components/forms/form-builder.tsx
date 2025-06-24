@@ -171,7 +171,9 @@ export function FormBuilder({ form, onSave, serviceId }: FormBuilderProps) {
               <CardDescription>Drag and drop to reorder fields</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <FieldTypeSelector onSelect={addField} />
+              <div data-testid="field-type-selector">
+                <FieldTypeSelector onSelect={addField} />
+              </div>
 
               {fields.length > 0 ? (
                 <DndContext

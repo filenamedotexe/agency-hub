@@ -99,15 +99,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Content Tools
 
   - This is a separate (in the sense that the tools are isolated from each other) set of "content tools"
-  - The tools use a prompt that the admins set/edit for each Content Tool run & can use dynamic fields attached to the user to create bespoke content for a selected client (thats how the dynamic fields are populated in the content tool)
-    - Each tool has a webhook to set that sends info (prompt with dynamic fields) post request to a webhook in n8n
-      - The content for that tool (and the user it was ran for) is then returned in the tool to view nicely and also saved to the users user detail page under "Generated Content"
+  - Each tool has configurable fields that admins can customize:
+    - Field visibility toggle (client must fill or admin-only)
+    - Field types: text, textarea, number, select
+    - Default values can use dynamic fields from forms (e.g., {{businessName}}, {{clientName}})
+    - Dynamic fields are organized by form title for easy reference
+    - Full field management: add, edit, delete fields through "Edit Fields" dialog
+  - **AI-Powered Content Generation**: Tools use AI services (Anthropic Claude, OpenAI) to generate content
+    - Supports both API key-based generation and mock generation for testing
+    - Processes dynamic field substitution in real-time
+    - Content is stored in database with full metadata tracking
+  - **Enhanced User Experience**:
+    - Click-to-copy dynamic fields throughout the interface
+    - Smart notifications for missing client data
+    - Dynamic generated content section that updates based on client selection
+    - "Just Generated" highlighting for new content
+    - Previous generations history with sorting and individual actions
+  - **Optional Webhook Integration**: Tools can optionally trigger webhooks after content generation
   - Tools
-    - Blog Writer
+    - Blog Writer (configurable fields: topic, wordCount, tone, keywords)
     - Facebook Video Ad Script & Caption Writer
     - Facebook Image Ad & Caption Writer
     - Google Search Ad Writer
-    - SEO KW Research
+    - SEO Keyword Research
 
 - Settings
   - Account Settings
@@ -190,21 +204,35 @@ npm run analyze         # Analyze bundle size
 -- Core tables structure
 users (id, email, role, profile_data)
 clients (id, name, business_name, duda_site_id, address, metadata)
-service_templates (id, name, type, default_tasks, price)
+service_templates (id, name, type, default_tasks, price, checklist)
 services (id, template_id, client_id, status, custom_tasks)
-tasks (id, service_id, name, description, due_date, client_visible, status)
-forms (id, name, schema, settings)
+tasks (id, service_id, name, description, due_date, client_visible, status, checklist)
+forms (id, name, schema, settings, service_id, created_by)
 form_responses (id, form_id, client_id, response_data, submitted_at)
-requests (id, client_id, description, status, duda_data, created_at)
+requests (id, client_id, description, status, duda_data, client_visible, created_at)
+request_comments (id, request_id, text, duda_uuid, is_deleted, created_at)
 activity_logs (id, user_id, entity_type, entity_id, action, metadata)
-attachments (id, entity_type, entity_id, file_path, metadata)
-api_keys (id, service, encrypted_key, created_by)
+attachments (id, entity_type, entity_id, file_path, file_size, mime_type, metadata)
+api_keys (id, service, encrypted_key, last_four, created_by)
+content_tools (id, type, name, description, prompt, webhook_id, fields)
+generated_content (id, tool_id, client_id, prompt, content, metadata, created_by)
+webhooks (id, name, url, type, entity_id, headers, is_active)
+webhook_executions (id, webhook_id, payload, response, status_code, error)
+
+-- New Features
+- Tasks include checklist field for internal tracking (never visible to clients)
+- Content tools support AI generation with metadata tracking
+- Generated content is stored with full client/tool association
+- Enhanced webhook system with execution tracking
+- Comprehensive attachment system with metadata
 
 -- Relationships
-- One client → many forms
+- One client → many forms, services, requests, generated_content
 - One client → many services
 - One service → many tasks (tasks cannot exist without services)
 - Forms can attach to services OR directly to clients
+- Content tools → many generated_content entries
+- Webhooks → many webhook_executions
 ```
 
 ### Dynamic Fields Schema
@@ -295,23 +323,29 @@ interface DudaWebhook {
 
 **IMPORTANT**: Role-based access control in Next.js requires careful implementation to avoid security vulnerabilities:
 
-1. **Middleware Authentication Method**: Always use `supabase.auth.getSession()` in middleware, NOT `getUser()`. The `getUser()` method makes API calls that don't work correctly in middleware context, while `getSession()` reads from cookies directly.
+1. **Middleware Authentication Method**: Always use `supabase.auth.getUser()` in middleware for the most reliable authentication check. This is the official Supabase pattern for server-side authentication verification.
 
 2. **Route Matching Precision**: Be extremely careful with route patterns in middleware. Using `"/"` in publicRoutes will match ALL routes starting with `/`, making every route public. Use exact matching for root paths.
 
-3. **Client-Side Navigation Limitations**: Next.js client-side navigation (router.push, Link components) can bypass middleware execution - this is documented Next.js behavior. Middleware primarily protects direct URL access and server-side navigation.
+3. **API Route vs Page Route Handling**: Middleware must handle API routes differently from page routes:
 
-4. **No Test Bypasses in Production**: Never implement authentication bypass systems (like test-auth-bypass cookies) that can be exploited. Use real authentication in all environments.
+   - **API routes**: Return JSON error responses (401/403) for auth failures
+   - **Page routes**: Redirect to login page for auth failures
+   - Never redirect API routes to login pages (causes CORS issues)
 
-5. **Dual-Layer Protection**: Implement both middleware-level and component-level route protection, but understand that middleware is the primary security layer and components are supplementary.
+4. **Client-Side Navigation Limitations**: Next.js client-side navigation (router.push, Link components) can bypass middleware execution - this is documented Next.js behavior. Middleware primarily protects direct URL access and server-side navigation.
+
+5. **No Test Bypasses in Production**: Never implement authentication bypass systems (like test-auth-bypass cookies) that can be exploited. Use real authentication in all environments.
+
+6. **Dual-Layer Protection**: Implement both middleware-level and component-level route protection, but understand that middleware is the primary security layer and components are supplementary.
 
 **Example Secure Middleware Pattern**:
 
 ```typescript
-// Use getSession() not getUser()
+// Use getUser() for reliable authentication
 const {
-  data: { session },
-} = await supabase.auth.getSession();
+  data: { user },
+} = await supabase.auth.getUser();
 
 // Exact route matching to prevent wildcards
 const publicRoutes = ["/login", "/signup"];
@@ -322,14 +356,20 @@ if (pathname === "/") {
   // Root path logic
 }
 
-// Fetch user role from database for authorization
-if (session?.user) {
-  const { data: user } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", session.user.id)
-    .single();
+// Different error handling for API vs page routes
+if (!user) {
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return NextResponse.redirect(new URL("/login", request.url));
 }
+
+// Fetch user role from database for authorization
+const { data: userData } = await supabase
+  .from("users")
+  .select("role")
+  .eq("id", user.id)
+  .single();
 ```
 
 ## Key Conventions
@@ -480,3 +520,157 @@ curl -I http://localhost:3001/signup
 - ✅ Check HTTP status codes
 - ✅ Verify specific pages load before testing
 - ✅ Read actual error logs when verification fails
+
+## Task Checklist Feature
+
+### Overview
+
+Tasks within service templates can now include internal checklists for tracking completion steps. These checklists are never visible to clients and are designed for internal team use only.
+
+### Key Features
+
+- **Internal Only**: Checklists are never shown to clients, maintaining clean client-facing task views
+- **Smart Completion**: When all checklist items are completed, system prompts with toast notification asking if task should be marked as done
+- **Template Integration**: Checklist items are defined in service templates and automatically copied to tasks when services are assigned to clients
+- **Real-time Updates**: Checklist progress is updated instantly with visual feedback
+
+## Dynamic Field Click-to-Copy Feature
+
+### Overview
+
+All dynamic fields (displayed in the format `{{fieldName}}`) throughout the application are now clickable and will copy the field to the clipboard when clicked. This provides a seamless user experience for working with dynamic fields across forms, content tools, and client data.
+
+### Key Features
+
+- **Universal Click-to-Copy**: Any dynamic field pattern `{{fieldName}}` displayed anywhere in the app is clickable
+- **Visual Feedback**: Fields have hover states and copy cursor indicators
+- **Toast Notifications**: Successful copy operations show confirmation toasts
+- **Consistent Styling**: Three variants available: `inline`, `code`, and `badge` for different contexts
+- **Auto-Detection**: The `DynamicText` component automatically detects and makes dynamic field patterns clickable in any text content
+
+### Implementation
+
+- **DynamicField Component**: Renders individual dynamic fields as clickable elements
+- **DynamicText Component**: Automatically processes text to make any `{{field}}` patterns clickable
+- **Used Throughout**: Form responses, content tools, generated content, and field configuration areas
+
+### Implementation Details
+
+#### Database Schema
+
+```sql
+-- Task table includes checklist field
+checklist Json? // Array of {id: string, text: string, completed: boolean}
+```
+
+#### Service Template Creation
+
+- Add checklist items to tasks during template creation
+- Items can be added/removed dynamically
+- Empty checklist items are filtered out on save
+- Form validation allows temporary empty text during editing
+
+#### Task Management
+
+- Checklist items display with checkboxes for completion tracking
+- Progress indicator shows "Checklist (2/5)" format
+- Completed items show strikethrough styling
+- Toast notification appears when all items completed: "All checklist items completed! Should we mark this task as done?"
+
+#### Client Visibility
+
+- Tasks show normal name/description to clients
+- Checklist items are completely hidden from client view
+- Small note appears in template editor: "Note: Checklists are never visible to clients"
+
+### Usage Flow
+
+1. **Template Creation**: Add checklist items to tasks in service templates
+2. **Service Assignment**: Checklist items automatically copied to actual tasks
+3. **Task Execution**: Team members check off items as they complete them
+4. **Completion Prompt**: System suggests marking task as done when all items completed
+5. **Client View**: Clients see clean task view without internal checklist details
+
+## Content Tools Enhanced Features
+
+### Overview
+
+Content tools have been significantly enhanced with improved UI/UX, dynamic generated content management, and comprehensive client data integration.
+
+### Key Features
+
+#### Dynamic Field Integration
+
+- **Client Data Fields**: Automatic integration of client name, business name, and address
+- **Form Response Fields**: Dynamic fields from client form responses are automatically available
+- **Smart Notifications**: Toast notifications inform users when clients have missing or partial dynamic field data
+- **Organized Display**: Available dynamic fields are organized by category (Client Data, form-specific sections)
+
+#### Enhanced Generated Content Management
+
+- **Client-Specific Filtering**: Generated content section dynamically updates based on client selection
+- **Just Generated Section**: New content appears in a highlighted "Just Generated" section with green accent
+- **Previous Generations**: Comprehensive history with metadata including client name, generation date, and prompt preview
+- **Sorting Options**: Sort by date or client when viewing all content for a tool
+- **Individual Actions**: Copy and download actions for each piece of generated content
+- **Real-time Updates**: Content list refreshes automatically after new generations
+
+#### Improved UI/UX
+
+- **Better Styling**: Clean, organized layouts with proper visual hierarchy
+- **Scrollable Sections**: Handle large amounts of content gracefully
+- **Context-Aware Empty States**: Helpful guidance messages when no content is available
+- **Responsive Design**: Works well on all screen sizes
+- **Professional Appearance**: Consistent with overall application design system
+
+#### Content Storage & Organization
+
+- **Database Storage**: All generated content is properly stored in the `generated_content` table
+- **Metadata Tracking**: Comprehensive metadata including variables used, timestamps, and generation context
+- **Client Association**: Content is properly linked to specific clients for easy retrieval
+- **Tool Association**: Content is organized by the specific content tool used
+
+### API Improvements
+
+- **Proper Authentication**: Fixed middleware to handle API route authentication correctly
+- **Error Handling**: Proper JSON error responses for API routes instead of redirects
+- **Client Filtering**: Generated content API supports optional client filtering
+- **Consistent Response Format**: Standardized API response format with proper metadata
+
+### Technical Implementation
+
+- **Middleware Fixes**: Corrected authentication handling for API routes vs page routes
+- **Dynamic Content Endpoint**: New `/api/content-tools/[id]/generated-content` endpoint with client filtering
+- **Enhanced Components**: Improved `ContentGenerator` component with better state management
+- **Toast Integration**: Smart notifications using the toast system for user feedback
+
+## Latest Application Features & Status
+
+### Current Implementation Status
+
+- ✅ **Authentication & Authorization**: Complete role-based access control with proper middleware
+- ✅ **Client Management**: Full CRUD operations with form responses and generated content
+- ✅ **Service Templates & Tasks**: Complete with internal checklist functionality
+- ✅ **Forms System**: Drag-and-drop builder with dynamic field support
+- ✅ **Content Tools**: AI-powered generation with comprehensive UI/UX enhancements
+- ✅ **Requests System**: Duda webhook integration with comment threading
+- ✅ **Settings Management**: API keys, team management, webhooks
+- ✅ **Dynamic Fields**: Universal click-to-copy functionality throughout app
+- ✅ **Attachment System**: File upload/management across all entities
+- ✅ **Activity Logging**: Comprehensive audit trail system
+
+### Recent Major Updates
+
+- **Content Tools AI Integration**: Direct AI generation using Anthropic/OpenAI APIs
+- **Enhanced Generated Content Management**: Dynamic filtering, history, and metadata tracking
+- **Middleware Security Fixes**: Proper API route authentication handling
+- **Dynamic Field UX**: Click-to-copy functionality with smart notifications
+- **Task Checklist System**: Internal tracking never visible to clients
+- **Improved Error Handling**: Consistent JSON responses for API routes
+
+### Development Workflow
+
+- **Primary Branch**: `editing-branch` for all development work
+- **Production Branch**: `main` for stable releases
+- **Testing**: Comprehensive E2E testing with Playwright on port 3001
+- **Server Verification**: Always verify server responds before testing/development

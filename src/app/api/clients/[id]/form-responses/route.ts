@@ -15,11 +15,34 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // For now, return empty array as forms aren't implemented yet
-    // In Phase 6, this will query actual form responses
-    const formResponses: any[] = [];
+    // Fetch form responses for this client
+    const formResponses = await prisma.formResponse.findMany({
+      where: {
+        clientId: params.id,
+      },
+      include: {
+        form: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        submittedAt: "desc",
+      },
+    });
 
-    return NextResponse.json(formResponses);
+    // Format the response data
+    const formattedResponses = formResponses.map((response) => ({
+      id: response.id,
+      formId: response.formId,
+      formName: response.form.name,
+      submittedAt: response.submittedAt,
+      responseData: response.responseData,
+    }));
+
+    return NextResponse.json(formattedResponses);
   } catch (error) {
     console.error("Error fetching form responses:", error);
     return NextResponse.json(

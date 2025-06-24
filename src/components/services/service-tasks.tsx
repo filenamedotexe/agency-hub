@@ -14,6 +14,8 @@ import {
   ChevronDown,
   ChevronRight,
   Paperclip,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +42,11 @@ interface Task {
   status: "TO_DO" | "IN_PROGRESS" | "DONE";
   dueDate: string | null;
   clientVisible: boolean;
+  checklist?: Array<{
+    id: string;
+    text: string;
+    completed: boolean;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -197,6 +204,35 @@ export function ServiceTasks({
     await updateTaskMutation.mutateAsync({ taskId, data: { clientVisible } });
   };
 
+  const handleChecklistUpdate = async (
+    taskId: string,
+    checklist: Array<{ id: string; text: string; completed: boolean }>
+  ) => {
+    // Check if all checklist items are completed
+    const allCompleted =
+      checklist.length > 0 && checklist.every((item) => item.completed);
+
+    // Update the checklist
+    await updateTaskMutation.mutateAsync({ taskId, data: { checklist } });
+
+    // If all items are completed and task is not already done, show toast
+    if (allCompleted) {
+      const task = tasks.find((t) => t.id === taskId);
+      if (task && task.status !== "DONE") {
+        toast.success(
+          "All checklist items completed! Should we mark this task as done?",
+          {
+            action: {
+              label: "Mark Done",
+              onClick: () => handleStatusChange(taskId, "DONE"),
+            },
+            duration: 10000, // Show for 10 seconds
+          }
+        );
+      }
+    }
+  };
+
   const handleCreateTask = async () => {
     await createTaskMutation.mutateAsync({
       ...newTask,
@@ -302,6 +338,67 @@ export function ServiceTasks({
                             {task.description}
                           </p>
                         )}
+
+                        {/* Checklist (not visible to clients) */}
+                        {task.checklist &&
+                          task.checklist.length > 0 &&
+                          !isReadOnly && (
+                            <div className="mt-3 space-y-2">
+                              <div className="flex items-center gap-2 text-sm text-gray-700">
+                                <CheckSquare className="h-4 w-4" />
+                                <span className="font-medium">
+                                  Checklist (
+                                  {
+                                    task.checklist.filter(
+                                      (item) => item.completed
+                                    ).length
+                                  }
+                                  /{task.checklist.length})
+                                </span>
+                              </div>
+                              <div className="space-y-1 pl-6">
+                                {task.checklist.map((item, index) => (
+                                  <div
+                                    key={item.id}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <button
+                                      onClick={() => {
+                                        const updatedChecklist = [
+                                          ...task.checklist!,
+                                        ];
+                                        updatedChecklist[index] = {
+                                          ...item,
+                                          completed: !item.completed,
+                                        };
+                                        handleChecklistUpdate(
+                                          task.id,
+                                          updatedChecklist
+                                        );
+                                      }}
+                                      className="text-gray-500 hover:text-gray-700"
+                                    >
+                                      {item.completed ? (
+                                        <CheckSquare className="h-4 w-4 text-green-600" />
+                                      ) : (
+                                        <Square className="h-4 w-4" />
+                                      )}
+                                    </button>
+                                    <span
+                                      className={cn(
+                                        "text-sm",
+                                        item.completed &&
+                                          "text-gray-500 line-through"
+                                      )}
+                                    >
+                                      {item.text}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                         <div className="mt-2 flex items-center gap-4">
                           {task.dueDate && (
                             <div className="flex items-center gap-1 text-xs text-gray-500">

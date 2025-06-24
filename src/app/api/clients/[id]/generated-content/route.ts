@@ -15,11 +15,35 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // For now, return empty array as content tools aren't implemented yet
-    // In Phase 8, this will query actual generated content
-    const generatedContent: any[] = [];
+    // Fetch generated content for this client
+    const generatedContent = await prisma.generatedContent.findMany({
+      where: {
+        clientId: params.id,
+      },
+      include: {
+        tool: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-    return NextResponse.json(generatedContent);
+    // Transform data to match the expected format
+    const formattedContent = generatedContent.map((item) => ({
+      id: item.id,
+      toolName: item.tool.name,
+      content: item.content,
+      metadata: item.metadata as Record<string, any>,
+      createdAt: item.createdAt.toISOString(),
+    }));
+
+    return NextResponse.json(formattedContent);
   } catch (error) {
     console.error("Error fetching generated content:", error);
     return NextResponse.json(

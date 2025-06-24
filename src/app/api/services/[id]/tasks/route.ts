@@ -9,6 +9,15 @@ const createTaskSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().datetime().nullable().optional(),
   clientVisible: z.boolean().default(false),
+  checklist: z
+    .array(
+      z.object({
+        id: z.string(),
+        text: z.string(),
+        completed: z.boolean().default(false),
+      })
+    )
+    .optional(),
 });
 
 export async function GET(
@@ -94,6 +103,7 @@ export async function POST(
         description: validatedData.description || "",
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
         clientVisible: validatedData.clientVisible,
+        checklist: validatedData.checklist || [],
         status: "TO_DO",
       },
     });

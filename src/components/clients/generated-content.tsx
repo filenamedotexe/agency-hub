@@ -19,6 +19,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { DynamicText } from "@/components/ui/dynamic-field";
 
 interface GeneratedContent {
   id: string;
@@ -96,7 +97,9 @@ export function GeneratedContent({ clientId }: GeneratedContentProps) {
                     <div className="space-y-3">
                       <div className="prose prose-sm max-w-none">
                         <pre className="whitespace-pre-wrap rounded-md bg-muted p-4 text-sm">
-                          {item.content}
+                          <DynamicText variant="inline">
+                            {item.content}
+                          </DynamicText>
                         </pre>
                       </div>
                       {item.metadata &&

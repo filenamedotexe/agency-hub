@@ -71,7 +71,8 @@ export async function loginAsRole(page: Page, role: UserRole) {
   await page.click('button[type="submit"]');
 
   // Wait for successful login redirect
-  await page.waitForURL("/dashboard", { timeout: 10000 });
+  const expectedUrl = role === "CLIENT" ? "/client-dashboard" : "/dashboard";
+  await page.waitForURL(expectedUrl, { timeout: 10000 });
   await page.waitForLoadState("networkidle");
 
   console.log(`✅ Login complete for ${role} with real authentication`);

@@ -3,5 +3,5 @@ description:
 globs: 
 alwaysApply: true
 ---
-always read claude.md before every response
-always read app_build_plan.md before every response
+always read claude.md after every message i send you
+Keep claude.md up to date with the up to date full current app features and details 

@@ -72,6 +72,7 @@ model ServiceTemplate {
   name         String
   type         ServiceType
   defaultTasks Json[]      @default([])
+  requiredFormIds String[]  @default([])
   price        Float?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -107,6 +108,7 @@ model Task {
   dueDate       DateTime?
   clientVisible Boolean    @default(false)
   status        TaskStatus @default(TO_DO)
+  checklist     Json?      // Array of checklist items: [{id: string, text: string, completed: boolean}]
   metadata      Json?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -294,6 +296,7 @@ model ContentTool {
   description String?
   prompt      String          // The AI prompt template
   webhookId   String?         // Optional webhook for this tool
+  fields      Json?           // Configurable fields array
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 

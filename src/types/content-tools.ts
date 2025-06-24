@@ -5,6 +5,19 @@ export type ContentToolType =
   | "GOOGLE_SEARCH_AD"
   | "SEO_KEYWORD_RESEARCH";
 
+export interface ContentToolField {
+  id: string;
+  name: string;
+  label: string;
+  type: "text" | "textarea" | "number" | "select";
+  required: boolean;
+  clientVisible: boolean;
+  placeholder?: string;
+  defaultValue?: string;
+  options?: { label: string; value: string }[];
+  order: number;
+}
+
 export interface ContentTool {
   id: string;
   type: ContentToolType;
@@ -12,6 +25,7 @@ export interface ContentTool {
   description?: string;
   prompt: string;
   webhookId?: string;
+  fields?: ContentToolField[];
   createdAt: string;
   updatedAt: string;
   _count?: {

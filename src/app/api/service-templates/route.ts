@@ -13,10 +13,20 @@ const createServiceTemplateSchema = z.object({
         name: z.string().min(1),
         description: z.string().optional(),
         clientVisible: z.boolean().default(false),
+        checklist: z
+          .array(
+            z.object({
+              id: z.string(),
+              text: z.string(),
+              completed: z.boolean().default(false),
+            })
+          )
+          .optional(),
       })
     )
     .default([]),
   price: z.number().positive().optional(),
+  requiredForms: z.array(z.string()).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -69,6 +79,7 @@ export async function POST(request: NextRequest) {
         type: validatedData.type,
         defaultTasks: validatedData.defaultTasks,
         price: validatedData.price,
+        requiredFormIds: validatedData.requiredForms || [],
       },
     });
 

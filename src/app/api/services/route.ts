@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
             name: task.name,
             description: task.description || null,
             clientVisible: task.clientVisible || false,
+            checklist: task.checklist || [],
             status: "TO_DO",
           })),
         });

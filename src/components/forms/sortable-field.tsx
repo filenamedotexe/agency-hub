@@ -49,7 +49,7 @@ export function SortableField({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} data-testid="sortable-field">
       <Card className="relative">
         <div
           className="absolute left-2 top-1/2 -translate-y-1/2 cursor-move"

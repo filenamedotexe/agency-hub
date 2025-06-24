@@ -1,10 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { AIService } from "@/lib/ai-service";
 
 const generateContentSchema = z.object({
   clientId: z.string().min(1, "Client ID is required"),
-  variables: z.record(z.string()).optional(),
+  fieldValues: z.record(z.string()).optional(),
+  toolFields: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        label: z.string(),
+        type: z.enum(["text", "textarea", "number", "select"]),
+        required: z.boolean(),
+        clientVisible: z.boolean(),
+        placeholder: z.string().optional(),
+        defaultValue: z.string().optional(),
+        options: z
+          .array(
+            z.object({
+              label: z.string(),
+              value: z.string(),
+            })
+          )
+          .optional(),
+        order: z.number(),
+      })
+    )
+    .optional(),
 });
 
 // Function to replace template variables with actual values
@@ -21,19 +45,6 @@ function processTemplate(
   });
 
   return processed;
-}
-
-// Mock AI generation (replace with actual AI API call)
-async function generateWithAI(
-  prompt: string,
-  apiKey?: string
-): Promise<string> {
-  // In production, this would call OpenAI/Anthropic API using the provided API key
-  // For now, return a mock response
-
-  await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API delay
-
-  return `This is AI-generated content based on your prompt:\n\n${prompt}\n\n[In production, this would be actual AI-generated content using the configured API key]`;
 }
 
 // POST /api/content-tools/[id]/generate - Generate content using a tool
@@ -75,7 +86,6 @@ export async function POST(
     const allVariables: Record<string, string> = {
       businessName: client.businessName || client.name,
       clientName: client.name,
-      ...validatedData.variables,
     };
 
     // Add dynamic fields from form responses
@@ -89,19 +99,56 @@ export async function POST(
       );
     });
 
+    // Process field values with dynamic field substitution
+    const processedFieldValues: Record<string, string> = {};
+    if (validatedData.fieldValues) {
+      Object.entries(validatedData.fieldValues).forEach(([key, value]) => {
+        // Replace dynamic field variables in the value
+        let processedValue = value;
+        Object.entries(allVariables).forEach(([varKey, varValue]) => {
+          const regex = new RegExp(`{{${varKey}}}`, "g");
+          processedValue = processedValue.replace(regex, varValue);
+        });
+        processedFieldValues[key] = processedValue;
+        allVariables[key] = processedValue; // Also add to allVariables for prompt processing
+      });
+    }
+
     // Process the prompt with variables
     const processedPrompt = processTemplate(tool.prompt, allVariables);
 
-    // Get API key if available
-    const apiKeyRecord = await prisma.apiKey.findFirst({
-      where: { service: "openai" }, // or "anthropic" based on settings
+    // Get API key - try Anthropic first, then OpenAI
+    let apiKeyRecord = await prisma.apiKey.findFirst({
+      where: { service: "anthropic" },
     });
 
+    let aiService: "anthropic" | "openai" = "anthropic";
+
+    if (!apiKeyRecord) {
+      apiKeyRecord = await prisma.apiKey.findFirst({
+        where: { service: "openai" },
+      });
+      aiService = "openai";
+    }
+
     // Generate content using AI
-    const generatedContent = await generateWithAI(
-      processedPrompt,
-      apiKeyRecord?.encryptedKey // In production, decrypt this
-    );
+    let generatedContent: string;
+
+    if (apiKeyRecord) {
+      try {
+        generatedContent = await AIService.generate({
+          prompt: processedPrompt,
+          service: aiService,
+          apiKey: apiKeyRecord.encryptedKey,
+        });
+      } catch (error) {
+        console.error("AI generation failed, falling back to mock:", error);
+        generatedContent = await AIService.generateMock(processedPrompt);
+      }
+    } else {
+      // No API keys configured, use mock generation
+      generatedContent = await AIService.generateMock(processedPrompt);
+    }
 
     // Save generated content
     const savedContent = await prisma.generatedContent.create({

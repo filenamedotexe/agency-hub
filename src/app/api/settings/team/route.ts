@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(users);
+    return NextResponse.json({ users });
   } catch (error) {
     console.error("Error fetching team members:", error);
     return NextResponse.json(
@@ -92,106 +92,6 @@ export async function POST(request: NextRequest) {
     console.error("Error creating team member:", error);
     return NextResponse.json(
       { error: "Failed to create team member" },
-      { status: 500 }
-    );
-  }
-}
-
-// PUT /api/settings/team/[id] - Update team member role
-export async function PUT(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("id");
-    const body = await request.json();
-    const { role } = body;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
-      );
-    }
-
-    if (
-      !role ||
-      !["ADMIN", "SERVICE_MANAGER", "COPYWRITER", "EDITOR", "VA"].includes(role)
-    ) {
-      return NextResponse.json(
-        { error: "Valid role is required" },
-        { status: 400 }
-      );
-    }
-
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: { role },
-    });
-
-    return NextResponse.json({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      message: "Role updated successfully",
-    });
-  } catch (error) {
-    console.error("Error updating team member:", error);
-    return NextResponse.json(
-      { error: "Failed to update team member" },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE /api/settings/team/[id] - Remove team member
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("id");
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Check if user has any associated data
-    const activityCount = await prisma.activityLog.count({
-      where: { userId },
-    });
-
-    if (activityCount > 0) {
-      // Soft delete - just change role to indicate inactive
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          profileData: {
-            ...((await prisma.user.findUnique({ where: { id: userId } }))
-              ?.profileData as any),
-            inactive: true,
-          },
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "Team member deactivated",
-      });
-    } else {
-      // Hard delete if no associated data
-      await prisma.user.delete({
-        where: { id: userId },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "Team member removed",
-      });
-    }
-  } catch (error) {
-    console.error("Error removing team member:", error);
-    return NextResponse.json(
-      { error: "Failed to remove team member" },
       { status: 500 }
     );
   }

@@ -166,7 +166,7 @@ export default function FormDetailPage({ params }: { params: { id: string } }) {
                 )}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent data-testid="form-responses">
               {responses.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
                   No responses yet

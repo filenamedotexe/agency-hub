@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  FileText,
+  CheckSquare,
+  X,
+  Edit,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,6 +44,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   name: z.string().min(1, "Template name is required").max(255),
@@ -55,9 +65,19 @@ const formSchema = z.object({
         name: z.string().min(1, "Task name is required"),
         description: z.string().optional(),
         clientVisible: z.boolean().default(false),
+        checklist: z
+          .array(
+            z.object({
+              id: z.string(),
+              text: z.string(),
+              completed: z.boolean().default(false),
+            })
+          )
+          .optional(),
       })
     )
     .min(1, "At least one task is required"),
+  requiredForms: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -65,22 +85,56 @@ type FormValues = z.infer<typeof formSchema>;
 export default function NewServiceTemplatePage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [forms, setForms] = useState<any[]>([]);
+  const [editingChecklistItem, setEditingChecklistItem] = useState<{
+    taskIndex: number;
+    checklistIndex: number;
+  } | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      defaultTasks: [{ name: "", description: "", clientVisible: false }],
+      defaultTasks: [
+        { name: "", description: "", clientVisible: false, checklist: [] },
+      ],
+      requiredForms: [],
     },
   });
+
+  useEffect(() => {
+    const fetchForms = async () => {
+      try {
+        const response = await fetch("/api/forms");
+        if (response.ok) {
+          const data = await response.json();
+          setForms(data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching forms:", error);
+      }
+    };
+
+    fetchForms();
+  }, []);
 
   const onSubmit = async (data: FormValues) => {
     setSubmitting(true);
     try {
+      // Filter out empty checklist items before submission
+      const cleanedData = {
+        ...data,
+        defaultTasks: data.defaultTasks.map((task) => ({
+          ...task,
+          checklist:
+            task.checklist?.filter((item) => item.text.trim() !== "") || [],
+        })),
+      };
+
       const response = await fetch("/api/service-templates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(cleanedData),
       });
 
       if (!response.ok) {
@@ -101,7 +155,7 @@ export default function NewServiceTemplatePage() {
     const currentTasks = form.getValues("defaultTasks");
     form.setValue("defaultTasks", [
       ...currentTasks,
-      { name: "", description: "", clientVisible: false },
+      { name: "", description: "", clientVisible: false, checklist: [] },
     ]);
   };
 
@@ -111,6 +165,39 @@ export default function NewServiceTemplatePage() {
       "defaultTasks",
       currentTasks.filter((_, i) => i !== index)
     );
+  };
+
+  const addChecklistItem = (taskIndex: number) => {
+    const currentTasks = form.getValues("defaultTasks");
+    const task = currentTasks[taskIndex];
+    const newChecklistItem = {
+      id: crypto.randomUUID(),
+      text: "",
+      completed: false,
+    };
+
+    const updatedTask = {
+      ...task,
+      checklist: [...(task.checklist || []), newChecklistItem],
+    };
+
+    const updatedTasks = [...currentTasks];
+    updatedTasks[taskIndex] = updatedTask;
+    form.setValue("defaultTasks", updatedTasks);
+  };
+
+  const removeChecklistItem = (taskIndex: number, checklistIndex: number) => {
+    const currentTasks = form.getValues("defaultTasks");
+    const task = currentTasks[taskIndex];
+
+    const updatedTask = {
+      ...task,
+      checklist: task.checklist?.filter((_, i) => i !== checklistIndex) || [],
+    };
+
+    const updatedTasks = [...currentTasks];
+    updatedTasks[taskIndex] = updatedTask;
+    form.setValue("defaultTasks", updatedTasks);
   };
 
   return (
@@ -284,6 +371,14 @@ export default function NewServiceTemplatePage() {
                                   </FormLabel>
                                   <FormDescription>
                                     Allow clients to see this task
+                                    {form.watch(
+                                      `defaultTasks.${index}.checklist`
+                                    )?.length > 0 && (
+                                      <span className="mt-1 block text-xs text-orange-600">
+                                        Note: Checklists are never visible to
+                                        clients
+                                      </span>
+                                    )}
                                   </FormDescription>
                                 </div>
                                 <FormControl>
@@ -295,6 +390,117 @@ export default function NewServiceTemplatePage() {
                               </FormItem>
                             )}
                           />
+
+                          {/* Checklist Section */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <FormLabel className="flex items-center gap-2 text-base">
+                                  <CheckSquare className="h-4 w-4" />
+                                  Internal Checklist
+                                </FormLabel>
+                                <FormDescription>
+                                  Private checklist items for task completion
+                                  (not visible to clients)
+                                </FormDescription>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => addChecklistItem(index)}
+                              >
+                                <Plus className="mr-1 h-3 w-3" />
+                                Add Item
+                              </Button>
+                            </div>
+
+                            {form
+                              .watch(`defaultTasks.${index}.checklist`)
+                              ?.map((item, checklistIndex) => {
+                                const isEditing =
+                                  editingChecklistItem?.taskIndex === index &&
+                                  editingChecklistItem?.checklistIndex ===
+                                    checklistIndex;
+
+                                return (
+                                  <div
+                                    key={checklistIndex}
+                                    className="flex items-center gap-2 rounded-md bg-gray-50 p-2"
+                                  >
+                                    {isEditing ? (
+                                      <FormField
+                                        control={form.control}
+                                        name={`defaultTasks.${index}.checklist.${checklistIndex}.text`}
+                                        render={({ field }) => (
+                                          <FormItem className="flex-1">
+                                            <FormControl>
+                                              <Input
+                                                placeholder="e.g., Verify campaign settings"
+                                                {...field}
+                                                className="bg-white"
+                                                autoFocus
+                                                onBlur={() =>
+                                                  setEditingChecklistItem(null)
+                                                }
+                                                onKeyDown={(e) => {
+                                                  if (e.key === "Enter") {
+                                                    setEditingChecklistItem(
+                                                      null
+                                                    );
+                                                  }
+                                                  if (e.key === "Escape") {
+                                                    setEditingChecklistItem(
+                                                      null
+                                                    );
+                                                  }
+                                                }}
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                    ) : (
+                                      <div className="flex flex-1 items-center gap-2">
+                                        <span className="text-sm">
+                                          {item.text ||
+                                            "Click edit to add text"}
+                                        </span>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6 text-gray-500 hover:text-gray-700"
+                                          onClick={() =>
+                                            setEditingChecklistItem({
+                                              taskIndex: index,
+                                              checklistIndex,
+                                            })
+                                          }
+                                        >
+                                          <Edit className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    )}
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-red-600 hover:text-red-700"
+                                      onClick={() =>
+                                        removeChecklistItem(
+                                          index,
+                                          checklistIndex
+                                        )
+                                      }
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                          </div>
                         </div>
 
                         {form.watch("defaultTasks").length > 1 && (
@@ -313,6 +519,83 @@ export default function NewServiceTemplatePage() {
                   </Card>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Required Forms
+              </CardTitle>
+              <CardDescription>
+                Forms that clients must complete when this service is assigned
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="requiredForms"
+                render={() => (
+                  <FormItem>
+                    <div className="space-y-3">
+                      {forms.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No forms available. Create forms first to assign them
+                          to this service.
+                        </p>
+                      ) : (
+                        forms.map((formItem) => (
+                          <FormField
+                            key={formItem.id}
+                            control={form.control}
+                            name="requiredForms"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={formItem.id}
+                                  className="flex flex-row items-start space-x-3 space-y-0"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(
+                                        formItem.id
+                                      )}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([
+                                              ...field.value,
+                                              formItem.id,
+                                            ])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== formItem.id
+                                              )
+                                            );
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel className="text-sm font-normal">
+                                      {formItem.name}
+                                    </FormLabel>
+                                    {formItem.description && (
+                                      <FormDescription className="text-xs">
+                                        {formItem.description}
+                                      </FormDescription>
+                                    )}
+                                  </div>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        ))
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
           </Card>
 

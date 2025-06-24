@@ -35,6 +35,23 @@ const protectedRoutes: Record<string, UserRole[]> = {
 // Public routes that don't require authentication
 const publicRoutes = ["/login", "/signup", "/api/health", "/api/auth"];
 
+// API routes that require authentication but don't need role checks
+const authenticatedApiRoutes = [
+  "/api/dashboard/stats",
+  "/api/clients",
+  "/api/content-tools",
+  "/api/forms",
+  "/api/services",
+  "/api/requests",
+  "/api/settings",
+  "/api/webhooks",
+  "/api/tasks",
+  "/api/service-templates",
+  "/api/attachments",
+  "/api/activity-logs",
+  "/api/debug",
+];
+
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
   console.log(`[MIDDLEWARE] Processing: ${pathname}`);
@@ -113,17 +130,25 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // This will refresh session if expired - required for Server Components
+  // OFFICIAL SUPABASE PATTERN: Always use getUser() in server code, never getSession()
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  console.log(`[MIDDLEWARE] getUser result:`, {
+    user: user ? { id: user.id, email: user.email } : null,
+  });
 
   // Check if route requires authentication
   const isProtectedRoute = Object.keys(protectedRoutes).some((route) =>
     pathname.startsWith(route)
   );
 
-  if (!isProtectedRoute) {
+  const isAuthenticatedApiRoute = authenticatedApiRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  if (!isProtectedRoute && !isAuthenticatedApiRoute) {
     console.log(`[MIDDLEWARE] Non-protected route: ${pathname}`);
     return response;
   }
@@ -131,22 +156,34 @@ export async function updateSession(request: NextRequest) {
   console.log(`[MIDDLEWARE] PROTECTED ROUTE: ${pathname}`);
 
   if (!user) {
-    console.log("[MIDDLEWARE] No authenticated user, redirecting to login");
+    console.log("[MIDDLEWARE] No authenticated user");
+
+    // For API routes, return 401 JSON response instead of redirect
+    if (pathname.startsWith("/api/")) {
+      console.log("[MIDDLEWARE] API route - returning 401");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // For page routes, redirect to login
+    console.log("[MIDDLEWARE] Page route - redirecting to login");
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  console.log(`[MIDDLEWARE] Authenticated user: ${user.email}`);
+  console.log(`[MIDDLEWARE] Authenticated user: ${user.email}, ID: ${user.id}`);
 
   // Fetch role from database
   let userRole: string | null = null;
   try {
+    console.log(`[MIDDLEWARE] Querying database for user: ${user.id}`);
     const { data: userData, error } = await supabase
       .from("users")
       .select("role")
       .eq("id", user.id)
       .single();
+
+    console.log(`[MIDDLEWARE] Database query result:`, { userData, error });
 
     if (error) {
       console.error("[MIDDLEWARE] Database error:", error);
@@ -161,10 +198,30 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (!userRole) {
-    console.log("[MIDDLEWARE] No user role found, redirecting to login");
+    console.log("[MIDDLEWARE] No user role found");
+
+    // For API routes, return 401 JSON response instead of redirect
+    if (pathname.startsWith("/api/")) {
+      console.log("[MIDDLEWARE] API route - returning 401 for missing role");
+      return NextResponse.json(
+        { error: "User role not found" },
+        { status: 401 }
+      );
+    }
+
+    // For page routes, redirect to login
+    console.log(
+      "[MIDDLEWARE] Page route - redirecting to login for missing role"
+    );
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("error", "role-not-found");
     return NextResponse.redirect(redirectUrl);
+  }
+
+  // If it's an authenticated API route, just check authentication
+  if (isAuthenticatedApiRoute) {
+    console.log(`[MIDDLEWARE] Authenticated API route: ${pathname}`);
+    return response;
   }
 
   // Find which protected route matches
@@ -188,6 +245,18 @@ export async function updateSession(request: NextRequest) {
       `[MIDDLEWARE] ACCESS DENIED: ${userRole} cannot access ${matchedRoute}`
     );
 
+    // For API routes, return 403 JSON response instead of redirect
+    if (pathname.startsWith("/api/")) {
+      console.log(
+        "[MIDDLEWARE] API route - returning 403 for insufficient permissions"
+      );
+      return NextResponse.json(
+        { error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
+    // For page routes, handle redirects
     // Special handling for CLIENT role
     if (userRole === UserRole.CLIENT) {
       console.log("[MIDDLEWARE] Redirecting CLIENT to client dashboard");

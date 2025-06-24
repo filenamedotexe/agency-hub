@@ -13,10 +13,20 @@ const updateServiceTemplateSchema = z.object({
         name: z.string().min(1),
         description: z.string().optional(),
         clientVisible: z.boolean().default(false),
+        checklist: z
+          .array(
+            z.object({
+              id: z.string(),
+              text: z.string(),
+              completed: z.boolean().default(false),
+            })
+          )
+          .optional(),
       })
     )
     .optional(),
   price: z.number().positive().optional().nullable(),
+  requiredForms: z.array(z.string()).optional(),
 });
 
 export async function GET(
@@ -45,7 +55,13 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(template);
+    // Transform requiredFormIds to requiredForms for frontend compatibility
+    const responseTemplate = {
+      ...template,
+      requiredForms: template.requiredFormIds,
+    };
+
+    return NextResponse.json(responseTemplate);
   } catch (error) {
     console.error("Error fetching service template:", error);
     return NextResponse.json(
@@ -75,9 +91,15 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateServiceTemplateSchema.parse(body);
 
+    const updateData = { ...validatedData };
+    if (validatedData.requiredForms) {
+      updateData.requiredFormIds = validatedData.requiredForms;
+      delete updateData.requiredForms;
+    }
+
     const template = await prisma.serviceTemplate.update({
       where: { id: params.id },
-      data: validatedData,
+      data: updateData,
     });
 
     await logActivity({

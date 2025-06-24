@@ -10,6 +10,15 @@ const updateTaskSchema = z.object({
   dueDate: z.string().datetime().nullable().optional(),
   status: z.enum(["TO_DO", "IN_PROGRESS", "DONE"]).optional(),
   clientVisible: z.boolean().optional(),
+  checklist: z
+    .array(
+      z.object({
+        id: z.string(),
+        text: z.string(),
+        completed: z.boolean().default(false),
+      })
+    )
+    .optional(),
 });
 
 export async function GET(

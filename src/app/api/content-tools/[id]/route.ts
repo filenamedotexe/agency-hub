@@ -50,13 +50,14 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { prompt, webhookId } = body;
+    const { prompt, webhookId, fields } = body;
 
     const tool = await prisma.contentTool.update({
       where: { id: params.id },
       data: {
         ...(prompt && { prompt }),
         ...(webhookId !== undefined && { webhookId }),
+        ...(fields !== undefined && { fields }),
       },
     });
 
