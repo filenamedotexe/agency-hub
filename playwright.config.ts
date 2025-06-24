@@ -1,48 +1,65 @@
 import { defineConfig, devices } from "@playwright/test";
+import path from "path";
 
+/**
+ * Read environment variables from file.
+ * https://github.com/motdotla/dotenv
+ */
+// require('dotenv').config();
+
+/**
+ * See https://playwright.dev/docs/test-configuration.
+ */
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: "./tests",
+  /* Run tests in files in parallel */
   fullyParallel: true,
+  /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
+  /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+  /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
-  timeout: 30000, // 30 seconds for individual tests
-  expect: {
-    timeout: 10000, // 10 seconds for assertions
-  },
+  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+  reporter: "list",
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    // Fixed base URL for Next.js on port 3001
+    /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: "http://localhost:3001",
+
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
+
+    /* Take screenshot on failure */
     screenshot: "only-on-failure",
+
+    /* Video on failure */
     video: "retain-on-failure",
-    // Always run headed for UI interaction
-    headless: false,
-    // Slower actions for better visibility during development
-    actionTimeout: 10000,
-    navigationTimeout: 30000,
   },
 
+  /* Increase timeout for auth-heavy tests */
+  timeout: 30000,
+
+  /* Configure projects for major browsers */
   projects: [
     {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        // Larger viewport for better UI interaction visibility
-        viewport: { width: 1280, height: 720 },
       },
     },
-    // Comment out other browsers for faster development
+
     // {
     //   name: 'firefox',
     //   use: { ...devices['Desktop Firefox'] },
     // },
+
     // {
     //   name: 'webkit',
     //   use: { ...devices['Desktop Safari'] },
     // },
-    // Mobile viewports
+
+    /* Test against mobile viewports. */
     // {
     //   name: 'Mobile Chrome',
     //   use: { ...devices['Pixel 5'] },
@@ -51,20 +68,23 @@ export default defineConfig({
     //   name: 'Mobile Safari',
     //   use: { ...devices['iPhone 12'] },
     // },
-    // Tablet viewports
+
+    /* Test against branded browsers. */
     // {
-    //   name: 'iPad',
-    //   use: { ...devices['iPad Pro'] },
+    //   name: 'Microsoft Edge',
+    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    // },
+    // {
+    //   name: 'Google Chrome',
+    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     // },
   ],
 
-  // Configure Next.js dev server on port 3001
+  /* Run your local dev server before starting the tests */
   webServer: {
     command: "PORT=3001 npm run dev",
-    port: 3001,
+    url: "http://localhost:3001",
     reuseExistingServer: !process.env.CI,
-    timeout: 120000, // 2 minutes to start server
-    stdout: "pipe",
-    stderr: "pipe",
+    timeout: 120 * 1000,
   },
 });

@@ -40,6 +40,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ActivityLogComponent } from "@/components/activity/activity-log";
 import { ClientServices } from "@/components/services/client-services";
+import { FormResponses } from "@/components/clients/form-responses";
+import { GeneratedContent } from "@/components/clients/generated-content";
 import type { Client } from "@/types/client";
 import { toast } from "sonner";
 
@@ -219,6 +221,12 @@ export default function ClientDetailPage() {
 
         {/* Services */}
         <ClientServices clientId={clientId} />
+
+        {/* Form Responses */}
+        <FormResponses clientId={clientId} />
+
+        {/* Generated Content */}
+        <GeneratedContent clientId={clientId} />
 
         {/* Activity Log */}
         <ActivityLogComponent clientId={clientId} limit={20} />

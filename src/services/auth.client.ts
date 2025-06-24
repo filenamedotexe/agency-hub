@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client-singleton";
 import { SignUpData, SignInData, AuthUser } from "@/types/auth";
 
 export class AuthClientService {
   private supabase;
 
   constructor() {
-    this.supabase = createClient();
+    this.supabase = getSupabaseClient();
   }
 
   async signUp({ email, password, role, profileData }: SignUpData) {
@@ -88,11 +88,20 @@ export class AuthClientService {
       if (!user) return null;
 
       // Fetch user profile from API
-      const response = await fetch("/api/auth/me");
-      if (!response.ok) return null;
+      try {
+        const response = await fetch("/api/auth/me");
 
-      const data = await response.json();
-      return data.user;
+        if (!response.ok) {
+          console.warn("Auth API returned non-OK status:", response.status);
+          return null;
+        }
+
+        const data = await response.json();
+        return data.user;
+      } catch (fetchError) {
+        console.error("Auth API call failed:", fetchError);
+        return null;
+      }
     } catch (error) {
       return null;
     }

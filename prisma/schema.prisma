@@ -40,8 +40,11 @@ model Client {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  activityLogs ActivityLog[]
-  services     Service[]
+  activityLogs     ActivityLog[]
+  services         Service[]
+  formResponses    FormResponse[]
+  requests         Request[]
+  generatedContent GeneratedContent[]
 
   @@map("clients")
 }
@@ -152,4 +155,183 @@ model Attachment {
   @@index([uploadedBy])
   @@index([createdAt])
   @@map("attachments")
+}
+
+// Phase 3: Forms
+model Form {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  schema      Json     // Form field definitions
+  settings    Json?    // Webhook URL, redirect URL, etc.
+  serviceId   String?  // Optional - forms can attach to services
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  responses FormResponse[]
+
+  @@index([serviceId])
+  @@index([createdBy])
+  @@map("forms")
+}
+
+model FormResponse {
+  id           String   @id @default(uuid())
+  formId       String
+  clientId     String
+  responseData Json     // Dynamic field responses
+  submittedAt  DateTime @default(now())
+
+  form   Form   @relation(fields: [formId], references: [id])
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@index([formId])
+  @@index([clientId])
+  @@index([submittedAt])
+  @@map("form_responses")
+}
+
+// Phase 3: Requests (from Duda webhooks)
+enum RequestStatus {
+  TO_DO
+  IN_PROGRESS
+  DONE
+}
+
+model Request {
+  id            String        @id @default(uuid())
+  clientId      String
+  description   String
+  status        RequestStatus @default(TO_DO)
+  clientVisible Boolean       @default(false)
+  dudaData      Json?         // Original webhook payload
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  completedAt   DateTime?
+
+  client   Client          @relation(fields: [clientId], references: [id])
+  comments RequestComment[]
+
+  @@index([clientId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("requests")
+}
+
+model RequestComment {
+  id          String   @id @default(uuid())
+  requestId   String
+  text        String
+  dudaUuid    String?  // Duda's comment UUID
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([dudaUuid])
+  @@map("request_comments")
+}
+
+// Phase 3: Webhooks
+enum WebhookType {
+  FORM
+  CONTENT_TOOL
+  GENERAL
+}
+
+model Webhook {
+  id          String      @id @default(uuid())
+  name        String
+  url         String
+  type        WebhookType
+  entityId    String?     // formId or contentToolId if applicable
+  headers     Json?       // Custom headers
+  isActive    Boolean     @default(true)
+  createdBy   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  executions WebhookExecution[]
+
+  @@index([type])
+  @@index([entityId])
+  @@index([isActive])
+  @@map("webhooks")
+}
+
+model WebhookExecution {
+  id         String   @id @default(uuid())
+  webhookId  String
+  payload    Json
+  response   Json?
+  statusCode Int?
+  error      String?
+  executedAt DateTime @default(now())
+
+  webhook Webhook @relation(fields: [webhookId], references: [id])
+
+  @@index([webhookId])
+  @@index([executedAt])
+  @@map("webhook_executions")
+}
+
+// Phase 3: Content Tools
+enum ContentToolType {
+  BLOG_WRITER
+  FACEBOOK_VIDEO_AD
+  FACEBOOK_IMAGE_AD
+  GOOGLE_SEARCH_AD
+  SEO_KEYWORD_RESEARCH
+}
+
+model ContentTool {
+  id          String          @id @default(uuid())
+  type        ContentToolType @unique
+  name        String
+  description String?
+  prompt      String          // The AI prompt template
+  webhookId   String?         // Optional webhook for this tool
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  generatedContent GeneratedContent[]
+
+  @@map("content_tools")
+}
+
+model GeneratedContent {
+  id         String          @id @default(uuid())
+  toolId     String
+  clientId   String
+  prompt     String          // The actual prompt used (with dynamic fields)
+  content    String          // The generated content
+  metadata   Json?           // Additional data like tokens used, model, etc.
+  createdBy  String
+  createdAt  DateTime        @default(now())
+
+  tool   ContentTool @relation(fields: [toolId], references: [id])
+  client Client      @relation(fields: [clientId], references: [id])
+
+  @@index([toolId])
+  @@index([clientId])
+  @@index([createdBy])
+  @@index([createdAt])
+  @@map("generated_content")
+}
+
+// Phase 3: API Keys
+model ApiKey {
+  id           String   @id @default(uuid())
+  service      String   // 'anthropic', 'openai', etc.
+  encryptedKey String   // Encrypted API key
+  lastFour     String   // Last 4 characters for display
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([service])
+  @@map("api_keys")
 }

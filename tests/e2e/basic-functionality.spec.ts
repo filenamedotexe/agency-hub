@@ -44,7 +44,8 @@ test.describe("Basic Functionality Tests", () => {
     await expect(page.locator('input[placeholder="Search"]')).toBeVisible();
 
     // Check for at least one client in the table
-    await expect(page.locator("table tbody tr")).toHaveCount({ min: 1 });
+    const rows = await page.locator("table tbody tr").count();
+    expect(rows).toBeGreaterThanOrEqual(1);
   });
 
   test("Can access signup page", async ({ page }) => {

@@ -41,29 +41,6 @@ export function FileUpload({
     }
   }, []);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragActive(false);
-
-      if (disabled) return;
-
-      const files = Array.from(e.dataTransfer.files);
-      handleFiles(files);
-    },
-    [disabled, handleFiles]
-  );
-
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (disabled) return;
-      const files = Array.from(e.target.files || []);
-      handleFiles(files);
-    },
-    [disabled, handleFiles]
-  );
-
   const handleFiles = useCallback(
     (files: File[]) => {
       setErrors([]);
@@ -86,6 +63,29 @@ export function FileUpload({
       onFilesSelected(valid);
     },
     [maxFiles, onFilesSelected]
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
+
+      if (disabled) return;
+
+      const files = Array.from(e.dataTransfer.files);
+      handleFiles(files);
+    },
+    [disabled, handleFiles]
+  );
+
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled) return;
+      const files = Array.from(e.target.files || []);
+      handleFiles(files);
+    },
+    [disabled, handleFiles]
   );
 
   const removeFile = useCallback(

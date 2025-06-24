@@ -2,7 +2,7 @@ import { test } from "@playwright/test";
 
 test("check console errors on clients page", async ({ page }) => {
   // Capture all console messages
-  const consoleMessages = [];
+  const consoleMessages: Array<{ type: string; text: string }> = [];
   page.on("console", (msg) => {
     consoleMessages.push({
       type: msg.type(),

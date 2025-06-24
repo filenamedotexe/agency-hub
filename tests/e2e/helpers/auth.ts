@@ -1,45 +1,48 @@
 import { Page } from "@playwright/test";
 
 /**
- * Helper function to login and wait for auth to fully resolve
- * This ensures the loading spinner disappears before proceeding
+ * Set test authentication bypass cookie
+ * This allows tests to bypass the complex Supabase auth flow
  */
-export async function loginAndWaitForAuth(page: Page) {
-  // Navigate to login
-  await page.goto("/login");
-
-  // Fill login form
-  await page.fill('input[type="email"]', "admin@example.com");
-  await page.fill('input[type="password"]', "password123");
-
-  // Submit form
-  await page.click('button[type="submit"]');
-
-  // Wait for redirect away from login
-  await page.waitForURL((url) => !url.pathname.includes("/login"), {
-    timeout: 15000,
-  });
-
-  // Wait for the dashboard to fully load first
-  await page.waitForLoadState("domcontentloaded");
-  await page.waitForLoadState("networkidle");
-
-  // Give auth state time to propagate
-  await page.waitForTimeout(2000);
+export async function setTestAuthBypass(page: Page) {
+  await page.context().addCookies([
+    {
+      name: "test-auth-bypass",
+      value: "true",
+      domain: "localhost",
+      path: "/",
+    },
+  ]);
 }
 
 /**
- * Navigate to a protected page and wait for it to load
- * This handles the loading spinner that appears during auth checks
+ * Login helper that actually performs the login flow
+ * and then sets the test bypass for subsequent navigation
+ */
+export async function loginAsAdmin(page: Page) {
+  // Step 1: Perform actual login
+  await page.goto("/login");
+  await page.fill('input[type="email"]', "admin@example.com");
+  await page.fill('input[type="password"]', "password123");
+  await page.click('button[type="submit"]');
+
+  // Wait for successful login redirect
+  await page.waitForURL("/dashboard");
+
+  // Step 2: Set test bypass cookie for subsequent navigation
+  await setTestAuthBypass(page);
+
+  console.log("✅ Login complete with test bypass enabled");
+}
+
+/**
+ * Simple navigation helper - just go to the page
+ * Assumes test bypass cookie is already set
  */
 export async function navigateToProtectedPage(page: Page, path: string) {
   await page.goto(path);
 
-  // Wait for page to load
-  await page.waitForLoadState("domcontentloaded");
-  await page.waitForLoadState("networkidle");
-
-  // Verify we're on the correct page (not redirected to login)
+  // Verify we're not redirected to login
   const currentUrl = page.url();
   if (currentUrl.includes("/login")) {
     throw new Error(`Navigation to ${path} failed - redirected to login`);

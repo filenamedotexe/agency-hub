@@ -78,28 +78,28 @@ export default function EditServiceTemplatePage({
   });
 
   useEffect(() => {
+    const fetchTemplate = async () => {
+      try {
+        const response = await fetch(`/api/service-templates/${params.id}`);
+        if (!response.ok) throw new Error("Failed to fetch template");
+
+        const template = await response.json();
+        form.reset({
+          name: template.name,
+          type: template.type,
+          price: template.price?.toString() || "",
+          defaultTasks: template.defaultTasks,
+        });
+      } catch (error) {
+        toast.error("Failed to load template");
+        router.push("/services");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchTemplate();
-  }, [params.id]);
-
-  const fetchTemplate = async () => {
-    try {
-      const response = await fetch(`/api/service-templates/${params.id}`);
-      if (!response.ok) throw new Error("Failed to fetch template");
-
-      const template = await response.json();
-      form.reset({
-        name: template.name,
-        type: template.type,
-        price: template.price?.toString() || "",
-        defaultTasks: template.defaultTasks,
-      });
-    } catch (error) {
-      toast.error("Failed to load template");
-      router.push("/services");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [params.id, form, router]);
 
   const onSubmit = async (data: FormValues) => {
     setSubmitting(true);

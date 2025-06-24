@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { FileUpload } from "@/components/ui/file-upload";
 import { AttachmentList } from "@/components/ui/attachment-list";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Database } from "@/types/database";
 
 interface AttachmentManagerProps {
   entityType: "service" | "task" | "client" | "form";
@@ -29,7 +27,6 @@ export function AttachmentManager({
 }: AttachmentManagerProps) {
   const [attachments, setAttachments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
 
   const { uploadFile, uploadMultipleFiles, isUploading, uploadProgress } =
     useFileUpload({
@@ -44,14 +41,18 @@ export function AttachmentManager({
   useEffect(() => {
     async function fetchAttachments() {
       try {
-        const { data, error } = await supabase
-          .from("attachments")
-          .select("*")
-          .eq("entity_type", entityType)
-          .eq("entity_id", entityId)
-          .order("created_at", { ascending: false });
+        const params = new URLSearchParams({
+          entityType,
+          entityId,
+        });
 
-        if (error) throw error;
+        const response = await fetch(`/api/attachments?${params}`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch attachments");
+        }
+
+        const data = await response.json();
         setAttachments(data || []);
       } catch (error) {
         console.error("Failed to fetch attachments:", error);
@@ -61,7 +62,7 @@ export function AttachmentManager({
     }
 
     fetchAttachments();
-  }, [entityType, entityId, supabase]);
+  }, [entityType, entityId]);
 
   const handleFilesSelected = async (files: File[]) => {
     if (multiple) {

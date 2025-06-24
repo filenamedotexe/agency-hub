@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { auth } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { createAttachmentSchema } from "@/lib/validations/file";
 import { z } from "zod";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await auth();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,10 +47,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await auth();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

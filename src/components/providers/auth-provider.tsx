@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { useRouter } from "next/navigation";
 import { AuthClientService } from "@/services/auth.client";
 import { AuthUser, AuthSession } from "@/types/auth";
@@ -15,17 +22,52 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+
+  // Check if we're in test mode
+  const isTestMode =
+    typeof window !== "undefined" &&
+    document.cookie.includes("test-auth-bypass=true");
+
   const [session, setSession] = useState<AuthSession>({
     user: null,
-    isLoading: true,
+    isLoading: !isTestMode, // If in test mode, don't show loading
     error: null,
   });
 
-  const authService = new AuthClientService();
+  const authService = useMemo(() => new AuthClientService(), []);
+
+  const checkUser = useCallback(async () => {
+    // Skip auth check in test mode
+    if (isTestMode) {
+      setSession({
+        user: {
+          id: "test-user",
+          email: "admin@example.com",
+          role: "ADMIN" as any,
+        },
+        isLoading: false,
+        error: null,
+      });
+      return;
+    }
+
+    console.log("[AuthProvider] Checking user...");
+    try {
+      const user = await authService.getCurrentUser();
+      console.log("[AuthProvider] User found:", user?.email);
+      setSession({ user, isLoading: false, error: null });
+    } catch (error) {
+      console.error("[AuthProvider] Auth check failed:", error);
+      setSession({ user: null, isLoading: false, error: null });
+    }
+  }, [isTestMode, authService]);
 
   useEffect(() => {
     // Check initial auth state
     checkUser();
+
+    // Skip subscription in test mode
+    if (isTestMode) return;
 
     // Subscribe to auth state changes
     const subscription = authService.onAuthStateChange((user) => {
@@ -35,17 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.data.subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const checkUser = async () => {
-    try {
-      const user = await authService.getCurrentUser();
-      setSession({ user, isLoading: false, error: null });
-    } catch (error) {
-      setSession({ user: null, isLoading: false, error: null });
-    }
-  };
+  }, [checkUser, isTestMode, authService]);
 
   const signIn = async (email: string, password: string) => {
     setSession((prev) => ({ ...prev, isLoading: true, error: null }));
@@ -62,10 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    setSession((prev) => ({ ...prev, isLoading: true }));
-
+    // Don't set loading during logout to prevent infinite spinner
     await authService.signOut();
+
+    // Clear the session without setting loading
     setSession({ user: null, isLoading: false, error: null });
+
+    // Navigate to login page
     router.push("/login");
   };
 

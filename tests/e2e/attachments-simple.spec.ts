@@ -31,8 +31,8 @@ test("basic attachment upload", async ({ page }) => {
 
   // Check if services are loaded
   const pageContent = await page.textContent("body");
-  console.log("Page has services:", pageContent.includes("Services"));
-  console.log("Page has loading:", pageContent.includes("Loading"));
+  console.log("Page has services:", pageContent?.includes("Services") || false);
+  console.log("Page has loading:", pageContent?.includes("Loading") || false);
 
   // Wait for services to potentially load
   await page.waitForTimeout(2000);

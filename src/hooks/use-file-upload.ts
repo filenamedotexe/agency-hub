@@ -66,14 +66,7 @@ export function useFileUpload({
         // Upload file to Supabase Storage
         const { error: uploadError } = await supabase.storage
           .from(STORAGE_BUCKETS.ATTACHMENTS)
-          .upload(filePath, file, {
-            onUploadProgress: (progress) => {
-              const percentage = Math.round(
-                (progress.loaded / progress.total) * 100
-              );
-              setUploadProgress({ progress: percentage, fileName: file.name });
-            },
-          });
+          .upload(filePath, file);
 
         if (uploadError) {
           throw uploadError;

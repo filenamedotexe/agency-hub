@@ -6,20 +6,25 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
-    // Get IP address for rate limiting
-    const ip = request.headers.get("x-forwarded-for") || "anonymous";
-    const { success, remaining } = await authRateLimiter.check(ip, 10); // 10 attempts per minute
+    // Skip rate limiting in development/test environments
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Skipping rate limiting in development/test environment");
+    } else {
+      // Get IP address for rate limiting
+      const ip = request.headers.get("x-forwarded-for") || "anonymous";
+      const { success, remaining } = await authRateLimiter.check(ip, 10); // 10 attempts per minute
 
-    if (!success) {
-      return NextResponse.json(
-        { error: "Too many login attempts. Please try again later." },
-        {
-          status: 429,
-          headers: {
-            "X-RateLimit-Remaining": remaining.toString(),
-          },
-        }
-      );
+      if (!success) {
+        return NextResponse.json(
+          { error: "Too many login attempts. Please try again later." },
+          {
+            status: 429,
+            headers: {
+              "X-RateLimit-Remaining": remaining.toString(),
+            },
+          }
+        );
+      }
     }
 
     const body = await request.json();
