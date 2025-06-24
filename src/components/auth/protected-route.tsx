@@ -19,17 +19,10 @@ export function ProtectedRoute({
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  // Test environment bypass - check for test cookie
-  const isTestMode =
-    typeof window !== "undefined" &&
-    document.cookie.includes("test-auth-bypass=true");
+  // SECURITY FIX: Removed test bypass - middleware should handle all auth
+  // Test bypass was creating security holes in role-based access control
 
   useEffect(() => {
-    if (isTestMode) {
-      // In test mode, skip all auth checks
-      return;
-    }
-
     if (!isLoading && !user) {
       router.push(redirectTo);
     } else if (
@@ -45,12 +38,7 @@ export function ProtectedRoute({
         router.push("/dashboard");
       }
     }
-  }, [user, isLoading, allowedRoles, router, redirectTo, isTestMode]);
-
-  // In test mode, always show content
-  if (isTestMode) {
-    return <>{children}</>;
-  }
+  }, [user, isLoading, allowedRoles, router, redirectTo]);
 
   if (isLoading) {
     return (

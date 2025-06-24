@@ -23,34 +23,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  // Check if we're in test mode
-  const isTestMode =
-    typeof window !== "undefined" &&
-    document.cookie.includes("test-auth-bypass=true");
-
   const [session, setSession] = useState<AuthSession>({
     user: null,
-    isLoading: !isTestMode, // If in test mode, don't show loading
+    isLoading: true,
     error: null,
   });
 
   const authService = useMemo(() => new AuthClientService(), []);
 
   const checkUser = useCallback(async () => {
-    // Skip auth check in test mode
-    if (isTestMode) {
-      setSession({
-        user: {
-          id: "test-user",
-          email: "admin@example.com",
-          role: "ADMIN" as any,
-        },
-        isLoading: false,
-        error: null,
-      });
-      return;
-    }
-
     console.log("[AuthProvider] Checking user...");
     try {
       const user = await authService.getCurrentUser();
@@ -60,14 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("[AuthProvider] Auth check failed:", error);
       setSession({ user: null, isLoading: false, error: null });
     }
-  }, [isTestMode, authService]);
+  }, [authService]);
 
   useEffect(() => {
     // Check initial auth state
     checkUser();
-
-    // Skip subscription in test mode
-    if (isTestMode) return;
 
     // Subscribe to auth state changes
     const subscription = authService.onAuthStateChange((user) => {
@@ -77,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.data.subscription.unsubscribe();
     };
-  }, [checkUser, isTestMode, authService]);
+  }, [checkUser, authService]);
 
   const signIn = async (email: string, password: string) => {
     setSession((prev) => ({ ...prev, isLoading: true, error: null }));

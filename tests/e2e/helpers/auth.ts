@@ -1,26 +1,9 @@
 import { Page } from "@playwright/test";
 
 /**
- * Set test authentication bypass cookie
- * This allows tests to bypass the complex Supabase auth flow
- */
-export async function setTestAuthBypass(page: Page) {
-  await page.context().addCookies([
-    {
-      name: "test-auth-bypass",
-      value: "true",
-      domain: "localhost",
-      path: "/",
-    },
-  ]);
-}
-
-/**
- * Login helper that actually performs the login flow
- * and then sets the test bypass for subsequent navigation
+ * Login as admin user with real authentication
  */
 export async function loginAsAdmin(page: Page) {
-  // Step 1: Perform actual login
   await page.goto("/login");
   await page.fill('input[type="email"]', "admin@example.com");
   await page.fill('input[type="password"]', "password123");
@@ -29,10 +12,26 @@ export async function loginAsAdmin(page: Page) {
   // Wait for successful login redirect
   await page.waitForURL("/dashboard");
 
-  // Step 2: Set test bypass cookie for subsequent navigation
-  await setTestAuthBypass(page);
+  console.log("✅ Admin login complete with real authentication");
+}
 
-  console.log("✅ Login complete with test bypass enabled");
+/**
+ * Login as any user with real authentication
+ */
+export async function loginAsUser(
+  page: Page,
+  email: string,
+  password: string = "password123"
+) {
+  await page.goto("/login");
+  await page.fill('input[type="email"]', email);
+  await page.fill('input[type="password"]', password);
+  await page.click('button[type="submit"]');
+
+  // Wait for successful login redirect
+  await page.waitForURL("/dashboard");
+
+  console.log(`✅ Login complete for ${email} with real authentication`);
 }
 
 /**

@@ -291,6 +291,47 @@ interface DudaWebhook {
 - **API Security**: Rate limiting, CORS, webhook signatures
 - **Data Protection**: Encrypted API keys, secure file storage
 
+#### Critical Middleware Implementation Notes
+
+**IMPORTANT**: Role-based access control in Next.js requires careful implementation to avoid security vulnerabilities:
+
+1. **Middleware Authentication Method**: Always use `supabase.auth.getSession()` in middleware, NOT `getUser()`. The `getUser()` method makes API calls that don't work correctly in middleware context, while `getSession()` reads from cookies directly.
+
+2. **Route Matching Precision**: Be extremely careful with route patterns in middleware. Using `"/"` in publicRoutes will match ALL routes starting with `/`, making every route public. Use exact matching for root paths.
+
+3. **Client-Side Navigation Limitations**: Next.js client-side navigation (router.push, Link components) can bypass middleware execution - this is documented Next.js behavior. Middleware primarily protects direct URL access and server-side navigation.
+
+4. **No Test Bypasses in Production**: Never implement authentication bypass systems (like test-auth-bypass cookies) that can be exploited. Use real authentication in all environments.
+
+5. **Dual-Layer Protection**: Implement both middleware-level and component-level route protection, but understand that middleware is the primary security layer and components are supplementary.
+
+**Example Secure Middleware Pattern**:
+
+```typescript
+// Use getSession() not getUser()
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+// Exact route matching to prevent wildcards
+const publicRoutes = ["/login", "/signup"];
+const isPublicRoute = publicRoutes.includes(pathname);
+
+// Handle root path separately
+if (pathname === "/") {
+  // Root path logic
+}
+
+// Fetch user role from database for authorization
+if (session?.user) {
+  const { data: user } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", session.user.id)
+    .single();
+}
+```
+
 ## Key Conventions
 
 ### Code Style
