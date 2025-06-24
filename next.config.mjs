@@ -8,6 +8,17 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    esmExternals: false,
+    webpackBuildWorker: true,
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
   },
 };
 
