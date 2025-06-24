@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActivityLogs } from "@/services/activity.service";
 import { z } from "zod";
 
-// Force dynamic rendering
+// Force dynamic rendering - this prevents build-time execution
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const querySchema = z.object({
   clientId: z.string().optional(),
