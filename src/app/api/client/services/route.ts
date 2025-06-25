@@ -1,27 +1,38 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const session = await getServerSession();
-    if (!session) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get services assigned to this client
+    // Get services for this client
     const services = await prisma.service.findMany({
       where: {
-        clientId: session.user.id,
+        clientId: user.id,
       },
       include: {
-        template: true,
+        template: {
+          select: {
+            name: true,
+            type: true,
+            price: true,
+          },
+        },
         tasks: {
           where: {
-            clientVisible: true, // Only include tasks that are visible to clients
+            clientVisible: true,
           },
           orderBy: {
-            order: "asc",
+            createdAt: "desc",
           },
         },
         _count: {

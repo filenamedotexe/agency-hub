@@ -37,6 +37,10 @@ interface ClientForm {
   description?: string;
   schema: any[];
   settings?: any;
+  serviceId?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
   isActive: boolean;
   responses: FormResponse[];
   _count: {

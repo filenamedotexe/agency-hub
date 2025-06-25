@@ -1,38 +1,35 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const session = await getServerSession();
-    if (!session) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get forms assigned to this client
+    // Get all forms - clients can see all published forms
     const forms = await prisma.form.findMany({
-      where: {
-        assignedClients: {
-          some: {
-            id: session.user.id,
-          },
-        },
-        status: "PUBLISHED",
-      },
       include: {
         responses: {
           where: {
-            userId: session.user.id,
+            clientId: user.id,
           },
           orderBy: {
-            createdAt: "desc",
+            submittedAt: "desc",
           },
         },
         _count: {
           select: {
             responses: {
               where: {
-                userId: session.user.id,
+                clientId: user.id,
               },
             },
           },

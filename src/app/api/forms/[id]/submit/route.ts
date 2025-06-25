@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "@/lib/supabase/server";
-
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 const submitFormSchema = z.object({
-  data: z.record(z.any()),
+  responseData: z.record(z.any()),
 });
 
 // POST /api/forms/[id]/submit - Submit a form response
@@ -16,61 +16,36 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession();
-    if (!session) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const validatedData = submitFormSchema.parse(body);
+    const { responseData } = submitFormSchema.parse(body);
 
-    // Get the form to validate against schema
+    // Check if form exists
     const form = await prisma.form.findUnique({
-      where: { id: params.id },
+      where: {
+        id: params.id,
+      },
     });
 
     if (!form) {
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
-    // Validate form data against schema
-    const formSchema = form.schema as any[];
-    const responseData: Record<string, any> = {};
-
-    for (const field of formSchema) {
-      const fieldValue = validatedData.data[field.name];
-
-      // Check required fields
-      if (field.required && !fieldValue) {
-        return NextResponse.json(
-          { error: `Field '${field.label}' is required` },
-          { status: 400 }
-        );
-      }
-
-      // Store field data with metadata
-      if (
-        fieldValue !== undefined &&
-        fieldValue !== null &&
-        fieldValue !== ""
-      ) {
-        responseData[field.name] = {
-          value: fieldValue,
-          type: field.type,
-          label: field.label,
-        };
-      }
-    }
-
     // Create form response
-    const formResponse = await prisma.formResponse.create({
+    const response = await prisma.formResponse.create({
       data: {
         formId: params.id,
-        userId: session.user.id,
-        data: responseData,
-      },
-      include: {
-        form: true,
+        clientId: user.id,
+        responseData,
       },
     });
 
@@ -81,30 +56,24 @@ export async function POST(
       executeWebhook(settings.webhookUrl, {
         formId: form.id,
         formName: form.name,
-        userId: session.user.id,
-        userEmail: session.user.email,
+        userId: user.id,
+        userEmail: user.email,
         responseData,
-        submittedAt: formResponse.createdAt,
+        submittedAt: response.submittedAt,
       }).catch(console.error);
     }
 
     // Return response with redirect URL if configured
     return NextResponse.json({
       success: true,
-      responseId: formResponse.id,
+      responseId: response.id,
       redirectUrl: settings?.redirectUrl,
       message: settings?.successMessage || "Form submitted successfully!",
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid submission data", details: error.errors },
-        { status: 400 }
-      );
-    }
-    console.error("Error submitting form:", error);
+    console.error("[FORM_SUBMIT]", error);
     return NextResponse.json(
-      { error: "Failed to submit form" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
