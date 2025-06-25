@@ -54,7 +54,7 @@ export function ApiKeyManager() {
       const response = await fetch("/api/settings/api-keys");
       if (response.ok) {
         const data = await response.json();
-        setApiKeys(data);
+        setApiKeys(data.keys || []);
       }
     } catch (error) {
       console.error("Failed to fetch API keys:", error);

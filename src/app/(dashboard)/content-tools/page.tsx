@@ -42,8 +42,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { ContentTool } from "@/types/content-tools";
 import { ContentGenerator } from "@/components/content-tools/content-generator";
+import { useToast } from "@/hooks/use-toast";
 
 const toolIcons: Record<string, React.ElementType> = {
   BLOG_WRITER: FileText,
@@ -63,11 +65,14 @@ function ContentToolsPageOriginal() {
   const [showWebhookDialog, setShowWebhookDialog] = useState(false);
   const [webhookForm, setWebhookForm] = useState({
     name: "",
-    url: "",
+    productionUrl: "",
+    testingUrl: "",
     headers: "",
+    isProduction: true,
   });
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchTools();
@@ -78,7 +83,7 @@ function ContentToolsPageOriginal() {
     const timeoutId = setTimeout(() => {
       console.log("🧪 Timeout reached - forcing loading to false");
       setLoading(false);
-    }, 10000); // 10 second timeout
+    }, 5000); // 5 second timeout
 
     return () => clearTimeout(timeoutId);
   }, []);
@@ -134,9 +139,13 @@ function ContentToolsPageOriginal() {
       if (response.ok) {
         const data = await response.json();
         setWebhooks(data);
+      } else {
+        console.error("Failed to fetch webhooks:", response.status);
+        setWebhooks([]);
       }
     } catch (error) {
       console.error("Error fetching webhooks:", error);
+      setWebhooks([]);
     }
   };
 
@@ -162,8 +171,16 @@ function ContentToolsPageOriginal() {
   };
 
   const handleCreateWebhook = async () => {
-    if (!webhookForm.name || !webhookForm.url) {
-      alert("Name and URL are required");
+    const activeUrl = webhookForm.isProduction
+      ? webhookForm.productionUrl
+      : webhookForm.testingUrl;
+
+    if (!webhookForm.name || !activeUrl) {
+      toast({
+        title: "Error",
+        description: "Name and active URL are required",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -177,21 +194,50 @@ function ContentToolsPageOriginal() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: webhookForm.name,
-          url: webhookForm.url,
+          url: activeUrl,
+          productionUrl: webhookForm.productionUrl,
+          testingUrl: webhookForm.testingUrl,
+          isProduction: webhookForm.isProduction,
           type: "CONTENT_TOOL",
           headers,
           isActive: true,
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to create webhook");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(
+          "Main webhook creation failed:",
+          response.status,
+          errorData
+        );
+        throw new Error(errorData.error || "Failed to create webhook");
+      }
 
+      const newWebhook = await response.json();
+      console.log("Main webhook created successfully:", newWebhook);
+
+      // Refresh webhooks list without reloading the page
       await fetchWebhooks();
       setShowWebhookDialog(false);
-      setWebhookForm({ name: "", url: "", headers: "" });
+      setWebhookForm({
+        name: "",
+        productionUrl: "",
+        testingUrl: "",
+        headers: "",
+        isProduction: true,
+      });
+      toast({
+        title: "Success",
+        description: `Webhook created successfully in ${webhookForm.isProduction ? "Production" : "Testing"} mode!`,
+      });
     } catch (error) {
       console.error("Error creating webhook:", error);
-      alert("Failed to create webhook");
+      toast({
+        title: "Error",
+        description: "Failed to create webhook",
+        variant: "destructive",
+      });
     }
   };
 
@@ -288,15 +334,66 @@ function ContentToolsPageOriginal() {
                 />
               </div>
               <div>
-                <Label htmlFor="webhook-url">Webhook URL</Label>
-                <Input
-                  id="webhook-url"
-                  value={webhookForm.url}
-                  onChange={(e) =>
-                    setWebhookForm((prev) => ({ ...prev, url: e.target.value }))
-                  }
-                  placeholder="https://your-webhook.com/endpoint"
-                />
+                <div className="mb-2 flex items-center justify-between">
+                  <Label>Environment</Label>
+                  <div className="flex items-center space-x-2">
+                    <Badge
+                      variant={
+                        webhookForm.isProduction ? "default" : "secondary"
+                      }
+                    >
+                      {webhookForm.isProduction ? "Production" : "Testing"}
+                    </Badge>
+                    <Switch
+                      checked={webhookForm.isProduction}
+                      onCheckedChange={(checked) =>
+                        setWebhookForm((prev) => ({
+                          ...prev,
+                          isProduction: checked,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="webhook-production-url">
+                      Production URL
+                    </Label>
+                    <Input
+                      id="webhook-production-url"
+                      value={webhookForm.productionUrl}
+                      onChange={(e) =>
+                        setWebhookForm((prev) => ({
+                          ...prev,
+                          productionUrl: e.target.value,
+                        }))
+                      }
+                      placeholder="https://your-production-webhook.com/endpoint"
+                      className={
+                        webhookForm.isProduction ? "border-green-500" : ""
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="webhook-testing-url">Testing URL</Label>
+                    <Input
+                      id="webhook-testing-url"
+                      value={webhookForm.testingUrl}
+                      onChange={(e) =>
+                        setWebhookForm((prev) => ({
+                          ...prev,
+                          testingUrl: e.target.value,
+                        }))
+                      }
+                      placeholder="https://your-testing-webhook.com/endpoint"
+                      className={
+                        !webhookForm.isProduction ? "border-blue-500" : ""
+                      }
+                    />
+                  </div>
+                </div>
               </div>
               <div>
                 <Label htmlFor="webhook-headers">Custom Headers (JSON)</Label>
@@ -418,14 +515,24 @@ function ContentToolsPageOriginal() {
                   className="flex items-center justify-between rounded-lg border p-3"
                 >
                   <div>
-                    <p className="font-medium">{webhook.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{webhook.name}</p>
+                      <Badge
+                        variant={webhook.isProduction ? "default" : "outline"}
+                        className="text-xs"
+                      >
+                        {webhook.isProduction ? "Production" : "Testing"}
+                      </Badge>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {webhook.url}
                     </p>
                   </div>
-                  <Badge variant={webhook.isActive ? "default" : "secondary"}>
-                    {webhook.isActive ? "Active" : "Inactive"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={webhook.isActive ? "default" : "secondary"}>
+                      {webhook.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
                 </div>
               ))}
             </div>
@@ -469,6 +576,8 @@ function ContentToolsPageOriginal() {
               webhooks={webhooks}
               onUpdate={handleUpdateTool}
               onClose={() => setSettingsTool(null)}
+              toast={toast}
+              fetchWebhooks={fetchWebhooks}
             />
           )}
         </DialogContent>
@@ -483,6 +592,8 @@ function ContentToolSettings({
   webhooks,
   onUpdate,
   onClose,
+  toast,
+  fetchWebhooks,
 }: {
   tool: ContentTool;
   webhooks: any[];
@@ -491,23 +602,110 @@ function ContentToolSettings({
     updates: { webhookId?: string | null }
   ) => Promise<void>;
   onClose: () => void;
+  toast: any;
+  fetchWebhooks: () => Promise<void>;
 }) {
   const [selectedWebhookId, setSelectedWebhookId] = useState(
-    tool.webhookId || ""
+    tool.webhookId || "none"
   );
   const [saving, setSaving] = useState(false);
+  const [showNewWebhookForm, setShowNewWebhookForm] = useState(false);
+  const [newWebhookForm, setNewWebhookForm] = useState({
+    name: "",
+    productionUrl: "",
+    testingUrl: "",
+    headers: "",
+    isProduction: true,
+  });
+  const [creatingWebhook, setCreatingWebhook] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       await onUpdate(tool.id, {
-        webhookId: selectedWebhookId || null,
+        webhookId: selectedWebhookId === "none" ? null : selectedWebhookId,
       });
       onClose();
     } catch (error) {
       console.error("Error saving settings:", error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCreateNewWebhook = async () => {
+    const activeUrl = newWebhookForm.isProduction
+      ? newWebhookForm.productionUrl
+      : newWebhookForm.testingUrl;
+
+    if (!newWebhookForm.name || !activeUrl) {
+      toast({
+        title: "Error",
+        description: "Name and active URL are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreatingWebhook(true);
+    try {
+      const headers = newWebhookForm.headers
+        ? JSON.parse(newWebhookForm.headers)
+        : {};
+
+      const response = await fetch("/api/webhooks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newWebhookForm.name,
+          url: activeUrl,
+          productionUrl: newWebhookForm.productionUrl,
+          testingUrl: newWebhookForm.testingUrl,
+          isProduction: newWebhookForm.isProduction,
+          type: "CONTENT_TOOL",
+          headers,
+          isActive: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Webhook creation failed:", response.status, errorData);
+        throw new Error(errorData.error || "Failed to create webhook");
+      }
+
+      const newWebhook = await response.json();
+      console.log("Webhook created successfully:", newWebhook);
+
+      // Update the webhooks list without reloading the page
+      await fetchWebhooks();
+
+      // Update the selected webhook to the newly created one
+      setSelectedWebhookId(newWebhook.id);
+
+      // Reset the form
+      setShowNewWebhookForm(false);
+      setNewWebhookForm({
+        name: "",
+        productionUrl: "",
+        testingUrl: "",
+        headers: "",
+        isProduction: true,
+      });
+
+      toast({
+        title: "Success",
+        description: `Webhook created successfully in ${newWebhookForm.isProduction ? "Production" : "Testing"} mode!`,
+      });
+    } catch (error) {
+      console.error("Error creating webhook:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create webhook",
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingWebhook(false);
     }
   };
 
@@ -520,7 +718,7 @@ function ContentToolSettings({
             <SelectValue placeholder="Choose a webhook (optional)" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">No webhook</SelectItem>
+            <SelectItem value="none">No webhook</SelectItem>
             {webhooks.map((webhook) => (
               <SelectItem key={webhook.id} value={webhook.id}>
                 {webhook.name} - {webhook.url}
@@ -528,11 +726,159 @@ function ContentToolSettings({
             ))}
           </SelectContent>
         </Select>
-        <p className="mt-2 text-sm text-muted-foreground">
-          When content is generated, the form data will be sent to this webhook
-          endpoint for processing by n8n, which will return the generated
-          content.
-        </p>
+
+        {webhooks.length === 0 && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            No webhooks available. Create one below to get started.
+          </p>
+        )}
+
+        {webhooks.length > 0 && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            When content is generated, the form data will be sent to this
+            webhook endpoint for processing by n8n, which will return the
+            generated content.
+          </p>
+        )}
+
+        <div className="mt-3">
+          {!showNewWebhookForm ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowNewWebhookForm(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create New Webhook
+            </Button>
+          ) : (
+            <div className="space-y-3 rounded-lg border p-4">
+              <h4 className="font-medium">Create New Webhook</h4>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="new-webhook-name">Webhook Name</Label>
+                  <Input
+                    id="new-webhook-name"
+                    value={newWebhookForm.name}
+                    onChange={(e) =>
+                      setNewWebhookForm((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    placeholder="My Content Webhook"
+                  />
+                </div>
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <Label>Environment</Label>
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant={
+                          newWebhookForm.isProduction ? "default" : "secondary"
+                        }
+                      >
+                        {newWebhookForm.isProduction ? "Production" : "Testing"}
+                      </Badge>
+                      <Switch
+                        checked={newWebhookForm.isProduction}
+                        onCheckedChange={(checked) =>
+                          setNewWebhookForm((prev) => ({
+                            ...prev,
+                            isProduction: checked,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="new-webhook-production-url">
+                        Production URL
+                      </Label>
+                      <Input
+                        id="new-webhook-production-url"
+                        value={newWebhookForm.productionUrl}
+                        onChange={(e) =>
+                          setNewWebhookForm((prev) => ({
+                            ...prev,
+                            productionUrl: e.target.value,
+                          }))
+                        }
+                        placeholder="https://your-production-webhook.com/endpoint"
+                        className={
+                          newWebhookForm.isProduction ? "border-green-500" : ""
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="new-webhook-testing-url">
+                        Testing URL
+                      </Label>
+                      <Input
+                        id="new-webhook-testing-url"
+                        value={newWebhookForm.testingUrl}
+                        onChange={(e) =>
+                          setNewWebhookForm((prev) => ({
+                            ...prev,
+                            testingUrl: e.target.value,
+                          }))
+                        }
+                        placeholder="https://your-testing-webhook.com/endpoint"
+                        className={
+                          !newWebhookForm.isProduction ? "border-blue-500" : ""
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="new-webhook-headers">
+                    Custom Headers (JSON)
+                  </Label>
+                  <Textarea
+                    id="new-webhook-headers"
+                    value={newWebhookForm.headers}
+                    onChange={(e) =>
+                      setNewWebhookForm((prev) => ({
+                        ...prev,
+                        headers: e.target.value,
+                      }))
+                    }
+                    placeholder='{"Authorization": "Bearer token"}'
+                    rows={3}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowNewWebhookForm(false);
+                      setNewWebhookForm({
+                        name: "",
+                        productionUrl: "",
+                        testingUrl: "",
+                        headers: "",
+                        isProduction: true,
+                      });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleCreateNewWebhook}
+                    disabled={creatingWebhook}
+                  >
+                    {creatingWebhook ? "Creating..." : "Create Webhook"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex justify-end space-x-2 pt-4">

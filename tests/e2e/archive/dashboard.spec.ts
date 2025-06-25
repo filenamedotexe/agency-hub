@@ -23,12 +23,10 @@ test.describe("Dashboard", () => {
     ).toBeVisible();
 
     // Check that stat cards are present (we look for the card structure, not specific values)
-    const statCards = page
-      .locator('[class*="card"]')
-      .filter({
-        hasText:
-          /Total Clients|Active Services|Pending Requests|Completed This Week/,
-      });
+    const statCards = page.locator('[class*="card"]').filter({
+      hasText:
+        /Total Clients|Active Services|Pending Requests|Completed This Week/,
+    });
     await expect(statCards).toHaveCount(4);
 
     // Verify charts are rendered

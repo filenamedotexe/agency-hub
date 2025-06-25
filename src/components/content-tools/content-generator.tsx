@@ -276,7 +276,7 @@ export function ContentGenerator({
 
   const handleGenerate = async () => {
     if (!selectedClientId) {
-      alert("Please select a client");
+      toast.error("Please select a client");
       return;
     }
 
@@ -289,10 +289,18 @@ export function ContentGenerator({
     );
 
     if (missingFields.length > 0) {
-      alert(
+      toast.error(
         `Please fill in required fields: ${missingFields.map((f) => f.label).join(", ")}`
       );
       return;
+    }
+
+    // Check if webhook is configured
+    if (!tool.webhookId) {
+      toast.warning(
+        "No webhook configured for this tool. Content will be generated but won't be sent to any external system. Configure a webhook in the tool settings to enable external integrations.",
+        { duration: 5000 }
+      );
     }
 
     setIsGenerating(true);
@@ -313,11 +321,19 @@ export function ContentGenerator({
 
       const data = await response.json();
       setGeneratedContent(data.content);
+
+      // Show success message with webhook info
+      if (tool.webhookId) {
+        toast.success("Content generated and sent to webhook successfully!");
+      } else {
+        toast.success("Content generated successfully!");
+      }
+
       // Refresh the previous content list
       fetchPreviousContent();
     } catch (error) {
       console.error("Error generating content:", error);
-      alert("Failed to generate content");
+      toast.error("Failed to generate content. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -325,7 +341,7 @@ export function ContentGenerator({
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedContent);
-    alert("Content copied to clipboard!");
+    toast.success("Content copied to clipboard!");
   };
 
   const downloadContent = () => {
@@ -362,10 +378,10 @@ export function ContentGenerator({
       setToolFields(editingTool.fields || []);
       setIsEditingFields(false);
       setEditingTool(null);
-      alert("Fields saved successfully!");
+      toast.success("Fields saved successfully!");
     } catch (error) {
       console.error("Error saving fields:", error);
-      alert("Failed to save fields");
+      toast.error("Failed to save fields");
     }
   };
 

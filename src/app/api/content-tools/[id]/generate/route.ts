@@ -179,16 +179,25 @@ export async function POST(
       });
 
       if (webhook && webhook.isActive) {
+        // Use the appropriate URL based on environment
+        const webhookUrl = webhook.isProduction
+          ? webhook.productionUrl || webhook.url
+          : webhook.testingUrl || webhook.url;
+
         // Fire and forget webhook
-        executeWebhook(webhook, {
-          toolId: tool.id,
-          toolName: tool.name,
-          clientId: client.id,
-          clientName: client.businessName || client.name,
-          content: generatedContent,
-          variables: allVariables,
-          generatedAt: savedContent.createdAt,
-        }).catch(console.error);
+        executeWebhook(
+          { ...webhook, url: webhookUrl },
+          {
+            toolId: tool.id,
+            toolName: tool.name,
+            clientId: client.id,
+            clientName: client.businessName || client.name,
+            content: generatedContent,
+            variables: allVariables,
+            generatedAt: savedContent.createdAt,
+            environment: webhook.isProduction ? "production" : "testing",
+          }
+        ).catch(console.error);
       }
     }
 

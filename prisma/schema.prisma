@@ -245,16 +245,19 @@ enum WebhookType {
 }
 
 model Webhook {
-  id          String      @id @default(uuid())
-  name        String
-  url         String
-  type        WebhookType
-  entityId    String?     // formId or contentToolId if applicable
-  headers     Json?       // Custom headers
-  isActive    Boolean     @default(true)
-  createdBy   String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id            String      @id @default(uuid())
+  name          String
+  url           String
+  productionUrl String?     // Production webhook URL
+  testingUrl    String?     // Testing webhook URL
+  isProduction  Boolean     @default(true) // Which environment is active
+  type          WebhookType
+  entityId      String?     // formId or contentToolId if applicable
+  headers       Json?       // Custom headers
+  isActive      Boolean     @default(true)
+  createdBy     String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   executions WebhookExecution[]
 

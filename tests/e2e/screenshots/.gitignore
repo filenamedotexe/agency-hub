@@ -1,0 +1,10 @@
+# Ignore all screenshots except baseline images
+*.png
+*.jpg
+*.jpeg
+
+# Keep baseline images for visual regression
+!baseline-*.png
+
+# Keep this file
+!.gitignore

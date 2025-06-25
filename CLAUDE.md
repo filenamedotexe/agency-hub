@@ -2,6 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Current Status (Updated January 2025)
+
+### ✅ DEPLOYMENT STATUS
+
+- **Vercel Production**: Successfully deployed and working
+  - Fixed Next.js 14 webpack issues with `esmExternals: false` and `webpackBuildWorker: true`
+  - Added `postinstall: "prisma generate"` script to resolve Prisma Client generation on Vercel
+  - Fixed API routes with `export const dynamic = "force-dynamic"` and `export const revalidate = 0`
+  - All 7 environment variables configured in Vercel production environment
+- **Localhost Development**: Fresh server running on port 3001
+  - Authentication system working (redirects to /login)
+  - All API routes properly configured for dynamic rendering
+
+### ✅ RECENT FIXES COMPLETED
+
+- **API Route Configuration**: All API routes now use `force-dynamic` to prevent build-time execution
+- **Environment Variables**: Complete setup for both local and production environments
+- **Prisma Integration**: Fixed client generation issues for Vercel deployment
+- **Authentication Flow**: Middleware and protected routes working correctly
+- **Content Tools**: Full AI-powered content generation with click-to-copy dynamic fields
+- **Settings API Keys Fix**: Fixed "apiKeys.map is not a function" error by correcting data extraction from API response (API returns `{keys: [...]}` but component expected direct array)
+- **Content Tools Select Fix**: Fixed Radix UI Select error "SelectItem must have a value prop that is not an empty string" by changing "No webhook" option from `value=""` to `value="none"` and updating related logic
+- **Content Tools Webhook Creation**: Enhanced Content Tool Settings dialog to allow webhook creation directly from within the settings, with inline form and better UX for when no webhooks exist
+- **Content Tools Webhook Integration**: Implemented full webhook functionality - content generation now calls configured webhooks and shows appropriate toast notifications (warning if no webhook, success if webhook called, error handling)
+- **Production/Testing Webhook URLs**: Enhanced webhook system with dual URL support - each webhook can have separate Production and Testing URLs with easy toggle switch, visual badges, and environment-aware execution
+
 ## Project Overview
 
 ### Overview
@@ -194,6 +220,11 @@ npm run db:studio       # Open Prisma Studio
 # Build
 npm run build           # Build for production
 npm run analyze         # Analyze bundle size
+
+# Deployment
+vercel --prod           # Deploy to Vercel production
+vercel env ls           # List environment variables
+vercel logs [URL]       # View deployment logs
 ```
 
 ## Architecture
