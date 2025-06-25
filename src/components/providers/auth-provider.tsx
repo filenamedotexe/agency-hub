@@ -72,26 +72,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    try {
-      // Call the auth service to sign out
-      const { error } = await authService.signOut();
+    console.log("[AuthProvider] Starting logout...");
 
-      if (error) {
-        console.error("Sign out error:", error);
-        // Still clear session and redirect even if server signout fails
-      }
+    // Clear session immediately to prevent UI issues
+    setSession({ user: null, isLoading: false, error: null });
 
-      // Clear the session
-      setSession({ user: null, isLoading: false, error: null });
+    // Call the auth service to sign out in the background
+    // Don't wait for it to complete to avoid blocking the UI
+    authService.signOut().catch((error) => {
+      console.error("[AuthProvider] Background logout error:", error);
+    });
 
-      // Navigate to login page
-      router.push("/login");
-    } catch (error) {
-      console.error("Sign out failed:", error);
-      // Force clear session and redirect on any error
-      setSession({ user: null, isLoading: false, error: null });
-      router.push("/login");
-    }
+    // Immediately redirect to login
+    router.push("/login");
+
+    console.log("[AuthProvider] Logout completed, redirected to login");
   };
 
   const refreshUser = async () => {

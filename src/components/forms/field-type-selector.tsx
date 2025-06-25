@@ -11,6 +11,7 @@ import {
   CheckSquare,
   Circle,
   Paperclip,
+  ListPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldType } from "@/types/forms";
@@ -34,6 +35,7 @@ const fieldTypes: {
   { type: "checkbox", label: "Checkbox", icon: CheckSquare },
   { type: "radio", label: "Radio", icon: Circle },
   { type: "file", label: "File Upload", icon: Paperclip },
+  { type: "list", label: "List", icon: ListPlus },
 ];
 
 export function FieldTypeSelector({ onSelect }: FieldTypeSelectorProps) {

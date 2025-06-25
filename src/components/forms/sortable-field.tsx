@@ -14,12 +14,16 @@ interface SortableFieldProps {
   field: FormField;
   onUpdate: (updates: Partial<FormField>) => void;
   onRemove: () => void;
+  formName?: string;
+  generateFieldName?: (fieldLabel: string) => string;
 }
 
 export function SortableField({
   field,
   onUpdate,
   onRemove,
+  formName,
+  generateFieldName,
 }: SortableFieldProps) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: field.id });
@@ -64,12 +68,22 @@ export function SortableField({
             <div className="flex-1 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor={`${field.id}-label`}>Label</Label>
+                  <Label htmlFor={`${field.id}-label`}>Field Text</Label>
                   <Input
                     id={`${field.id}-label`}
                     value={field.label}
-                    onChange={(e) => onUpdate({ label: e.target.value })}
-                    placeholder="Field label"
+                    onChange={(e) => {
+                      const newLabel = e.target.value;
+                      const updates: Partial<FormField> = { label: newLabel };
+
+                      // Auto-generate field name if generateFieldName function is provided
+                      if (generateFieldName && newLabel) {
+                        updates.name = generateFieldName(newLabel);
+                      }
+
+                      onUpdate(updates);
+                    }}
+                    placeholder="Field text"
                   />
                 </div>
                 <div>
@@ -83,7 +97,19 @@ export function SortableField({
                 </div>
               </div>
 
-              {["text", "textarea", "email", "tel", "number"].includes(
+              <div>
+                <Label htmlFor={`${field.id}-description`}>
+                  Field Description (optional)
+                </Label>
+                <Input
+                  id={`${field.id}-description`}
+                  value={field.description || ""}
+                  onChange={(e) => onUpdate({ description: e.target.value })}
+                  placeholder="Add helpful text to display below the field"
+                />
+              </div>
+
+              {["text", "textarea", "email", "tel", "number", "list"].includes(
                 field.type
               ) && (
                 <div>
@@ -92,7 +118,11 @@ export function SortableField({
                     id={`${field.id}-placeholder`}
                     value={field.placeholder || ""}
                     onChange={(e) => onUpdate({ placeholder: e.target.value })}
-                    placeholder="Enter placeholder text"
+                    placeholder={
+                      field.type === "list"
+                        ? "Enter item placeholder"
+                        : "Enter placeholder text"
+                    }
                   />
                 </div>
               )}

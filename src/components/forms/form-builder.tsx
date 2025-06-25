@@ -72,12 +72,27 @@ export function FormBuilder({ form, onSave, serviceId }: FormBuilderProps) {
     }
   };
 
+  const generateFieldName = (fieldLabel: string) => {
+    // Create a clean field name from form name and field label
+    const formNamePart = name.trim() || "form";
+    const fieldLabelPart = fieldLabel.trim() || "field";
+
+    // Convert to lowercase and replace spaces/special chars with underscores
+    const cleanName = `${formNamePart}_${fieldLabelPart}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, ""); // Remove leading/trailing underscores
+
+    return cleanName;
+  };
+
   const addField = (type: FieldType) => {
+    const defaultLabel = `New ${type} field`;
     const newField: FormField = {
       id: `field-${Date.now()}`,
       type,
-      label: `New ${type} field`,
-      name: `field_${Date.now()}`,
+      label: defaultLabel,
+      name: generateFieldName(defaultLabel),
       required: false,
       ...(["select", "radio", "checkbox"].includes(type) && {
         options: [
@@ -192,6 +207,8 @@ export function FormBuilder({ form, onSave, serviceId }: FormBuilderProps) {
                           field={field}
                           onUpdate={(updates) => updateField(field.id, updates)}
                           onRemove={() => removeField(field.id)}
+                          formName={name}
+                          generateFieldName={generateFieldName}
                         />
                       ))}
                     </div>

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Form, FormField } from "@/types/forms";
 import { cn } from "@/lib/utils";
+import { Plus, X } from "lucide-react";
 
 interface FormRendererProps {
   form: Form;
@@ -35,8 +36,20 @@ export function FormRenderer({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateField = (field: FormField, value: any): string | null => {
-    if (field.required && !value) {
-      return `${field.label} is required`;
+    if (field.required) {
+      if (!value) {
+        return `${field.label} is required`;
+      }
+
+      // For list fields, check if array is empty or has only empty strings
+      if (field.type === "list" && Array.isArray(value)) {
+        const hasNonEmptyItem = value.some(
+          (item) => item && item.trim() !== ""
+        );
+        if (!hasNonEmptyItem) {
+          return `${field.label} must have at least one item`;
+        }
+      }
     }
 
     if (field.validation) {
@@ -110,8 +123,15 @@ export function FormRenderer({
       const submissionData: Record<string, any> = {};
       form.schema.forEach((field) => {
         if (formData[field.name] !== undefined) {
+          let value = formData[field.name];
+
+          // For list fields, filter out empty strings
+          if (field.type === "list" && Array.isArray(value)) {
+            value = value.filter((item) => item && item.trim() !== "");
+          }
+
           submissionData[field.name] = {
-            value: formData[field.name],
+            value: value,
             type: field.type,
             label: field.label,
           };
@@ -122,6 +142,11 @@ export function FormRenderer({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const renderFieldDescription = (description?: string) => {
+    if (!description) return null;
+    return <p className="text-sm text-muted-foreground">{description}</p>;
   };
 
   const renderField = (field: FormField) => {
@@ -152,6 +177,7 @@ export function FormRenderer({
               aria-invalid={!!error}
               aria-describedby={error ? `${field.id}-error` : undefined}
             />
+            {renderFieldDescription(field.description)}
             {error && (
               <p id={`${field.id}-error`} className="text-sm text-destructive">
                 {error}
@@ -179,6 +205,7 @@ export function FormRenderer({
               aria-invalid={!!error}
               aria-describedby={error ? `${field.id}-error` : undefined}
             />
+            {renderFieldDescription(field.description)}
             {error && (
               <p id={`${field.id}-error`} className="text-sm text-destructive">
                 {error}
@@ -218,6 +245,7 @@ export function FormRenderer({
                 ))}
               </SelectContent>
             </Select>
+            {renderFieldDescription(field.description)}
             {error && (
               <p id={`${field.id}-error`} className="text-sm text-destructive">
                 {error}
@@ -256,6 +284,7 @@ export function FormRenderer({
                 </div>
               ))}
             </RadioGroup>
+            {renderFieldDescription(field.description)}
             {error && (
               <p id={`${field.id}-error`} className="text-sm text-destructive">
                 {error}
@@ -284,6 +313,7 @@ export function FormRenderer({
                 )}
               </Label>
             </div>
+            {renderFieldDescription(field.description)}
             {error && (
               <p id={`${field.id}-error`} className="text-sm text-destructive">
                 {error}
@@ -314,6 +344,7 @@ export function FormRenderer({
               aria-invalid={!!error}
               aria-describedby={error ? `${field.id}-error` : undefined}
             />
+            {renderFieldDescription(field.description)}
             {error && (
               <p id={`${field.id}-error`} className="text-sm text-destructive">
                 {error}
@@ -322,6 +353,68 @@ export function FormRenderer({
             {isPreview && (
               <p className="text-xs text-muted-foreground">
                 File uploads are simulated in preview mode
+              </p>
+            )}
+          </div>
+        );
+
+      case "list":
+        const listItems = Array.isArray(value) ? value : [];
+
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label>
+              {field.label}
+              {field.required && (
+                <span className="ml-1 text-destructive">*</span>
+              )}
+            </Label>
+
+            <div className="space-y-2">
+              {listItems.map((item, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={item}
+                    onChange={(e) => {
+                      const newItems = [...listItems];
+                      newItems[index] = e.target.value;
+                      handleFieldChange(field.name, newItems);
+                    }}
+                    placeholder={field.placeholder || "Enter item"}
+                    className={cn(error && "border-destructive")}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const newItems = listItems.filter((_, i) => i !== index);
+                      handleFieldChange(field.name, newItems);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  handleFieldChange(field.name, [...listItems, ""]);
+                }}
+                className="w-full"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add another item
+              </Button>
+            </div>
+
+            {renderFieldDescription(field.description)}
+            {error && (
+              <p id={`${field.id}-error`} className="text-sm text-destructive">
+                {error}
               </p>
             )}
           </div>

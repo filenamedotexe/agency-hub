@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "@/lib/supabase/server";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
@@ -6,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const submitFormSchema = z.object({
-  clientId: z.string().min(1, "Client ID is required"),
   data: z.record(z.any()),
 });
 
@@ -16,6 +16,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const validatedData = submitFormSchema.parse(body);
 
@@ -61,12 +66,11 @@ export async function POST(
     const formResponse = await prisma.formResponse.create({
       data: {
         formId: params.id,
-        clientId: validatedData.clientId,
-        responseData,
+        userId: session.user.id,
+        data: responseData,
       },
       include: {
         form: true,
-        client: true,
       },
     });
 
@@ -77,9 +81,10 @@ export async function POST(
       executeWebhook(settings.webhookUrl, {
         formId: form.id,
         formName: form.name,
-        clientId: validatedData.clientId,
+        userId: session.user.id,
+        userEmail: session.user.email,
         responseData,
-        submittedAt: formResponse.submittedAt,
+        submittedAt: formResponse.createdAt,
       }).catch(console.error);
     }
 

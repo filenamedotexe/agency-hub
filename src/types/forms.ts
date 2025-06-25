@@ -8,7 +8,8 @@ export type FieldType =
   | "select"
   | "checkbox"
   | "radio"
-  | "file";
+  | "file"
+  | "list";
 
 export interface FieldOption {
   label: string;
@@ -30,6 +31,7 @@ export interface FormField {
   name: string;
   required: boolean;
   placeholder?: string;
+  description?: string;
   options?: FieldOption[];
   validation?: FieldValidation;
 }

@@ -122,6 +122,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [sidebarOpen]);
 
+  // Click outside handler for user menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [userMenuOpen]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -193,6 +211,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+
+          {/* Mobile Sign Out Button */}
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("[DashboardLayout] Mobile logout button clicked");
+                setSidebarOpen(false);
+                signOut();
+              }}
+              className="nav-item w-full text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+              type="button"
+            >
+              <LogOut className="mr-3 h-5 w-5" />
+              Sign out
+            </button>
+          </div>
         </nav>
       </div>
 
@@ -275,8 +311,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       </p>
                     </div>
                     <button
-                      onClick={() => signOut()}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-900"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log(
+                          "[DashboardLayout] Desktop logout button clicked"
+                        );
+                        signOut();
+                      }}
+                      className="flex w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-900"
+                      type="button"
                     >
                       <LogOut className="mr-2 h-4 w-4 text-gray-500" />
                       Sign out
@@ -289,7 +333,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 pb-20 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+          {children}
+        </main>
 
         {/* Mobile bottom navigation */}
         <nav className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white shadow-lg lg:hidden">

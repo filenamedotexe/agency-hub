@@ -1,36 +1,23 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
-import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 
 export async function POST() {
+  console.log("[API] Logout endpoint called");
+
   try {
     const supabase = await createClient();
 
     // Sign out from Supabase
-    const { error } = await supabase.auth.signOut();
+    await supabase.auth.signOut();
 
-    if (error) {
-      console.error("Supabase logout error:", error);
-      // Still return success as we want to clear client session
-    }
-
-    // Clear any additional server-side session data if needed
-    const cookieStore = await cookies();
-
-    // Remove any auth-related cookies
-    cookieStore.getAll().forEach((cookie) => {
-      if (cookie.name.includes("auth") || cookie.name.includes("supabase")) {
-        cookieStore.delete(cookie.name);
-      }
-    });
-
+    console.log("[API] Logout successful");
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Logout error:", error);
-    // Return success even on error to ensure client logout proceeds
+    console.error("[API] Logout error:", error);
+    // Always return success to ensure client-side logout proceeds
     return NextResponse.json({ success: true });
   }
 }

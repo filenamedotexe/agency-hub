@@ -152,12 +152,60 @@
       --text-2xl: 1.25rem;
     }
   }
+
+  /* Mobile Safe Area Padding */
+  .mobile-safe-padding {
+    @apply pb-20 lg:pb-0;
+  }
+  
+  .mobile-safe-padding-sm {
+    @apply pb-16 lg:pb-0;
+  }
+  
+  .mobile-safe-padding-lg {
+    @apply pb-24 lg:pb-0;
+  }
+
+  /* Responsive Container */
+  .container-responsive {
+    @apply w-full px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl;
+  }
+
+  /* Responsive Grid */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+  }
+
+  /* Responsive Stack */
+  .stack-responsive {
+    @apply flex flex-col sm:flex-row gap-4 sm:gap-6;
+  }
+
+  /* Mobile Scroll */
+  .overflow-x-mobile {
+    @apply overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible;
+  }
+
+  /* Touch Target Size */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Floating Action Button Mobile Safe */
+  .fab-mobile-safe {
+    @apply fixed bottom-24 right-4 lg:bottom-8;
+  }
+
+  /* Modal/Dialog Mobile Safe */
+  .modal-mobile-safe {
+    @apply mb-20 lg:mb-0;
+  }
 }
 
 @layer components {
   /* Card Styles */
   .card-custom {
-    @apply bg-white border border-gray-200 rounded-lg p-6 transition-shadow duration-150;
+    @apply bg-white border border-gray-200 rounded-lg p-4 sm:p-6 transition-shadow duration-150;
   }
   
   .card-custom:hover {
@@ -196,12 +244,12 @@
   }
 
   .table-custom th {
-    @apply text-left font-semibold text-gray-700 px-4 py-3 border-b border-gray-200;
+    @apply text-left font-semibold text-gray-700 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 text-sm sm:text-base;
     @apply bg-gray-50 text-sm uppercase tracking-wider;
   }
 
   .table-custom td {
-    @apply px-4 py-4 border-b border-gray-100 text-gray-700;
+    @apply px-2 sm:px-4 py-2 sm:py-4 border-b border-gray-100 text-gray-700 text-sm sm:text-base;
   }
 
   .table-custom tr:hover {

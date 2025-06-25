@@ -50,6 +50,8 @@ const authenticatedApiRoutes = [
   "/api/attachments",
   "/api/activity-logs",
   "/api/debug",
+  "/api/client/forms",
+  "/api/client/services",
 ];
 
 export async function updateSession(request: NextRequest) {

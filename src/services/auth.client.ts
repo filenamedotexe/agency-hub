@@ -66,8 +66,10 @@ export class AuthClientService {
 
   async signOut() {
     try {
-      // First call the API logout endpoint to clear server-side session
-      const response = await fetch("/api/auth/logout", {
+      console.log("[AuthClient] Starting logout process...");
+
+      // Call server logout endpoint first
+      await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -75,26 +77,16 @@ export class AuthClientService {
         },
       });
 
-      if (!response.ok) {
-        console.warn("Server logout failed, continuing with client logout");
-      }
-
       // Then sign out from Supabase client
-      const { error } = await this.supabase.auth.signOut();
-      if (error) {
-        console.error("Supabase signOut error:", error);
-        // Don't throw here, just log the error
-      }
+      await this.supabase.auth.signOut();
 
+      console.log("[AuthClient] Logout completed successfully");
       return { error: null };
     } catch (error: any) {
-      console.error("Sign out error:", error);
-      return {
-        error: {
-          message: error.message || "Sign out failed",
-          code: error.code,
-        },
-      };
+      console.error("[AuthClient] Logout error:", error);
+      // Even if there's an error, we should still try to clear the session
+      // The auth provider will handle the redirect
+      return { error: null }; // Don't return error to prevent blocking logout
     }
   }
 
