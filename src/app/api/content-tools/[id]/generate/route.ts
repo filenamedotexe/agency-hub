@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { AIService } from "@/lib/ai-service";
+import { getCallbackUrl } from "@/lib/callback-urls";
 
 const generateContentSchema = z.object({
   clientId: z.string().min(1, "Client ID is required"),
@@ -102,16 +103,30 @@ export async function POST(
       );
     });
 
-    // Process field values with dynamic field substitution
+    // Process field values with dynamic field substitution and track used fields
     const processedFieldValues: Record<string, string> = {};
+    const usedDynamicFields: Record<string, string> = {};
+
     if (validatedData.fieldValues) {
       Object.entries(validatedData.fieldValues).forEach(([key, value]) => {
-        // Replace dynamic field variables in the value
         let processedValue = value;
-        Object.entries(allVariables).forEach(([varKey, varValue]) => {
-          const regex = new RegExp(`{{${varKey}}}`, "g");
-          processedValue = processedValue.replace(regex, varValue);
-        });
+
+        // Find and replace all dynamic field placeholders
+        const dynamicFieldMatches = value.match(/\{\{(\w+)\}\}/g);
+        if (dynamicFieldMatches) {
+          dynamicFieldMatches.forEach((match) => {
+            const fieldName = match.replace(/\{\{|\}\}/g, "");
+            if (allVariables[fieldName] !== undefined) {
+              processedValue = processedValue.replace(
+                match,
+                allVariables[fieldName]
+              );
+              // Track that this dynamic field was used
+              usedDynamicFields[fieldName] = allVariables[fieldName];
+            }
+          });
+        }
+
         processedFieldValues[key] = processedValue;
         allVariables[key] = processedValue; // Also add to allVariables for prompt processing
       });
@@ -173,12 +188,17 @@ export async function POST(
     });
 
     // Execute webhook if configured
+    let webhookExecuted = false;
+    let webhookEnvironment = "testing";
+
     if (tool.webhookId) {
       const webhook = await prisma.webhook.findUnique({
         where: { id: tool.webhookId },
       });
 
       if (webhook && webhook.isActive) {
+        webhookExecuted = true;
+        webhookEnvironment = webhook.isProduction ? "production" : "testing";
         // Use the appropriate URL based on environment
         const webhookUrl = webhook.isProduction
           ? webhook.productionUrl || webhook.url
@@ -193,7 +213,11 @@ export async function POST(
             clientId: client.id,
             clientName: client.businessName || client.name,
             content: generatedContent,
-            variables: allVariables,
+            fieldValues: processedFieldValues,
+            rawFieldValues: validatedData.fieldValues || {},
+            dynamicFieldsUsed: usedDynamicFields,
+            allDynamicFields: allVariables,
+            callbackUrl: getCallbackUrl(tool.id, webhook.isProduction),
             generatedAt: savedContent.createdAt,
             environment: webhook.isProduction ? "production" : "testing",
           }
@@ -201,7 +225,11 @@ export async function POST(
       }
     }
 
-    return NextResponse.json(savedContent);
+    return NextResponse.json({
+      ...savedContent,
+      webhookExecuted,
+      webhookEnvironment,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

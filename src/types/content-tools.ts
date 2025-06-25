@@ -25,6 +25,15 @@ export interface ContentTool {
   description?: string;
   prompt: string;
   webhookId?: string;
+  webhook?: {
+    id: string;
+    name: string;
+    url: string;
+    productionUrl?: string;
+    testingUrl?: string;
+    isProduction: boolean;
+    isActive: boolean;
+  };
   fields?: ContentToolField[];
   createdAt: string;
   updatedAt: string;

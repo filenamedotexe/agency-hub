@@ -33,6 +33,7 @@ export default function EditFormPage({ params }: { params: { id: string } }) {
 
   const handleSave = async (data: any) => {
     try {
+      console.log("Saving form data:", data);
       const response = await fetch(`/api/forms/${params.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -41,6 +42,18 @@ export default function EditFormPage({ params }: { params: { id: string } }) {
 
       if (!response.ok) {
         const error = await response.json();
+        console.error("Form update error:", error);
+
+        // Show detailed validation errors if available
+        if (error.details && Array.isArray(error.details)) {
+          const errorMessages = error.details
+            .map(
+              (detail: any) => `${detail.path?.join(".")}: ${detail.message}`
+            )
+            .join("\n");
+          throw new Error(`Validation errors:\n${errorMessages}`);
+        }
+
         throw new Error(error.error || "Failed to update form");
       }
 

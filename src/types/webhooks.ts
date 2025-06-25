@@ -4,6 +4,9 @@ export interface Webhook {
   id: string;
   name: string;
   url: string;
+  productionUrl?: string; // Production webhook URL
+  testingUrl?: string; // Testing webhook URL
+  isProduction: boolean; // Which environment is active (default: true)
   type: WebhookType;
   entityId?: string;
   headers?: Record<string, string>;

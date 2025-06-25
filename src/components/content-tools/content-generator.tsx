@@ -16,6 +16,7 @@ import {
   Calendar,
   Clock,
   User,
+  TestTube,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,15 @@ import {
 } from "@/components/ui/dialog";
 import { ContentTool, ContentToolField } from "@/types/content-tools";
 import { DynamicField } from "@/components/ui/dynamic-field";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { getCallbackUrlClient, isNgrokConfigured } from "@/lib/callback-urls";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ContentGeneratorProps {
   tool: ContentTool;
@@ -272,7 +281,7 @@ export function ContentGenerator({
         );
       }
     }
-  }, [selectedClientId, allDynamicFields, dynamicFields, clients, toast]);
+  }, [selectedClientId, allDynamicFields, dynamicFields, clients]);
 
   const handleGenerate = async () => {
     if (!selectedClientId) {
@@ -323,8 +332,16 @@ export function ContentGenerator({
       setGeneratedContent(data.content);
 
       // Show success message with webhook info
-      if (tool.webhookId) {
-        toast.success("Content generated and sent to webhook successfully!");
+      if (data.webhookExecuted) {
+        toast.success(
+          `Content generated and sent to n8n webhook successfully! (${data.webhookEnvironment} environment)`,
+          { duration: 5000 }
+        );
+      } else if (tool.webhookId) {
+        toast.warning(
+          "Content generated but webhook may not have executed. Check webhook configuration.",
+          { duration: 5000 }
+        );
       } else {
         toast.success("Content generated successfully!");
       }
@@ -336,6 +353,120 @@ export function ContentGenerator({
       toast.error("Failed to generate content. Please try again.");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    if (!selectedClientId) {
+      toast.error("Please select a client");
+      return;
+    }
+
+    if (!tool.webhookId || !tool.webhook) {
+      toast.error("No webhook configured for this tool");
+      return;
+    }
+
+    const selectedClient = clients.find((c) => c.id === selectedClientId);
+
+    // Use the appropriate URL based on environment
+    const webhookUrl = tool.webhook.isProduction
+      ? tool.webhook.productionUrl || tool.webhook.url
+      : tool.webhook.testingUrl || tool.webhook.url;
+
+    console.log("Testing webhook:", {
+      webhookUrl,
+      environment: tool.webhook.isProduction ? "production" : "testing",
+      webhookId: tool.webhookId,
+    });
+
+    // Process field values to replace dynamic fields with actual values
+    const processedFieldValues: Record<string, string> = {};
+    const usedDynamicFields: Record<string, any> = {};
+
+    // Combine client data with dynamic fields
+    const allDynamicFields: Record<string, any> = {
+      businessName: selectedClient?.businessName || selectedClient?.name || "",
+      clientName: selectedClient?.name || "",
+      ...dynamicFields,
+    };
+
+    // Process each field value and track which dynamic fields were used
+    Object.entries(fieldValues).forEach(([key, value]) => {
+      let processedValue = value;
+
+      // Find and replace all dynamic field placeholders
+      const dynamicFieldMatches = value.match(/\{\{(\w+)\}\}/g);
+      if (dynamicFieldMatches) {
+        dynamicFieldMatches.forEach((match) => {
+          const fieldName = match.replace(/\{\{|\}\}/g, "");
+          if (allDynamicFields[fieldName] !== undefined) {
+            const fieldValue = allDynamicFields[fieldName];
+            processedValue = processedValue.replace(
+              match,
+              fieldValue.value || fieldValue || ""
+            );
+            // Track that this dynamic field was used
+            usedDynamicFields[fieldName] = fieldValue.value || fieldValue || "";
+          }
+        });
+      }
+
+      processedFieldValues[key] = processedValue;
+    });
+
+    // Prepare test payload with processed values and dynamic field tracking
+    const testPayload = {
+      test: true,
+      toolId: tool.id,
+      toolName: tool.name,
+      clientId: selectedClientId,
+      clientName:
+        selectedClient?.businessName ||
+        selectedClient?.name ||
+        "Unknown Client",
+      fieldValues: processedFieldValues,
+      rawFieldValues: fieldValues, // Original values with {{placeholders}}
+      dynamicFieldsUsed: usedDynamicFields, // Which dynamic fields were actually used
+      allDynamicFields: allDynamicFields, // All available dynamic fields
+      callbackUrl: getCallbackUrlClient(tool.id, tool.webhook.isProduction),
+      timestamp: new Date().toISOString(),
+      environment: tool.webhook.isProduction ? "production" : "testing",
+    };
+
+    try {
+      const response = await fetch("/api/test-webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          webhookUrl,
+          payload: testPayload,
+          headers: {},
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to test webhook");
+      }
+
+      const result = await response.json();
+
+      console.log("Webhook test result:", result);
+
+      if (result.statusCode === 200 || result.statusCode === 204) {
+        toast.success(
+          `Test webhook sent successfully to ${tool.webhook.isProduction ? "Production" : "Testing"} URL! Status: ${result.statusCode}`,
+          { duration: 5000 }
+        );
+      } else {
+        toast.warning(
+          `Webhook test sent but received status ${result.statusCode}. Check n8n workflow.`,
+          { duration: 7000 }
+        );
+      }
+    } catch (error) {
+      console.error("Error testing webhook:", error);
+      toast.error("Failed to test webhook. Check console for details.");
     }
   };
 
@@ -465,19 +596,20 @@ export function ContentGenerator({
               Fill in the required information to generate content
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="max-h-[80vh] space-y-4 overflow-y-auto">
             <div>
               <Label htmlFor="client">Select Client</Label>
               <Select
-                value={selectedClientId || ""}
+                value={selectedClientId || "no-client"}
                 onValueChange={(value) =>
-                  onClientSelect(value === "" ? null : value)
+                  onClientSelect(value === "no-client" ? null : value)
                 }
               >
                 <SelectTrigger id="client">
                   <SelectValue placeholder="Choose a client" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="no-client">All clients</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.businessName || client.name}
@@ -691,6 +823,173 @@ export function ContentGenerator({
               <Sparkles className="mr-2 h-4 w-4" />
               {isGenerating ? "Generating..." : "Generate Content"}
             </Button>
+
+            {/* Webhook Configuration Display */}
+            {tool.webhookId && tool.webhook && (
+              <div className="mt-4 space-y-3 rounded-lg border bg-muted/50 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-medium">
+                      Webhook Configuration
+                    </h4>
+                    <Badge
+                      variant={
+                        tool.webhook.isProduction ? "default" : "secondary"
+                      }
+                    >
+                      {tool.webhook.isProduction ? "Production" : "Testing"}
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestWebhook}
+                    disabled={!selectedClientId}
+                    title={
+                      !selectedClientId
+                        ? "Select a client first"
+                        : "Test webhook with current values"
+                    }
+                  >
+                    <TestTube className="mr-2 h-4 w-4" />
+                    Test
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  When content is generated, it will be sent to this webhook for
+                  processing by n8n
+                </p>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Active URL
+                    </p>
+                    <p className="break-all font-mono text-xs">
+                      {tool.webhook.isProduction
+                        ? tool.webhook.productionUrl || tool.webhook.url
+                        : tool.webhook.testingUrl || tool.webhook.url}
+                    </p>
+                  </div>
+                  <div className="border-t pt-2">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                      n8n Callback URL
+                    </p>
+
+                    {/* Active Callback URL */}
+                    <div
+                      className={`rounded border p-2 ${tool.webhook.isProduction ? "border-green-500/20 bg-green-50/50 dark:bg-green-950/20" : "border-blue-500/20 bg-blue-50/50 dark:bg-blue-950/20"}`}
+                    >
+                      <div className="mb-1 flex items-center justify-between">
+                        <p className="text-xs font-medium">
+                          {tool.webhook.isProduction ? "Production" : "Testing"}{" "}
+                          Callback
+                        </p>
+                        <Badge
+                          variant="outline"
+                          className={`h-5 text-xs ${tool.webhook.isProduction ? "border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-400" : "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400"}`}
+                        >
+                          Active
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="flex-1 break-all font-mono text-xs">
+                          {getCallbackUrlClient(
+                            tool.id,
+                            tool.webhook.isProduction
+                          )}
+                        </p>
+                        {!tool.webhook.isProduction && !isNgrokConfigured() && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6"
+                                >
+                                  <Info className="h-3 w-3 text-yellow-500" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-sm">
+                                <div className="space-y-2 text-xs">
+                                  <p className="font-semibold">
+                                    Setup ngrok for Testing:
+                                  </p>
+                                  <ol className="list-inside list-decimal space-y-1">
+                                    <li>
+                                      Install ngrok:{" "}
+                                      <code className="rounded bg-slate-100 px-1">
+                                        brew install ngrok
+                                      </code>
+                                    </li>
+                                    <li>
+                                      Run:{" "}
+                                      <code className="rounded bg-slate-100 px-1">
+                                        ngrok http 3001
+                                      </code>
+                                    </li>
+                                    <li>
+                                      Copy the https URL (e.g.,
+                                      https://abc123.ngrok.io)
+                                    </li>
+                                    <li>
+                                      Update{" "}
+                                      <code className="rounded bg-slate-100 px-1">
+                                        .env.local
+                                      </code>
+                                      :
+                                      <br />
+                                      <code className="rounded bg-slate-100 px-1 text-[10px]">
+                                        NEXT_PUBLIC_CALLBACK_BASE_URL_TESTING=https://abc123.ngrok.io
+                                      </code>
+                                    </li>
+                                    <li>Restart your dev server</li>
+                                  </ol>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6"
+                          onClick={() => {
+                            if (!tool.webhook) return;
+                            const url = getCallbackUrlClient(
+                              tool.id,
+                              tool.webhook.isProduction
+                            );
+                            if (
+                              !tool.webhook.isProduction &&
+                              !isNgrokConfigured()
+                            ) {
+                              toast.warning(
+                                "Please configure ngrok first! Click the info icon for instructions."
+                              );
+                              return;
+                            }
+                            navigator.clipboard.writeText(url);
+                            toast.success(
+                              `${tool.webhook.isProduction ? "Production" : "Testing"} callback URL copied!`
+                            );
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Use this URL in your n8n webhook response to send the
+                      generated content back. Add a &quot;Respond to
+                      Webhook&quot; node in n8n with this URL to complete the
+                      flow.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -878,7 +1177,7 @@ export function ContentGenerator({
 
       {/* Field Editor Dialog */}
       <Dialog open={isEditingFields} onOpenChange={setIsEditingFields}>
-        <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
+        <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col">
           <DialogHeader>
             <DialogTitle>Edit Content Tool Fields</DialogTitle>
             <DialogDescription>
@@ -887,7 +1186,7 @@ export function ContentGenerator({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="flex-1 space-y-6 overflow-y-auto pr-2">
             {/* Dynamic Fields Reference */}
             <div>
               <h3 className="mb-2 font-medium">Available Dynamic Fields</h3>

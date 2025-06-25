@@ -8,6 +8,14 @@ import { z } from "zod";
 const updateWebhookSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   url: z.string().url("Invalid webhook URL").optional(),
+  productionUrl: z.string().url("Invalid production URL").optional().nullable(),
+  testingUrl: z
+    .string()
+    .url("Invalid testing URL")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  isProduction: z.boolean().optional(),
   headers: z.record(z.string()).optional(),
   isActive: z.boolean().optional(),
 });

@@ -26,6 +26,18 @@ export async function GET(
             },
           },
         },
+        webhook: {
+          select: {
+            id: true,
+            name: true,
+            url: true,
+            productionUrl: true,
+            testingUrl: true,
+            isProduction: true,
+            isActive: true,
+            headers: true,
+          },
+        },
       },
     });
 

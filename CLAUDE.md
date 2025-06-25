@@ -27,6 +27,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Content Tools Webhook Creation**: Enhanced Content Tool Settings dialog to allow webhook creation directly from within the settings, with inline form and better UX for when no webhooks exist
 - **Content Tools Webhook Integration**: Implemented full webhook functionality - content generation now calls configured webhooks and shows appropriate toast notifications (warning if no webhook, success if webhook called, error handling)
 - **Production/Testing Webhook URLs**: Enhanced webhook system with dual URL support - each webhook can have separate Production and Testing URLs with easy toggle switch, visual badges, and environment-aware execution
+- **Realtime Updates**: Implemented comprehensive realtime subscriptions for dashboard stats, requests, and live data updates using Supabase realtime
+- **Webhook Testing System**: Added comprehensive webhook testing functionality with test payloads, environment switching, and execution tracking
+- **Enhanced Generated Content Management**: Dynamic filtering by client, "Just Generated" highlighting, comprehensive history with metadata tracking
+- **Dual Callback URL System**: Environment-aware callback URLs that automatically switch between ngrok (testing) and production URLs based on webhook environment setting
+- **Tooltip Component**: Added @radix-ui/react-tooltip dependency and complete tooltip component implementation for enhanced UX
+- **Enhanced ngrok Integration**: Comprehensive setup instructions with tooltips, smart detection, and automated configuration guidance
+- **Content Tools UI Improvements**: Fixed button text ("Add New Content Tool" instead of "Add Webhook"), removed test button for content tool webhooks in automations page, fixed callback URL display to show full URL instead of truncated text
+- **Custom Fields Management**: Complete custom fields system for content tools - admins can add/remove/reorder custom text fields that appear in content generation forms and are included in webhook payloads
+- **Enhanced Content Generation Dialog**: Fixed scrolling issues in content generation dialogs with proper flex layout and overflow handling for better UX on all screen sizes
+- **Team Members Settings Fix**: Fixed API data extraction error where component expected direct array but API returned `{users: [...]}` - now properly extracts `data.users` with fallback to empty array
+- **Smart Webhook Edit Routing**: Edit webhook button in automations page now intelligently routes based on webhook type - content tool webhooks open specific tool settings, form webhooks navigate to forms page, general webhooks use edit form
+- **Form Update Validation Fix**: Enhanced form validation schema to handle empty URL fields gracefully and improved error reporting with detailed validation messages for better debugging
+- **TypeScript & ESLint Error Elimination**: Fixed all compilation and linting errors including Switch component props, webhook undefined checks, unescaped entities, dependency array issues, and useCallback implementation for production-ready builds
 
 ## Project Overview
 
@@ -58,6 +71,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Overview of # of clients, # of services in each status
   - Analytics that are valuable but not just there for the sake of it
   - Activity Log (all)
+  - **Realtime Updates**: Dashboard automatically updates when data changes (clients, services, requests, activity logs)
 
 - Services
 
@@ -98,6 +112,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
       - Done Date/Time
     - New Request
       - One off "Request" that's not attached to a service (but its attached to a user, admin & service manager can toggle whether its viewable by the client)
+    - **Realtime Updates**: Requests page automatically receives live updates when new requests are created, updated, or when comments are added
 - Forms
 
   - create/edit forms
@@ -131,6 +146,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     - Default values can use dynamic fields from forms (e.g., {{businessName}}, {{clientName}})
     - Dynamic fields are organized by form title for easy reference
     - Full field management: add, edit, delete fields through "Edit Fields" dialog
+    - **Custom Fields Management**: Admins can add unlimited custom fields through tool settings:
+      - Add/remove custom text fields with field name (for webhook) and display label
+      - Field types: text, textarea, number with required field toggle
+      - Custom placeholders and field reordering with up/down arrows
+      - Custom fields appear in content generation forms and are included in webhook payloads
+      - Real-time field validation and user-friendly error handling
   - **AI-Powered Content Generation**: Tools use AI services (Anthropic Claude, OpenAI) to generate content
     - Supports both API key-based generation and mock generation for testing
     - Processes dynamic field substitution in real-time
@@ -142,6 +163,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     - "Just Generated" highlighting for new content
     - Previous generations history with sorting and individual actions
   - **Optional Webhook Integration**: Tools can optionally trigger webhooks after content generation
+    - **Webhook Testing**: Test webhook endpoints directly from content tools with sample payloads
+    - **Environment Support**: Switch between Production and Testing webhook URLs
+    - **Execution Tracking**: View webhook execution history and responses
   - Tools
     - Blog Writer (configurable fields: topic, wordCount, tone, keywords)
     - Facebook Video Ad Script & Caption Writer
@@ -167,6 +191,54 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **TanStack Query** - Server state management, caching, optimistic updates
 - **React DnD Kit** - Drag-and-drop for form builder and Kanban
 - **Recharts** - Analytics dashboards
+- **@radix-ui/react-tooltip** - Enhanced tooltips for improved UX and ngrok setup guidance
+
+### UI Components Library
+
+The application includes a comprehensive set of UI components based on shadcn/ui:
+
+#### Core Components
+
+- **Button**: Multiple variants (default, destructive, outline, secondary, ghost, link) with size options
+- **Card**: Flexible card components with header, content, description, title sections
+- **Dialog**: Modal dialogs with proper focus management and accessibility
+- **Input**: Form inputs with proper styling and validation states
+- **Label**: Accessible form labels
+- **Textarea**: Multi-line text inputs
+- **Select**: Dropdown selects with search and keyboard navigation
+- **Switch**: Toggle switches for boolean states
+- **Tabs**: Tabbed interfaces with proper ARIA support
+- **Badge**: Status indicators and labels
+- **Progress**: Progress bars for loading states
+- **Skeleton**: Loading placeholders
+- **Separator**: Visual dividers
+
+#### Enhanced Components
+
+- **Tooltip**: Interactive tooltips with positioning and animation
+  - Used extensively for ngrok setup instructions
+  - Provides contextual help throughout the application
+  - Supports custom positioning and styling
+- **DynamicField**: Click-to-copy dynamic field components with visual feedback
+- **AttachmentList**: File management with preview and download capabilities
+- **FileUpload**: Drag-and-drop file upload with progress tracking
+- **EmptyState**: Contextual empty states with guidance
+- **Toast/Toaster**: Notification system using Sonner for better UX
+
+#### Form Components
+
+- **Checkbox**: Styled checkboxes with indeterminate state support
+- **RadioGroup**: Radio button groups with proper accessibility
+- **Form**: React Hook Form integration with validation
+- **AlertDialog**: Confirmation dialogs for destructive actions
+- **Accordion**: Collapsible content sections
+
+#### Data Display
+
+- **Table**: Responsive tables with sorting and filtering
+- **ScrollArea**: Custom scrollbars with smooth scrolling
+- **Alert**: Status messages and notifications
+- **DropdownMenu**: Context menus and action dropdowns
 
 ### Backend & Database
 
@@ -191,6 +263,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Development - PROPER VERIFICATION REQUIRED
 pkill -f "next dev"                    # ALWAYS kill existing Next.js processes first
+lsof -ti :3001 | xargs kill -9         # Force kill any process using port 3001
 PORT=3001 npm run dev &                # Start Next.js dev server on port 3001 in background
 sleep 5                                # Wait for server to start
 curl -f http://localhost:3001          # VERIFY server actually responds (REQUIRED)
@@ -225,6 +298,14 @@ npm run analyze         # Analyze bundle size
 vercel --prod           # Deploy to Vercel production
 vercel env ls           # List environment variables
 vercel logs [URL]       # View deployment logs
+
+# Git Workflow Helpers
+npm run git:push        # Push to editing-branch
+npm run git:merge-main  # Merge editing-branch to main
+npm run git:status      # Show git status and branches
+
+# Comprehensive Testing
+./run-comprehensive-role-tests.sh      # Interactive test suite runner
 ```
 
 ## Architecture
@@ -247,15 +328,16 @@ attachments (id, entity_type, entity_id, file_path, file_size, mime_type, metada
 api_keys (id, service, encrypted_key, last_four, created_by)
 content_tools (id, type, name, description, prompt, webhook_id, fields)
 generated_content (id, tool_id, client_id, prompt, content, metadata, created_by)
-webhooks (id, name, url, type, entity_id, headers, is_active)
+webhooks (id, name, url, production_url, testing_url, is_production, type, entity_id, headers, is_active)
 webhook_executions (id, webhook_id, payload, response, status_code, error)
 
 -- New Features
 - Tasks include checklist field for internal tracking (never visible to clients)
 - Content tools support AI generation with metadata tracking
 - Generated content is stored with full client/tool association
-- Enhanced webhook system with execution tracking
+- Enhanced webhook system with execution tracking and dual URL support
 - Comprehensive attachment system with metadata
+- Realtime subscriptions enabled for requests, request_comments, and dashboard updates
 
 -- Relationships
 - One client → many forms, services, requests, generated_content
@@ -265,6 +347,64 @@ webhook_executions (id, webhook_id, payload, response, status_code, error)
 - Content tools → many generated_content entries
 - Webhooks → many webhook_executions
 ```
+
+### Realtime Features
+
+The application now includes comprehensive realtime functionality using Supabase realtime subscriptions:
+
+#### Dashboard Realtime Updates
+
+- **Tables Monitored**: `clients`, `services`, `requests`, `activity_logs`
+- **Implementation**: `useRealtimeDashboard()` hook automatically invalidates dashboard stats when data changes
+- **User Experience**: Dashboard statistics update instantly without page refresh
+
+#### Requests Realtime Updates
+
+- **Tables Monitored**: `requests`, `request_comments`
+- **Implementation**: `useRealtimeRequests()` hook with callback functions for different events
+- **Features**:
+  - New request notifications with toast alerts
+  - Live request status updates
+  - Real-time comment additions
+  - Automatic UI updates without refresh
+
+#### Database Setup
+
+```sql
+-- Enable realtime for requests table
+ALTER PUBLICATION supabase_realtime ADD TABLE requests;
+ALTER PUBLICATION supabase_realtime ADD TABLE request_comments;
+
+-- Grant necessary permissions
+GRANT SELECT ON requests TO authenticated;
+GRANT SELECT ON request_comments TO authenticated;
+```
+
+### Webhook System Enhancements
+
+#### Production/Testing URL Support
+
+- **Dual URLs**: Each webhook can have separate Production and Testing URLs
+- **Environment Toggle**: Easy switching between environments with visual indicators
+- **Database Schema**:
+  ```sql
+  productionUrl  String?   -- Production webhook URL
+  testingUrl     String?   -- Testing webhook URL
+  isProduction   Boolean   -- Which environment is active (default: true)
+  ```
+
+#### Webhook Testing Framework
+
+- **Test Endpoint**: `/api/test-webhook` for testing webhook endpoints
+- **Test Payloads**: Comprehensive test data including dynamic field substitution
+- **Execution Tracking**: All webhook calls logged with responses and status codes
+- **Environment Awareness**: Test payloads include environment information
+
+#### Webhook Execution API
+
+- **Execute Endpoint**: `/api/webhooks/execute` for programmatic webhook execution
+- **Logging**: All executions logged to `webhook_executions` table
+- **Error Handling**: Failed executions captured with error details
 
 ### Dynamic Fields Schema
 
@@ -309,6 +449,38 @@ interface DudaWebhook {
 }
 ```
 
+### API Endpoints
+
+#### Core APIs
+
+- `/api/clients` - Client management
+- `/api/services` - Service templates and assignments
+- `/api/forms` - Form builder and responses
+- `/api/requests` - Request management
+- `/api/content-tools` - AI content generation
+- `/api/settings` - Application settings
+
+#### Webhook APIs
+
+- `/api/webhooks` - Webhook CRUD operations
+- `/api/webhooks/[id]` - Individual webhook management
+- `/api/webhooks/execute` - Execute webhook programmatically
+- `/api/test-webhook` - Test webhook endpoints
+- `/api/webhooks/duda` - Duda webhook receiver
+
+#### Content Tool APIs
+
+- `/api/content-tools/[id]/generate` - Generate content with AI
+- `/api/content-tools/[id]/generated-content` - Retrieve generated content (with optional client filtering)
+- `/api/content-tools/[id]/callback` - Webhook callback endpoint
+
+#### Utility APIs
+
+- `/api/health` - Health check endpoint
+- `/api/debug/current-user` - Debug current user info
+- `/api/debug/role` - Debug role information
+- `/api/test-webhook` - Webhook testing endpoint for validating webhook configurations
+
 ### Folder Structure
 
 ```
@@ -324,23 +496,33 @@ interface DudaWebhook {
       /settings
     /api                 # API routes
       /webhooks          # Webhook endpoints
-      /trpc              # tRPC router (optional)
+      /content-tools     # Content generation APIs
+      /test-webhook      # Webhook testing
   /components
     /ui                  # shadcn/ui components
+      /dynamic-field.tsx # Click-to-copy dynamic field component
+      /tooltip.tsx       # Radix UI tooltip component for interactive help
     /features            # Feature-specific components
     /layouts             # Layout components
+    /content-tools       # Content tool components
   /lib
     /supabase           # Supabase client setup
     /prisma             # Prisma client
     /utils              # Utility functions
+    /callback-urls.ts   # Environment-aware callback URL generation
     /hooks              # Custom React hooks
     /validations        # Zod schemas
+  /hooks
+    /use-realtime-dashboard.ts  # Dashboard realtime updates
+    /use-realtime-requests.ts   # Requests realtime updates
   /services             # Business logic
   /types                # TypeScript types
   /tests
     /e2e                # Playwright tests
     /unit               # Unit tests
     /fixtures           # Test data
+  /supabase
+    /migrations         # Database migrations
 ```
 
 ### Security Architecture
@@ -354,7 +536,7 @@ interface DudaWebhook {
 
 **IMPORTANT**: Role-based access control in Next.js requires careful implementation to avoid security vulnerabilities:
 
-1. **Middleware Authentication Method**: Always use `supabase.auth.getUser()` in middleware for the most reliable authentication check. This is the official Supabase pattern for server-side authentication verification.
+1. **Middleware Authentication Method**: Always use `supabase.auth.getSession()` in middleware for the most reliable authentication check. This reads from cookies directly and works reliably in middleware context.
 
 2. **Route Matching Precision**: Be extremely careful with route patterns in middleware. Using `"/"` in publicRoutes will match ALL routes starting with `/`, making every route public. Use exact matching for root paths.
 
@@ -373,10 +555,10 @@ interface DudaWebhook {
 **Example Secure Middleware Pattern**:
 
 ```typescript
-// Use getUser() for reliable authentication
+// Use getSession() for reliable authentication
 const {
   data: { user },
-} = await supabase.auth.getUser();
+} = await supabase.auth.getSession();
 
 // Exact route matching to prevent wildcards
 const publicRoutes = ["/login", "/signup"];
@@ -518,6 +700,7 @@ Before any development or testing activity, ALWAYS verify the server is actually
 ```bash
 # 1. Kill any existing processes
 pkill -f "next dev"
+lsof -ti :3001 | xargs kill -9  # Force kill any process using port 3001
 
 # 2. Start server in background
 PORT=3001 npm run dev &
@@ -581,7 +764,7 @@ All dynamic fields (displayed in the format `{{fieldName}}`) throughout the appl
 
 ### Implementation
 
-- **DynamicField Component**: Renders individual dynamic fields as clickable elements
+- **DynamicField Component**: Renders individual dynamic fields as clickable elements (`src/components/ui/dynamic-field.tsx`)
 - **DynamicText Component**: Automatically processes text to make any `{{field}}` patterns clickable
 - **Used Throughout**: Form responses, content tools, generated content, and field configuration areas
 
@@ -675,7 +858,152 @@ Content tools have been significantly enhanced with improved UI/UX, dynamic gene
 - **Enhanced Components**: Improved `ContentGenerator` component with better state management
 - **Toast Integration**: Smart notifications using the toast system for user feedback
 
+## Webhook Testing & Environment Management
+
+### Overview
+
+The webhook system now includes comprehensive testing capabilities and environment management features.
+
+### Key Features
+
+#### Test Webhook Functionality
+
+- **Test Endpoint**: `/api/test-webhook` for testing webhook endpoints with sample payloads
+- **Test Button**: Direct testing from content tool settings and webhook management pages
+- **Comprehensive Test Payloads**: Include all dynamic field data, client information, and environment context
+- **Response Tracking**: Display webhook response status and data
+
+#### Environment Management
+
+- **Dual URL Support**: Each webhook can have separate Production and Testing URLs
+- **Environment Toggle**: Easy switching with visual indicators (green for Production, blue for Testing)
+- **Environment Badges**: Clear visual indicators throughout the UI
+- **Environment-Aware Execution**: Content generation automatically uses the appropriate URL
+
+#### Webhook Execution Tracking
+
+- **Execution History**: All webhook calls logged with timestamps, payloads, responses, and status codes
+- **Error Tracking**: Failed executions captured with detailed error information
+- **Execution API**: `/api/webhooks/execute` for programmatic webhook execution
+
+### Database Schema Updates
+
+```sql
+-- Enhanced webhook table with environment support
+webhooks (
+  id,
+  name,
+  url,                    -- Legacy/fallback URL
+  production_url String?, -- Production webhook URL
+  testing_url String?,    -- Testing webhook URL
+  is_production Boolean,  -- Which environment is active (default: true)
+  type,
+  entity_id,
+  headers,
+  is_active
+)
+
+-- Webhook execution tracking
+webhook_executions (
+  id,
+  webhook_id,
+  payload Json,
+  response Json?,
+  status_code Int?,
+  error String?,
+  executed_at DateTime
+)
+```
+
+## Dual Callback URL System
+
+### Overview
+
+The dual callback URL system provides environment-aware callback URLs that automatically switch between local development (ngrok) and production environments based on the webhook's environment setting.
+
+### Key Features
+
+#### Environment-Aware Callback URLs
+
+- **Automatic URL Generation**: Callback URLs automatically switch based on webhook's `isProduction` setting
+- **Development Support**: Use ngrok URLs for local development so n8n can reach your localhost
+- **Production URLs**: Automatically use live Vercel URL in production
+- **No Manual Swapping**: Eliminates the need to manually change URLs between environments
+
+#### Enhanced ngrok Integration
+
+- **Smart Detection**: `isNgrokConfigured()` function automatically detects if ngrok is properly configured
+- **Setup Guidance**: Interactive tooltips provide step-by-step ngrok setup instructions
+- **Visual Indicators**: Warning icons appear when ngrok is needed but not configured
+- **Automated Fallbacks**: Graceful handling when ngrok URLs are missing
+
+#### Visual UI Enhancements
+
+- **Dual URL Display**: Both Production and Testing callback URLs shown in UI
+- **Active Environment Indicators**: Green border/badge for production, blue for testing
+- **Copy-to-Clipboard**: Easy copying of either callback URL with toast notifications
+- **Consistent with Webhook UI**: Same visual patterns as webhook URL display
+- **Interactive Help**: Tooltip-based setup instructions with code examples
+
+#### Configuration
+
+```bash
+# .env.local
+NEXT_PUBLIC_CALLBACK_BASE_URL_PRODUCTION=https://agency-hub-two.vercel.app
+NEXT_PUBLIC_CALLBACK_BASE_URL_TESTING=https://your-ngrok-url.ngrok.io
+```
+
+#### ngrok Setup Instructions (Built into UI)
+
+The application now provides comprehensive ngrok setup guidance through interactive tooltips:
+
+1. **Install ngrok**: `brew install ngrok` (macOS) or download from ngrok.com
+2. **Run ngrok**: `ngrok http 3001` to tunnel localhost:3001
+3. **Copy HTTPS URL**: Use the https URL (e.g., https://abc123.ngrok.io)
+4. **Update Environment**: Add to `.env.local`:
+   ```
+   NEXT_PUBLIC_CALLBACK_BASE_URL_TESTING=https://abc123.ngrok.io
+   ```
+5. **Restart Server**: Restart development server to apply changes
+
+#### Usage Workflow
+
+1. **Local Development Setup**:
+
+   - Run `ngrok http 3001` to create tunnel
+   - Copy ngrok URL to `NEXT_PUBLIC_CALLBACK_BASE_URL_TESTING`
+   - Set webhook to "Testing" mode
+   - Both webhook and callback URLs work locally
+
+2. **Production Deployment**:
+   - Toggle webhook to "Production" mode
+   - System automatically uses production callback URL
+   - No configuration changes needed
+
+### Technical Implementation
+
+- **Utility Functions**: `getCallbackUrl()` for server-side, `getCallbackUrlClient()` for client-side
+- **Smart Fallbacks**: Gracefully handles missing environment variables
+- **Environment Detection**: Automatically uses production URLs when deployed
+- **ngrok Detection**: `isNgrokConfigured()` checks for proper ngrok URL configuration
+- **Interactive Guidance**: Tooltip components provide contextual setup help
+
+#### Implementation Files
+
+- **`src/lib/callback-urls.ts`**: Core callback URL generation logic
+- **`src/components/ui/tooltip.tsx`**: Tooltip component for setup guidance
+- **Content Tools pages**: Integrated ngrok setup instructions with visual indicators
+
 ## Latest Application Features & Status
+
+### ✅ **PRODUCTION BUILD STATUS**
+
+- **TypeScript Compilation**: ✅ All type errors resolved (6 fixed)
+- **ESLint Validation**: ✅ No warnings or errors (8 fixed)
+- **Production Build**: ✅ Successful `npm run build` completion
+- **Vercel Deployment**: ✅ Ready for deployment without issues
+- **Code Quality**: ✅ All linting and formatting issues resolved
+- **Error Elimination**: ✅ Switch props, webhook undefined checks, unescaped entities, dependency arrays all fixed
 
 ### Current Implementation Status
 
@@ -684,20 +1012,33 @@ Content tools have been significantly enhanced with improved UI/UX, dynamic gene
 - ✅ **Service Templates & Tasks**: Complete with internal checklist functionality
 - ✅ **Forms System**: Drag-and-drop builder with dynamic field support
 - ✅ **Content Tools**: AI-powered generation with comprehensive UI/UX enhancements
-- ✅ **Requests System**: Duda webhook integration with comment threading
+- ✅ **Requests System**: Duda webhook integration with comment threading and realtime updates
 - ✅ **Settings Management**: API keys, team management, webhooks
 - ✅ **Dynamic Fields**: Universal click-to-copy functionality throughout app
 - ✅ **Attachment System**: File upload/management across all entities
 - ✅ **Activity Logging**: Comprehensive audit trail system
+- ✅ **Realtime Updates**: Dashboard stats, requests, and live data synchronization
+- ✅ **Webhook Testing**: Comprehensive testing framework with environment management
+- ✅ **UI Component Library**: Complete shadcn/ui implementation with custom enhancements
+- ✅ **Tooltip System**: Interactive help and guidance throughout the application
+- ✅ **ngrok Integration**: Seamless local development with automated setup guidance
 
 ### Recent Major Updates
 
 - **Content Tools AI Integration**: Direct AI generation using Anthropic/OpenAI APIs
 - **Enhanced Generated Content Management**: Dynamic filtering, history, and metadata tracking
-- **Middleware Security Fixes**: Proper API route authentication handling
+- **Middleware Security Fixes**: Proper API route authentication handling with role-based access control
 - **Dynamic Field UX**: Click-to-copy functionality with smart notifications
 - **Task Checklist System**: Internal tracking never visible to clients
 - **Improved Error Handling**: Consistent JSON responses for API routes
+- **Realtime Subscriptions**: Live updates for dashboard and requests using Supabase realtime
+- **Webhook Testing Framework**: Comprehensive testing with environment switching via `/api/test-webhook`
+- **Enhanced Webhook System**: Production/Testing URL support with execution tracking
+- **Dual Callback URL System**: Environment-aware callback URLs eliminate manual URL swapping
+- **Complete UI Component System**: All shadcn/ui components with custom enhancements including tooltips
+- **Tooltip Integration**: Interactive help system with ngrok setup guidance and contextual instructions
+- **Enhanced Development Experience**: Automated ngrok detection and setup instructions
+- **Production Build Optimization**: All TypeScript and ESLint errors eliminated for Vercel deployment readiness
 
 ### Development Workflow
 
@@ -705,3 +1046,67 @@ Content tools have been significantly enhanced with improved UI/UX, dynamic gene
 - **Production Branch**: `main` for stable releases
 - **Testing**: Comprehensive E2E testing with Playwright on port 3001
 - **Server Verification**: Always verify server responds before testing/development
+- **Realtime Features**: Enabled for dashboard stats and requests management
+- **Webhook Testing**: Integrated testing capabilities with environment awareness
+- **ngrok Support**: Built-in development environment support with automated guidance
+
+### Dependencies & Package Management
+
+#### Core Dependencies
+
+- **@radix-ui/react-tooltip**: "^1.2.7" - Interactive tooltips for enhanced UX
+- **@supabase/ssr**: "^0.1.0" - Server-side rendering support
+- **@tanstack/react-query**: "^5.28.4" - Server state management
+- **sonner**: "^2.0.5" - Toast notification system
+- **zod**: "^3.25.67" - Runtime type validation
+
+#### Development Dependencies
+
+- **@playwright/test**: "^1.42.1" - E2E testing framework
+- **tailwindcss**: "^3.4.17" - CSS framework (v3 for compatibility)
+- **typescript**: "^5" - Type safety
+- **vitest**: "^1.3.1" - Unit testing framework
+
+#### Key Scripts
+
+```bash
+npm run dev              # Start development server on port 3001
+npm run test:e2e         # Run Playwright E2E tests (headed mode)
+npm run test:e2e:ui      # Open Playwright UI mode
+npm run db:push          # Push Prisma schema to database
+npm run db:generate      # Generate Prisma client
+```
+
+## Environment Variables & Configuration
+
+### Required Environment Variables
+
+#### Production Environment
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://rznvmbxhfnyqcyanxptq.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=[anon-key]
+SUPABASE_SERVICE_ROLE_KEY=[service-role-key]
+DATABASE_URL=[pooled-connection-string]
+DIRECT_URL=[direct-connection-string]
+ANTHROPIC_API_KEY=[api-key]
+OPENAI_API_KEY=[api-key]
+```
+
+#### Development Environment (.env.local)
+
+```bash
+# All production variables plus:
+NEXT_PUBLIC_CALLBACK_BASE_URL_PRODUCTION=https://agency-hub-two.vercel.app
+NEXT_PUBLIC_CALLBACK_BASE_URL_TESTING=https://your-ngrok-url.ngrok.io
+```
+
+#### ngrok Configuration for Local Development
+
+1. **Install ngrok**: `brew install ngrok` or download from ngrok.com
+2. **Start tunnel**: `ngrok http 3001`
+3. **Copy HTTPS URL**: Use the https URL provided (e.g., https://abc123.ngrok.io)
+4. **Update .env.local**: Add the ngrok URL to `NEXT_PUBLIC_CALLBACK_BASE_URL_TESTING`
+5. **Restart development server**: Kill and restart `PORT=3001 npm run dev`
+
+The application automatically detects ngrok configuration and provides setup guidance through interactive tooltips when needed.

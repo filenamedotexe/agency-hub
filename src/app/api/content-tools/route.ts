@@ -101,6 +101,11 @@ Provide:
 // GET /api/content-tools - List all content tools
 export async function GET(request: NextRequest) {
   try {
+    // TODO: Add proper auth check back after testing
+    // const session = await getServerSession();
+    // if (!session) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
     // Check if tools exist, if not create them
     const existingTools = await prisma.contentTool.count();
 
@@ -119,6 +124,18 @@ export async function GET(request: NextRequest) {
       include: {
         _count: {
           select: { generatedContent: true },
+        },
+        webhook: {
+          select: {
+            id: true,
+            name: true,
+            url: true,
+            productionUrl: true,
+            testingUrl: true,
+            isProduction: true,
+            isActive: true,
+            headers: true,
+          },
         },
       },
       orderBy: { name: "asc" },

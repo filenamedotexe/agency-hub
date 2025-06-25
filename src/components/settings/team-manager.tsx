@@ -38,6 +38,9 @@ interface TeamMember {
   email: string;
   role: string;
   createdAt: string;
+  profileData?: {
+    name?: string;
+  };
 }
 
 const ROLES = [
@@ -73,6 +76,7 @@ export function TeamManager() {
   const [formData, setFormData] = useState({
     email: "",
     role: "COPYWRITER",
+    name: "",
   });
 
   const { toast } = useToast();
@@ -82,10 +86,11 @@ export function TeamManager() {
       const response = await fetch("/api/settings/team");
       if (response.ok) {
         const data = await response.json();
-        setTeamMembers(data);
+        setTeamMembers(data.users || []);
       }
     } catch (error) {
       console.error("Failed to fetch team members:", error);
+      setTeamMembers([]);
     } finally {
       setLoading(false);
     }
@@ -111,7 +116,7 @@ export function TeamManager() {
       });
 
       setShowAddForm(false);
-      setFormData({ email: "", role: "SERVICE_MANAGER" });
+      setFormData({ email: "", role: "SERVICE_MANAGER", name: "" });
       fetchTeamMembers();
     } catch (error) {
       console.error("Error adding team member:", error);
@@ -209,7 +214,10 @@ export function TeamManager() {
                 <Mail className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="font-medium">{member.email}</p>
+                <p className="font-medium">
+                  {member.profileData?.name || member.email.split("@")[0]}
+                </p>
+                <p className="text-sm text-muted-foreground">{member.email}</p>
                 <div className="flex items-center gap-2">
                   <Badge variant={getRoleBadgeVariant(member.role)}>
                     {ROLES.find((r) => r.value === member.role)?.label ||
@@ -228,7 +236,12 @@ export function TeamManager() {
                 variant="ghost"
                 onClick={() => {
                   setEditingMember(member);
-                  setFormData({ email: member.email, role: member.role });
+                  setFormData({
+                    email: member.email,
+                    role: member.role,
+                    name:
+                      member.profileData?.name || member.email.split("@")[0],
+                  });
                   setShowAddForm(true);
                 }}
               >
@@ -256,13 +269,29 @@ export function TeamManager() {
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogTitle>
+              {editingMember ? "Edit Team Member" : "Add Team Member"}
+            </DialogTitle>
             <DialogDescription>
-              Invite a new member to your team
+              {editingMember
+                ? "Update team member role and information"
+                : "Invite a new member to your team"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                placeholder="John Doe"
+              />
+            </div>
+
             <div>
               <Label htmlFor="email">Email Address</Label>
               <Input
@@ -304,10 +333,21 @@ export function TeamManager() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddForm(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAddForm(false);
+                setEditingMember(null);
+                setFormData({ email: "", role: "COPYWRITER", name: "" });
+              }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleAddMember}>Add Member</Button>
+            <Button
+              onClick={editingMember ? handleUpdateMember : handleAddMember}
+            >
+              {editingMember ? "Update Member" : "Add Member"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

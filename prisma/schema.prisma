@@ -259,7 +259,8 @@ model Webhook {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  executions WebhookExecution[]
+  executions   WebhookExecution[]
+  contentTools ContentTool[]
 
   @@index([type])
   @@index([entityId])
@@ -303,6 +304,7 @@ model ContentTool {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
+  webhook          Webhook?           @relation(fields: [webhookId], references: [id])
   generatedContent GeneratedContent[]
 
   @@map("content_tools")

@@ -50,8 +50,22 @@ const updateFormSchema = z.object({
     .optional(),
   settings: z
     .object({
-      webhookUrl: z.string().url().optional(),
-      redirectUrl: z.string().url().optional(),
+      webhookUrl: z
+        .string()
+        .optional()
+        .refine(
+          (url) =>
+            !url || url === "" || z.string().url().safeParse(url).success,
+          { message: "Invalid webhook URL format" }
+        ),
+      redirectUrl: z
+        .string()
+        .optional()
+        .refine(
+          (url) =>
+            !url || url === "" || z.string().url().safeParse(url).success,
+          { message: "Invalid redirect URL format" }
+        ),
       submitButtonText: z.string().optional(),
       successMessage: z.string().optional(),
     })

@@ -67,14 +67,24 @@ export class AuthClientService {
   async signOut() {
     try {
       // First call the API logout endpoint to clear server-side session
-      await fetch("/api/auth/logout", {
+      const response = await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+
+      if (!response.ok) {
+        console.warn("Server logout failed, continuing with client logout");
+      }
 
       // Then sign out from Supabase client
       const { error } = await this.supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase signOut error:", error);
+        // Don't throw here, just log the error
+      }
 
       return { error: null };
     } catch (error: any) {
