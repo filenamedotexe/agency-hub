@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Booking Modal</title>
+    <script>
+        // Simple test to check if the booking modal is working
+        async function testBooking() {
+            try {
+                // First login
+                const loginRes = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'password123'
+                    }),
+                    credentials: 'include'
+                });
+                
+                if (!loginRes.ok) {
+                    console.error('Login failed:', await loginRes.text());
+                    return;
+                }
+                
+                console.log('✅ Login successful');
+                
+                // Now test creating a booking
+                const bookingData = {
+                    title: 'Test Booking from Script',
+                    description: 'This is a test',
+                    clientId: 'test-client-id', // This will need a real ID
+                    hostId: 'test-host-id', // This will need a real ID
+                    startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+                    endTime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // Tomorrow + 1 hour
+                    location: 'Test Location',
+                    attendees: []
+                };
+                
+                const bookingRes = await fetch('http://localhost:3001/api/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData),
+                    credentials: 'include'
+                });
+                
+                if (!bookingRes.ok) {
+                    console.error('Booking creation failed:', await bookingRes.text());
+                    return;
+                }
+                
+                const booking = await bookingRes.json();
+                console.log('✅ Booking created:', booking);
+                
+                // Test fetching bookings
+                const fetchRes = await fetch('http://localhost:3001/api/bookings', {
+                    credentials: 'include'
+                });
+                
+                if (!fetchRes.ok) {
+                    console.error('Fetch bookings failed:', await fetchRes.text());
+                    return;
+                }
+                
+                const bookings = await fetchRes.json();
+                console.log('✅ Bookings fetched:', bookings.length, 'bookings');
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+            }
+        }
+        
+        window.onload = testBooking;
+    </script>
+</head>
+<body>
+    <h1>Testing Booking API</h1>
+    <p>Check the console for results...</p>
+</body>
+</html>

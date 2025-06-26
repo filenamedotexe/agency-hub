@@ -45,9 +45,25 @@ export function ClientList() {
         sortBy,
         sortOrder,
       });
-      const response = await fetch(`/api/clients?${params}`);
+      const response = await fetch(`/api/clients?${params}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch clients");
-      return response.json();
+      const result = await response.json();
+
+      // Handle both old and new API response formats
+      if (result.data && result.pagination) {
+        return {
+          clients: result.data,
+          page: result.pagination.page,
+          pageSize: result.pagination.pageSize,
+          total: result.pagination.total,
+          totalPages: result.pagination.totalPages,
+        };
+      }
+
+      // Fallback for old format
+      return result;
     },
   });
 

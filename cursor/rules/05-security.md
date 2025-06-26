@@ -56,6 +56,18 @@ if (pathname === "/") {
   // Root path logic
 }
 
+// Skip auth for static assets (performance optimization)
+if (pathname.startsWith("/_next/static") || pathname.startsWith("/favicon")) {
+  return NextResponse.next();
+}
+
+// Check middleware cache for performance (1-minute TTL)
+const cached = getCachedAuth(user?.id);
+if (cached) {
+  // Use cached role data
+  return handleAuthorization(cached.role);
+}
+
 // Different error handling for API vs page routes
 if (!user) {
   if (pathname.startsWith("/api/")) {
@@ -70,7 +82,33 @@ const { data: userData } = await supabase
   .select("role")
   .eq("id", user.id)
   .single();
+
+// Cache the result for future requests
+setCachedAuth(user.id, userData);
 ```
+
+## Auth System Optimizations (2025)
+
+### Performance Enhancements
+
+1. **Middleware Caching**: User roles cached for 1 minute to reduce database queries
+2. **Session State Persistence**: Auth state stored in sessionStorage to prevent loading spinners
+3. **Optimized Session Refresh**: Reduced from 1 minute to 5 minutes for better performance
+4. **Static Asset Bypass**: Middleware skips authentication for static resources
+
+### New Security Features
+
+1. **Auth Error Boundary**: Graceful error handling for authentication failures
+2. **Loading Timeouts**: 5-second timeout prevents infinite loading states
+3. **Debug Mode**: Enable with `NEXT_PUBLIC_AUTH_DEBUG=true` for troubleshooting
+4. **Activity-Based Refresh**: Session only refreshes on meaningful user interactions
+
+### Architecture Components
+
+- `/src/lib/auth-state.ts` - Global auth state management with sessionStorage
+- `/src/lib/middleware-cache.ts` - In-memory cache for middleware auth checks
+- `/src/lib/auth-debug.ts` - Debug logging utility for auth flow analysis
+- `/src/components/providers/auth-error-boundary.tsx` - Error boundary for auth failures
 
 ## Role-Based Access Control
 

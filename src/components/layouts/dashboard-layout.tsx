@@ -19,6 +19,7 @@ import {
   ChevronDown,
   Bot,
   Webhook,
+  Calendar,
 } from "lucide-react";
 
 interface NavItem {
@@ -69,6 +70,12 @@ const navItems: NavItem[] = [
     label: "Forms",
     href: "/forms",
     icon: Edit3,
+    roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
+  },
+  {
+    label: "Calendar",
+    href: "/calendar",
+    icon: Calendar,
     roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
   },
   {
@@ -140,7 +147,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [userMenuOpen]);
 
-  if (isLoading) {
+  // Use a stable loading state for SSR to avoid hydration mismatch
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">

@@ -34,8 +34,16 @@ export async function GET(request: NextRequest) {
       sortOrder: searchParams.get("sortOrder") || undefined,
     });
 
-    const data = await getClients(params);
-    return NextResponse.json(data);
+    const result = await getClients(params);
+    return NextResponse.json({
+      data: result.clients,
+      pagination: {
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+        totalPages: result.totalPages,
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

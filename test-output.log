@@ -1,0 +1,333 @@
+
+Running 14 tests using 8 workers
+
+  ✘  6 [chromium] › tests/e2e/calendar-booking-test.spec.ts:135:7 › Calendar Phase 4 UI/UX Tests › Booking modal should be responsive on mobile (521ms)
+  ✘  4 [chromium] › tests/e2e/calendar-booking-test.spec.ts:81:7 › Calendar Phase 4 UI/UX Tests › Calendar page should load and display properly (657ms)
+  ✘  2 [chromium] › tests/e2e/calendar-booking-test.spec.ts:167:7 › Calendar Phase 4 UI/UX Tests › Google Calendar integration UI should work (623ms)
+  ✘  5 [chromium] › tests/e2e/calendar-booking-test.spec.ts:106:7 › Calendar Phase 4 UI/UX Tests › Mobile responsiveness - calendar toolbar should stack vertically (633ms)
+  ✘  3 [chromium] › tests/e2e/calendar-booking-test.spec.ts:123:7 › Calendar Phase 4 UI/UX Tests › Touch interactions - buttons should have proper touch targets (646ms)
+  ✘  8 [chromium] › tests/e2e/calendar-booking-test.spec.ts:94:7 › Calendar Phase 4 UI/UX Tests › Mobile responsiveness - sidebar should be hidden on mobile (651ms)
+  ✘  1 [chromium] › tests/e2e/calendar-booking-test.spec.ts:150:7 › Calendar Phase 4 UI/UX Tests › Calendar views should switch properly (689ms)
+  ✘  11 [chromium] › tests/e2e/calendar-booking-test.spec.ts:215:7 › Calendar Phase 4 UI/UX Tests › Error handling - should show graceful errors (302ms)
+  ✘  10 [chromium] › tests/e2e/calendar-booking-test.spec.ts:192:7 › Calendar Phase 4 UI/UX Tests › Keyboard navigation should work (453ms)
+  ✘  9 [chromium] › tests/e2e/calendar-booking-test.spec.ts:180:7 › Calendar Phase 4 UI/UX Tests › Desktop layout - sidebar should be visible (446ms)
+  ✘  12 [chromium] › tests/e2e/calendar-booking-test.spec.ts:236:7 › Calendar Booking Creation Flow › Should create a new booking via time slot selection (333ms)
+  ✘  13 [chromium] › tests/e2e/calendar-booking-test.spec.ts:205:7 › Calendar Phase 4 UI/UX Tests › Loading states should be handled properly (396ms)
+  ✘  14 [chromium] › tests/e2e/calendar-booking-test.spec.ts:253:7 › Calendar Booking Creation Flow › Should create a new booking via button (378ms)
+  ✘  7 [chromium] › tests/e2e/calendar-booking-test.spec.ts:45:7 › Calendar Booking Modal › service dropdown works correctly with client selection (21.2s)
+
+
+  1) [chromium] › tests/e2e/calendar-booking-test.spec.ts:45:7 › Calendar Booking Modal › service dropdown works correctly with client selection 
+
+    TimeoutError: page.waitForSelector: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('h1:has-text("Calendar")') to be visible[22m
+
+
+      28 |     
+      29 |     // Wait for the main calendar heading to be visible
+    > 30 |     await page.waitForSelector('h1:has-text("Calendar")', { 
+         |                ^
+      31 |       state: 'visible',
+      32 |       timeout: 15000 
+      33 |     });
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:30:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--7197a-ectly-with-client-selection-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--7197a-ectly-with-client-selection-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/e2e-calendar-booking-test--7197a-ectly-with-client-selection-chromium/error-context.md
+
+  2) [chromium] › tests/e2e/calendar-booking-test.spec.ts:81:7 › Calendar Phase 4 UI/UX Tests › Calendar page should load and display properly 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--eba6f-d-load-and-display-properly-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--eba6f-d-load-and-display-properly-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › tests/e2e/calendar-booking-test.spec.ts:94:7 › Calendar Phase 4 UI/UX Tests › Mobile responsiveness - sidebar should be hidden on mobile 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--ee8b4--should-be-hidden-on-mobile-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--ee8b4--should-be-hidden-on-mobile-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium] › tests/e2e/calendar-booking-test.spec.ts:106:7 › Calendar Phase 4 UI/UX Tests › Mobile responsiveness - calendar toolbar should stack vertically 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--5868c-bar-should-stack-vertically-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--5868c-bar-should-stack-vertically-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [chromium] › tests/e2e/calendar-booking-test.spec.ts:123:7 › Calendar Phase 4 UI/UX Tests › Touch interactions - buttons should have proper touch targets 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--8ff44-d-have-proper-touch-targets-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--8ff44-d-have-proper-touch-targets-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [chromium] › tests/e2e/calendar-booking-test.spec.ts:135:7 › Calendar Phase 4 UI/UX Tests › Booking modal should be responsive on mobile 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--de593-uld-be-responsive-on-mobile-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--de593-uld-be-responsive-on-mobile-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [chromium] › tests/e2e/calendar-booking-test.spec.ts:150:7 › Calendar Phase 4 UI/UX Tests › Calendar views should switch properly 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--782c4-iews-should-switch-properly-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--782c4-iews-should-switch-properly-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [chromium] › tests/e2e/calendar-booking-test.spec.ts:167:7 › Calendar Phase 4 UI/UX Tests › Google Calendar integration UI should work 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--b9038--integration-UI-should-work-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--b9038--integration-UI-should-work-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [chromium] › tests/e2e/calendar-booking-test.spec.ts:180:7 › Calendar Phase 4 UI/UX Tests › Desktop layout - sidebar should be visible 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--fc383---sidebar-should-be-visible-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--fc383---sidebar-should-be-visible-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [chromium] › tests/e2e/calendar-booking-test.spec.ts:192:7 › Calendar Phase 4 UI/UX Tests › Keyboard navigation should work 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--0c6af-oard-navigation-should-work-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--0c6af-oard-navigation-should-work-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) [chromium] › tests/e2e/calendar-booking-test.spec.ts:205:7 › Calendar Phase 4 UI/UX Tests › Loading states should be handled properly 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--58d8d--should-be-handled-properly-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--58d8d--should-be-handled-properly-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [chromium] › tests/e2e/calendar-booking-test.spec.ts:215:7 › Calendar Phase 4 UI/UX Tests › Error handling - should show graceful errors 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      76 | test.describe('Calendar Phase 4 UI/UX Tests', () => {
+      77 |   test.beforeEach(async ({ page }) => {
+    > 78 |     await login(page, 'admin@test.com', 'password');
+         |                ^
+      79 |   });
+      80 |
+      81 |   test('Calendar page should load and display properly', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:78:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--03d6d-should-show-graceful-errors-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--03d6d-should-show-graceful-errors-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) [chromium] › tests/e2e/calendar-booking-test.spec.ts:236:7 › Calendar Booking Creation Flow › Should create a new booking via time slot selection 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      231 | test.describe('Calendar Booking Creation Flow', () => {
+      232 |   test.beforeEach(async ({ page }) => {
+    > 233 |     await login(page, 'admin@test.com', 'password');
+          |                ^
+      234 |   });
+      235 |
+      236 |   test('Should create a new booking via time slot selection', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:233:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--cd0b5-ing-via-time-slot-selection-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--cd0b5-ing-via-time-slot-selection-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) [chromium] › tests/e2e/calendar-booking-test.spec.ts:253:7 › Calendar Booking Creation Flow › Should create a new booking via button 
+
+    TypeError: (0 , _auth.login) is not a function
+
+      231 | test.describe('Calendar Booking Creation Flow', () => {
+      232 |   test.beforeEach(async ({ page }) => {
+    > 233 |     await login(page, 'admin@test.com', 'password');
+          |                ^
+      234 |   });
+      235 |
+      236 |   test('Should create a new booking via time slot selection', async ({ page }) => {
+        at /Users/zachwieder/Documents/CODING MAIN/agency-hub/tests/e2e/calendar-booking-test.spec.ts:233:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--71bdc-te-a-new-booking-via-button-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/e2e-calendar-booking-test--71bdc-te-a-new-booking-via-button-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14 failed
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:45:7 › Calendar Booking Modal › service dropdown works correctly with client selection 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:81:7 › Calendar Phase 4 UI/UX Tests › Calendar page should load and display properly 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:94:7 › Calendar Phase 4 UI/UX Tests › Mobile responsiveness - sidebar should be hidden on mobile 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:106:7 › Calendar Phase 4 UI/UX Tests › Mobile responsiveness - calendar toolbar should stack vertically 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:123:7 › Calendar Phase 4 UI/UX Tests › Touch interactions - buttons should have proper touch targets 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:135:7 › Calendar Phase 4 UI/UX Tests › Booking modal should be responsive on mobile 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:150:7 › Calendar Phase 4 UI/UX Tests › Calendar views should switch properly 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:167:7 › Calendar Phase 4 UI/UX Tests › Google Calendar integration UI should work 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:180:7 › Calendar Phase 4 UI/UX Tests › Desktop layout - sidebar should be visible 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:192:7 › Calendar Phase 4 UI/UX Tests › Keyboard navigation should work 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:205:7 › Calendar Phase 4 UI/UX Tests › Loading states should be handled properly 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:215:7 › Calendar Phase 4 UI/UX Tests › Error handling - should show graceful errors 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:236:7 › Calendar Booking Creation Flow › Should create a new booking via time slot selection 
+    [chromium] › tests/e2e/calendar-booking-test.spec.ts:253:7 › Calendar Booking Creation Flow › Should create a new booking via button 

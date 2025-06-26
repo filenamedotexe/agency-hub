@@ -5,7 +5,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { AuthService } from "@/services/auth.service";
 
 const SESSION_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
-const SESSION_CHECK_INTERVAL = 60 * 1000; // 1 minute
+const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes (was 1 minute)
 
 export function useSessionRefresh() {
   const { user, refreshUser } = useAuth();
@@ -20,26 +20,30 @@ export function useSessionRefresh() {
       lastActivityRef.current = Date.now();
     };
 
-    // Add event listeners for user activity
-    const events = ["mousedown", "keydown", "touchstart", "scroll"];
+    // Add event listeners for meaningful user activity (not mouse moves or scroll)
+    const events = ["mousedown", "keydown", "touchstart"];
     events.forEach((event) => {
-      window.addEventListener(event, updateActivity);
+      window.addEventListener(event, updateActivity, { passive: true });
     });
 
-    // Check session periodically
+    // Check session periodically with optimizations
     const checkSession = async () => {
       const timeSinceActivity = Date.now() - lastActivityRef.current;
 
-      // If user has been active within the refresh interval
-      if (timeSinceActivity < SESSION_REFRESH_INTERVAL) {
+      // Only refresh if user has been active recently (within last 5 minutes)
+      if (timeSinceActivity < SESSION_CHECK_INTERVAL) {
+        console.log("[SessionRefresh] User active, refreshing session");
         const { error } = await authService.current.refreshSession();
 
         if (error) {
-          console.error("Session refresh failed:", error);
-          // Let the auth state change handler deal with this
+          console.error("[SessionRefresh] Session refresh failed:", error);
+          // Don't refresh user on error to prevent logout loops
         } else {
+          // Only refresh user state if session was actually refreshed
           await refreshUser();
         }
+      } else {
+        console.log("[SessionRefresh] User inactive, skipping refresh");
       }
     };
 

@@ -1,5 +1,12 @@
 import { getSupabaseClient } from "@/lib/supabase/client-singleton";
 import { SignUpData, SignInData, AuthUser } from "@/types/auth";
+import {
+  authLog,
+  authTime,
+  authTimeEnd,
+  authError,
+  authWarn,
+} from "@/lib/auth-debug";
 
 export class AuthClientService {
   private supabase;
@@ -91,29 +98,47 @@ export class AuthClientService {
   }
 
   async getCurrentUser(): Promise<AuthUser | null> {
+    authLog("getCurrentUser called");
+    authTime("getCurrentUser");
     try {
+      authTime("supabase.auth.getUser");
       const {
         data: { user },
       } = await this.supabase.auth.getUser();
+      authTimeEnd("supabase.auth.getUser");
 
-      if (!user) return null;
+      if (!user) {
+        authLog("No user from supabase.auth.getUser");
+        authTimeEnd("getCurrentUser");
+        return null;
+      }
+
+      authLog("Supabase user found:", user.email);
 
       // Fetch user profile from API
       try {
+        authTime("fetch /api/auth/me");
         const response = await fetch("/api/auth/me");
+        authTimeEnd("fetch /api/auth/me");
 
         if (!response.ok) {
-          console.warn("Auth API returned non-OK status:", response.status);
+          authWarn("Auth API returned non-OK status:", response.status);
+          authTimeEnd("getCurrentUser");
           return null;
         }
 
         const data = await response.json();
+        authLog("User profile fetched:", data.user?.email, data.user?.role);
+        authTimeEnd("getCurrentUser");
         return data.user;
       } catch (fetchError) {
-        console.error("Auth API call failed:", fetchError);
+        authError("Auth API call failed", fetchError);
+        authTimeEnd("getCurrentUser");
         return null;
       }
     } catch (error) {
+      authError("getCurrentUser failed", error);
+      authTimeEnd("getCurrentUser");
       return null;
     }
   }

@@ -123,6 +123,9 @@ GRANT SELECT ON request_comments TO authenticated;
     /features            # Feature-specific components
     /layouts             # Layout components
     /content-tools       # Content tool components
+    /providers
+      /auth-provider.tsx        # Auth context provider (with 5-second timeout)
+      /auth-error-boundary.tsx  # Error boundary for auth failures
   /lib
     /supabase           # Supabase client setup
     /prisma             # Prisma client
@@ -130,15 +133,20 @@ GRANT SELECT ON request_comments TO authenticated;
     /callback-urls.ts   # Environment-aware callback URL generation
     /hooks              # Custom React hooks
     /validations        # Zod schemas
+    /auth-state.ts      # Global auth state management (sessionStorage)
+    /auth-debug.ts      # Auth debugging utility
+    /middleware-cache.ts # Middleware auth caching (1-minute TTL)
   /hooks
     /use-realtime-dashboard.ts  # Dashboard realtime updates
     /use-realtime-requests.ts   # Requests realtime updates
+    /use-session-refresh.ts     # Session refresh hook (5-minute intervals)
   /services             # Business logic
   /types                # TypeScript types
   /tests
     /e2e                # Playwright tests
     /unit               # Unit tests
     /fixtures           # Test data
+    /auth-optimization.spec.ts  # Auth optimization test suite (13 tests)
   /supabase
     /migrations         # Database migrations
 ```

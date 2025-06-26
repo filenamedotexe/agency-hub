@@ -1,6 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { UserRole } from "@prisma/client";
+import { authLog, authTime, authTimeEnd, authWarn } from "@/lib/auth-debug";
+import { getCachedAuth, setCachedAuth } from "@/lib/middleware-cache";
 
 // Define protected routes and their required roles
 const protectedRoutes: Record<string, UserRole[]> = {
@@ -56,27 +58,26 @@ const authenticatedApiRoutes = [
 
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  console.log(`[MIDDLEWARE] Processing: ${pathname}`);
+  const start = Date.now();
 
-  // Allow exact root path
-  if (pathname === "/") {
-    console.log(`[MIDDLEWARE] Root path allowed: ${pathname}`);
+  // OPTIMIZATION 1: Skip static assets IMMEDIATELY (no logging)
+  if (
+    pathname.includes("/_next") ||
+    pathname.includes("/favicon.ico") ||
+    pathname.includes("/.well-known") ||
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|js|css|woff|woff2)$/i)
+  ) {
     return NextResponse.next();
   }
 
-  // Allow public routes
-  const matchingPublicRoute = publicRoutes.find((route) =>
-    pathname.startsWith(route)
-  );
-  if (matchingPublicRoute) {
-    console.log(
-      `[MIDDLEWARE] Public route allowed: ${pathname} (matched: ${matchingPublicRoute})`
-    );
-    return NextResponse.next();
-  }
+  console.log(`[MW] Processing: ${pathname}`);
 
-  // Allow static assets
-  if (pathname.includes("/_next") || pathname.includes("/favicon.ico")) {
+  // OPTIMIZATION 2: Fast path for public routes
+  if (
+    pathname === "/" ||
+    publicRoutes.some((route) => pathname.startsWith(route))
+  ) {
+    console.log(`[MW] Public route: ${pathname}`);
     return NextResponse.next();
   }
 
@@ -133,13 +134,13 @@ export async function updateSession(request: NextRequest) {
   );
 
   // OFFICIAL SUPABASE PATTERN: Always use getUser() in server code, never getSession()
+  authTime("getUser");
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  authTimeEnd("getUser");
 
-  console.log(`[MIDDLEWARE] getUser result:`, {
-    user: user ? { id: user.id, email: user.email } : null,
-  });
+  authLog(`getUser result:`, user ? { id: user.id, email: user.email } : null);
 
   // Check if route requires authentication
   const isProtectedRoute = Object.keys(protectedRoutes).some((route) =>
@@ -175,28 +176,44 @@ export async function updateSession(request: NextRequest) {
 
   console.log(`[MIDDLEWARE] Authenticated user: ${user.email}, ID: ${user.id}`);
 
-  // Fetch role from database
+  // Check cache first
   let userRole: string | null = null;
-  try {
-    console.log(`[MIDDLEWARE] Querying database for user: ${user.id}`);
-    const { data: userData, error } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+  const cached = getCachedAuth(user.id);
 
-    console.log(`[MIDDLEWARE] Database query result:`, { userData, error });
+  if (cached) {
+    userRole = cached.role;
+    console.log(`[MIDDLEWARE] Using cached role: ${userRole}`);
+  } else {
+    // Fetch role from database
+    try {
+      console.log(`[MIDDLEWARE] Querying database for user: ${user.id}`);
+      authTime(`database-query-${user.id}`);
 
-    if (error) {
-      console.error("[MIDDLEWARE] Database error:", error);
+      const { data: userData, error } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      authTimeEnd(`database-query-${user.id}`);
+      console.log(`[MIDDLEWARE] Database query result:`, { userData, error });
+
+      if (error) {
+        console.error("[MIDDLEWARE] Database error:", error);
+        userRole = null;
+      } else {
+        userRole = userData?.role || null;
+        console.log(`[MIDDLEWARE] User role: ${userRole}`);
+
+        // Cache the result
+        if (userRole) {
+          setCachedAuth(user.id, user, userRole);
+        }
+      }
+    } catch (error) {
+      console.error("[MIDDLEWARE] Failed to fetch user role:", error);
       userRole = null;
-    } else {
-      userRole = userData?.role || null;
-      console.log(`[MIDDLEWARE] User role: ${userRole}`);
     }
-  } catch (error) {
-    console.error("[MIDDLEWARE] Failed to fetch user role:", error);
-    userRole = null;
   }
 
   if (!userRole) {
@@ -270,8 +287,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  authLog(`ACCESS GRANTED: ${userRole} can access ${matchedRoute}`);
+
+  const duration = Date.now() - start;
   console.log(
-    `[MIDDLEWARE] ACCESS GRANTED: ${userRole} can access ${matchedRoute}`
+    `[MW] ${pathname} completed in ${duration}ms (cache: ${cached ? "HIT" : "MISS"})`
   );
+
   return response;
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { AuthErrorBoundary } from "@/components/providers/auth-error-boundary";
 import { Providers } from "@/components/providers";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -20,12 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          <Providers>
-            {children}
-            <Toaster />
-          </Providers>
-        </AuthProvider>
+        <AuthErrorBoundary>
+          <AuthProvider>
+            <Providers>
+              {children}
+              <Toaster />
+            </Providers>
+          </AuthProvider>
+        </AuthErrorBoundary>
       </body>
     </html>
   );

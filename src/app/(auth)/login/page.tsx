@@ -47,6 +47,8 @@ function LoginForm() {
   });
 
   const onSubmit = async (data: SignInInput) => {
+    console.log("[LoginForm] onSubmit called with:", data);
+    console.log("[LoginForm] Form validation errors:", form.formState.errors);
     setIsLoading(true);
     setError(null);
 
@@ -92,7 +94,18 @@ function LoginForm() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                console.log("[LoginForm] Form submit event triggered");
+                e.preventDefault();
+                console.log("[LoginForm] Calling handleSubmit");
+                form.handleSubmit(onSubmit)(e);
+              }}
+              method="post"
+              action="#"
+              className="space-y-4"
+              data-testid="login-form"
+            >
               {justRegistered && (
                 <Alert className="border-brand-success bg-brand-success-light">
                   <AlertDescription className="text-brand-success">
@@ -145,7 +158,13 @@ function LoginForm() {
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+                data-testid="login-submit"
+                onClick={() => console.log("[LoginForm] Submit button clicked")}
+              >
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </form>

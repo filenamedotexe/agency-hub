@@ -8,6 +8,360 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  role               UserRole
+  profileData        Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  activityLogs       ActivityLog[]
+  availabilityRules  AvailabilityRule[]
+  bookingSlots       BookingSlot[]
+  bookingsAsCreator  Booking[]           @relation("BookingCreator")
+  bookingsAsHost     Booking[]           @relation("BookingHost")
+  calendarConnection CalendarConnection?
+
+  @@map("users")
+}
+
+model Client {
+  id               String             @id @default(uuid())
+  name             String
+  businessName     String
+  address          String?
+  dudaSiteId       String?            @unique
+  metadata         Json?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  activityLogs     ActivityLog[]
+  bookings         Booking[]
+  formResponses    FormResponse[]
+  generatedContent GeneratedContent[]
+  requests         Request[]
+  services         Service[]
+
+  @@map("clients")
+}
+
+model ServiceTemplate {
+  id              String      @id @default(uuid())
+  name            String
+  type            ServiceType
+  defaultTasks    Json[]      @default([])
+  price           Float?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  requiredFormIds String[]    @default([])
+  services        Service[]
+
+  @@map("service_templates")
+}
+
+model Service {
+  id         String          @id @default(uuid())
+  templateId String
+  clientId   String
+  status     ServiceStatus   @default(TO_DO)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  bookings   Booking[]
+  client     Client          @relation(fields: [clientId], references: [id])
+  template   ServiceTemplate @relation(fields: [templateId], references: [id])
+  tasks      Task[]
+
+  @@index([clientId])
+  @@index([templateId])
+  @@index([status])
+  @@map("services")
+}
+
+model Task {
+  id            String     @id @default(uuid())
+  serviceId     String
+  name          String
+  description   String?
+  dueDate       DateTime?
+  clientVisible Boolean    @default(false)
+  status        TaskStatus @default(TO_DO)
+  metadata      Json?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  checklist     Json?
+  service       Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+  @@index([status])
+  @@map("tasks")
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  userId     String
+  entityType String
+  entityId   String
+  clientId   String?
+  action     String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  client     Client?  @relation(fields: [clientId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([clientId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model Attachment {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  fileName   String
+  filePath   String
+  fileSize   Int
+  mimeType   String
+  metadata   Json?
+  uploadedBy String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([uploadedBy])
+  @@index([createdAt])
+  @@map("attachments")
+}
+
+model Form {
+  id          String         @id @default(uuid())
+  name        String
+  description String?
+  schema      Json
+  settings    Json?
+  serviceId   String?
+  createdBy   String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  responses   FormResponse[]
+
+  @@index([serviceId])
+  @@index([createdBy])
+  @@map("forms")
+}
+
+model FormResponse {
+  id           String   @id @default(uuid())
+  formId       String
+  clientId     String
+  responseData Json
+  submittedAt  DateTime @default(now())
+  client       Client   @relation(fields: [clientId], references: [id])
+  form         Form     @relation(fields: [formId], references: [id])
+
+  @@index([formId])
+  @@index([clientId])
+  @@index([submittedAt])
+  @@map("form_responses")
+}
+
+model Request {
+  id            String           @id @default(uuid())
+  clientId      String
+  description   String
+  status        RequestStatus    @default(TO_DO)
+  dudaData      Json?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  completedAt   DateTime?
+  clientVisible Boolean          @default(false)
+  comments      RequestComment[]
+  client        Client           @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("requests")
+}
+
+model RequestComment {
+  id        String   @id @default(uuid())
+  requestId String
+  text      String
+  dudaUuid  String?
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  request   Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([dudaUuid])
+  @@map("request_comments")
+}
+
+model Webhook {
+  id            String             @id @default(uuid())
+  name          String
+  url           String
+  type          WebhookType
+  entityId      String?
+  headers       Json?
+  isActive      Boolean            @default(true)
+  createdBy     String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  isProduction  Boolean            @default(true)
+  productionUrl String?
+  testingUrl    String?
+  contentTools  ContentTool[]
+  executions    WebhookExecution[]
+
+  @@index([type])
+  @@index([entityId])
+  @@index([isActive])
+  @@map("webhooks")
+}
+
+model WebhookExecution {
+  id         String   @id @default(uuid())
+  webhookId  String
+  payload    Json
+  response   Json?
+  statusCode Int?
+  error      String?
+  executedAt DateTime @default(now())
+  webhook    Webhook  @relation(fields: [webhookId], references: [id])
+
+  @@index([webhookId])
+  @@index([executedAt])
+  @@map("webhook_executions")
+}
+
+model ContentTool {
+  id               String             @id @default(uuid())
+  type             ContentToolType    @unique
+  name             String
+  description      String?
+  prompt           String
+  webhookId        String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  fields           Json?
+  webhook          Webhook?           @relation(fields: [webhookId], references: [id])
+  generatedContent GeneratedContent[]
+
+  @@map("content_tools")
+}
+
+model GeneratedContent {
+  id        String      @id @default(uuid())
+  toolId    String
+  clientId  String
+  prompt    String
+  content   String
+  metadata  Json?
+  createdBy String
+  createdAt DateTime    @default(now())
+  client    Client      @relation(fields: [clientId], references: [id])
+  tool      ContentTool @relation(fields: [toolId], references: [id])
+
+  @@index([toolId])
+  @@index([clientId])
+  @@index([createdBy])
+  @@index([createdAt])
+  @@map("generated_content")
+}
+
+model ApiKey {
+  id           String   @id @default(uuid())
+  service      String   @unique
+  encryptedKey String
+  lastFour     String
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("api_keys")
+}
+
+model CalendarConnection {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  provider     String
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  calendarId   String
+  email        String
+  syncEnabled  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("calendar_connections")
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  title         String
+  description   String?
+  clientId      String
+  serviceId     String?
+  hostId        String
+  startTime     DateTime
+  endTime       DateTime
+  duration      Int
+  status        BookingStatus @default(PENDING)
+  location      String?
+  meetingUrl    String?
+  googleEventId String?
+  attendees     Json
+  reminderSent  Boolean       @default(false)
+  cancelReason  String?
+  notes         String?
+  createdBy     String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  client        Client        @relation(fields: [clientId], references: [id])
+  creator       User          @relation("BookingCreator", fields: [createdBy], references: [id])
+  host          User          @relation("BookingHost", fields: [hostId], references: [id])
+  service       Service?      @relation(fields: [serviceId], references: [id])
+
+  @@index([hostId, startTime])
+  @@index([clientId])
+  @@index([status])
+  @@index([startTime])
+  @@map("bookings")
+}
+
+model AvailabilityRule {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  isDefault Boolean  @default(false)
+  timezone  String   @default("America/New_York")
+  rules     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("availability_rules")
+}
+
+model BookingSlot {
+  id        String  @id @default(uuid())
+  userId    String
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  isActive  Boolean @default(true)
+  user      User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, dayOfWeek, startTime])
+  @@map("booking_slots")
+}
+
 enum UserRole {
   ADMIN
   SERVICE_MANAGER
@@ -15,38 +369,6 @@ enum UserRole {
   EDITOR
   VA
   CLIENT
-}
-
-model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  role        UserRole
-  profileData Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  activityLogs ActivityLog[]
-
-  @@map("users")
-}
-
-model Client {
-  id           String   @id @default(uuid())
-  name         String
-  businessName String
-  address      String?
-  dudaSiteId   String?  @unique
-  metadata     Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  activityLogs     ActivityLog[]
-  services         Service[]
-  formResponses    FormResponse[]
-  requests         Request[]
-  generatedContent GeneratedContent[]
-
-  @@map("clients")
 }
 
 enum ServiceType {
@@ -67,224 +389,18 @@ enum TaskStatus {
   DONE
 }
 
-model ServiceTemplate {
-  id           String      @id @default(uuid())
-  name         String
-  type         ServiceType
-  defaultTasks Json[]      @default([])
-  requiredFormIds String[]  @default([])
-  price        Float?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  services Service[]
-
-  @@map("service_templates")
-}
-
-model Service {
-  id         String        @id @default(uuid())
-  templateId String
-  clientId   String
-  status     ServiceStatus @default(TO_DO)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-
-  template ServiceTemplate @relation(fields: [templateId], references: [id])
-  client   Client          @relation(fields: [clientId], references: [id])
-  tasks    Task[]
-
-  @@index([clientId])
-  @@index([templateId])
-  @@index([status])
-  @@map("services")
-}
-
-model Task {
-  id            String     @id @default(uuid())
-  serviceId     String
-  name          String
-  description   String?
-  dueDate       DateTime?
-  clientVisible Boolean    @default(false)
-  status        TaskStatus @default(TO_DO)
-  checklist     Json?      // Array of checklist items: [{id: string, text: string, completed: boolean}]
-  metadata      Json?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-
-  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  @@index([serviceId])
-  @@index([status])
-  @@map("tasks")
-}
-
-model ActivityLog {
-  id         String   @id @default(uuid())
-  userId     String
-  entityType String
-  entityId   String
-  clientId   String?
-  action     String
-  metadata   Json?
-  createdAt  DateTime @default(now())
-
-  user   User    @relation(fields: [userId], references: [id])
-  client Client? @relation(fields: [clientId], references: [id])
-
-  @@index([userId])
-  @@index([entityType, entityId])
-  @@index([clientId])
-  @@index([createdAt])
-  @@map("activity_logs")
-}
-
-model Attachment {
-  id         String   @id @default(uuid())
-  entityType String   // 'service', 'task', 'client', etc.
-  entityId   String
-  fileName   String
-  filePath   String   // Supabase storage path
-  fileSize   Int      // Size in bytes
-  mimeType   String
-  metadata   Json?    // Additional metadata like dimensions for images
-  uploadedBy String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([entityType, entityId])
-  @@index([uploadedBy])
-  @@index([createdAt])
-  @@map("attachments")
-}
-
-// Phase 3: Forms
-model Form {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  schema      Json     // Form field definitions
-  settings    Json?    // Webhook URL, redirect URL, etc.
-  serviceId   String?  // Optional - forms can attach to services
-  createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  responses FormResponse[]
-
-  @@index([serviceId])
-  @@index([createdBy])
-  @@map("forms")
-}
-
-model FormResponse {
-  id           String   @id @default(uuid())
-  formId       String
-  clientId     String
-  responseData Json     // Dynamic field responses
-  submittedAt  DateTime @default(now())
-
-  form   Form   @relation(fields: [formId], references: [id])
-  client Client @relation(fields: [clientId], references: [id])
-
-  @@index([formId])
-  @@index([clientId])
-  @@index([submittedAt])
-  @@map("form_responses")
-}
-
-// Phase 3: Requests (from Duda webhooks)
 enum RequestStatus {
   TO_DO
   IN_PROGRESS
   DONE
 }
 
-model Request {
-  id            String        @id @default(uuid())
-  clientId      String
-  description   String
-  status        RequestStatus @default(TO_DO)
-  clientVisible Boolean       @default(false)
-  dudaData      Json?         // Original webhook payload
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  completedAt   DateTime?
-
-  client   Client          @relation(fields: [clientId], references: [id])
-  comments RequestComment[]
-
-  @@index([clientId])
-  @@index([status])
-  @@index([createdAt])
-  @@map("requests")
-}
-
-model RequestComment {
-  id          String   @id @default(uuid())
-  requestId   String
-  text        String
-  dudaUuid    String?  // Duda's comment UUID
-  isDeleted   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
-
-  @@index([requestId])
-  @@index([dudaUuid])
-  @@map("request_comments")
-}
-
-// Phase 3: Webhooks
 enum WebhookType {
   FORM
   CONTENT_TOOL
   GENERAL
 }
 
-model Webhook {
-  id            String      @id @default(uuid())
-  name          String
-  url           String
-  productionUrl String?     // Production webhook URL
-  testingUrl    String?     // Testing webhook URL
-  isProduction  Boolean     @default(true) // Which environment is active
-  type          WebhookType
-  entityId      String?     // formId or contentToolId if applicable
-  headers       Json?       // Custom headers
-  isActive      Boolean     @default(true)
-  createdBy     String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  executions   WebhookExecution[]
-  contentTools ContentTool[]
-
-  @@index([type])
-  @@index([entityId])
-  @@index([isActive])
-  @@map("webhooks")
-}
-
-model WebhookExecution {
-  id         String   @id @default(uuid())
-  webhookId  String
-  payload    Json
-  response   Json?
-  statusCode Int?
-  error      String?
-  executedAt DateTime @default(now())
-
-  webhook Webhook @relation(fields: [webhookId], references: [id])
-
-  @@index([webhookId])
-  @@index([executedAt])
-  @@map("webhook_executions")
-}
-
-// Phase 3: Content Tools
 enum ContentToolType {
   BLOG_WRITER
   FACEBOOK_VIDEO_AD
@@ -293,53 +409,11 @@ enum ContentToolType {
   SEO_KEYWORD_RESEARCH
 }
 
-model ContentTool {
-  id          String          @id @default(uuid())
-  type        ContentToolType @unique
-  name        String
-  description String?
-  prompt      String          // The AI prompt template
-  webhookId   String?         // Optional webhook for this tool
-  fields      Json?           // Configurable fields array
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  webhook          Webhook?           @relation(fields: [webhookId], references: [id])
-  generatedContent GeneratedContent[]
-
-  @@map("content_tools")
-}
-
-model GeneratedContent {
-  id         String          @id @default(uuid())
-  toolId     String
-  clientId   String
-  prompt     String          // The actual prompt used (with dynamic fields)
-  content    String          // The generated content
-  metadata   Json?           // Additional data like tokens used, model, etc.
-  createdBy  String
-  createdAt  DateTime        @default(now())
-
-  tool   ContentTool @relation(fields: [toolId], references: [id])
-  client Client      @relation(fields: [clientId], references: [id])
-
-  @@index([toolId])
-  @@index([clientId])
-  @@index([createdBy])
-  @@index([createdAt])
-  @@map("generated_content")
-}
-
-// Phase 3: API Keys
-model ApiKey {
-  id           String   @id @default(uuid())
-  service      String   // 'anthropic', 'openai', etc.
-  encryptedKey String   // Encrypted API key
-  lastFour     String   // Last 4 characters for display
-  createdBy    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([service])
-  @@map("api_keys")
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  RESCHEDULED
 }

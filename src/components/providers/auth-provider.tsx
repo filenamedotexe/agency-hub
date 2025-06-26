@@ -11,6 +11,13 @@ import {
 import { useRouter } from "next/navigation";
 import { AuthClientService } from "@/services/auth.client";
 import { AuthUser, AuthSession } from "@/types/auth";
+import { authLog, authTime, authTimeEnd, authError } from "@/lib/auth-debug";
+import {
+  getAuthState,
+  setAuthState,
+  shouldCheckAuth,
+  clearAuthState,
+} from "@/lib/auth-state";
 
 interface AuthContextType extends AuthSession {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -23,39 +30,84 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
+  // Initialize from global state to prevent loading on navigation
+  const globalState = getAuthState();
   const [session, setSession] = useState<AuthSession>({
-    user: null,
-    isLoading: true,
+    user: globalState.user,
+    isLoading: !globalState.isInitialized || shouldCheckAuth(),
     error: null,
   });
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   const authService = useMemo(() => new AuthClientService(), []);
 
   const checkUser = useCallback(async () => {
-    console.log("[AuthProvider] Checking user...");
+    authLog("checkUser started");
+    authTime("checkUser");
     try {
       const user = await authService.getCurrentUser();
-      console.log("[AuthProvider] User found:", user?.email);
+      authTimeEnd("checkUser");
+      authLog("User found:", user?.email, user?.role);
+
+      // Save to global state
+      setAuthState(user);
+
       setSession({ user, isLoading: false, error: null });
     } catch (error) {
-      console.error("[AuthProvider] Auth check failed:", error);
+      authTimeEnd("checkUser");
+      authError("Auth check failed", error);
+
+      // Clear global state on auth failure
+      clearAuthState();
+
       setSession({ user: null, isLoading: false, error: null });
     }
   }, [authService]);
 
   useEffect(() => {
-    // Check initial auth state
-    checkUser();
+    // Only check if we should check auth (not initialized or expired)
+    if (session.isLoading) {
+      checkUser();
+    }
 
     // Subscribe to auth state changes
     const subscription = authService.onAuthStateChange((user) => {
+      authLog("Auth state changed:", user?.email);
+
+      // Update global state on auth changes
+      if (user) {
+        setAuthState(user);
+      } else {
+        clearAuthState();
+      }
       setSession((prev) => ({ ...prev, user, isLoading: false }));
     });
 
     return () => {
       subscription.data.subscription.unsubscribe();
     };
-  }, [checkUser, authService]);
+  }, [session.isLoading, checkUser, authService]); // Include necessary dependencies
+
+  // Add loading timeout to prevent infinite loading
+  useEffect(() => {
+    if (!session.isLoading) return;
+
+    const timeout = setTimeout(() => {
+      if (session.isLoading) {
+        console.error(
+          "[AuthProvider] Loading timeout after 5s - forcing complete"
+        );
+        setSession({
+          user: null,
+          isLoading: false,
+          error: { message: "Loading timeout" },
+        });
+        setLoadingTimeout(true);
+      }
+    }, 5000); // 5 second timeout
+
+    return () => clearTimeout(timeout);
+  }, [session.isLoading]);
 
   const signIn = async (email: string, password: string) => {
     setSession((prev) => ({ ...prev, isLoading: true, error: null }));
@@ -67,12 +119,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error };
     }
 
+    // Save to global state on successful login
+    setAuthState(user);
+
     setSession({ user, isLoading: false, error: null });
     return { error: null };
   };
 
   const signOut = async () => {
     console.log("[AuthProvider] Starting logout...");
+
+    // Clear global auth state immediately
+    clearAuthState();
 
     // Clear session immediately to prevent UI issues
     setSession({ user: null, isLoading: false, error: null });

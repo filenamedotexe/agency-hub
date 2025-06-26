@@ -3,5 +3,4 @@ description:
 globs: 
 alwaysApply: true
 ---
-always read claude.md after every message i send you
-Keep claude.md up to date with the up to date full current app features and details 
+always read all files in /cursor/rules directory  after every message i send you and keep all relevant files up to date 
