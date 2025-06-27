@@ -20,6 +20,8 @@ import {
   Bot,
   Webhook,
   Calendar,
+  Package,
+  TrendingUp,
 } from "lucide-react";
 
 interface NavItem {
@@ -89,6 +91,18 @@ const navItems: NavItem[] = [
     href: "/automations",
     icon: Webhook,
     roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
+  },
+  {
+    label: "Orders",
+    href: "/admin/orders",
+    icon: Package,
+    roles: [UserRole.ADMIN],
+  },
+  {
+    label: "Sales Analytics",
+    href: "/admin/sales",
+    icon: TrendingUp,
+    roles: [UserRole.ADMIN],
   },
   {
     label: "Settings",

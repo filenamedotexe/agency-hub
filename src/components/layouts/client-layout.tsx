@@ -13,6 +13,8 @@ import {
   Briefcase,
   LogOut,
   ChevronDown,
+  ShoppingCart,
+  History,
 } from "lucide-react";
 
 interface NavItem {
@@ -26,6 +28,16 @@ const navItems: NavItem[] = [
     label: "Dashboard",
     href: "/client-dashboard",
     icon: Home,
+  },
+  {
+    label: "Store",
+    href: "/store",
+    icon: ShoppingCart,
+  },
+  {
+    label: "Order History",
+    href: "/store/orders",
+    icon: History,
   },
   {
     label: "Forms",
@@ -261,7 +273,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile bottom navigation */}
         <nav className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white shadow-lg lg:hidden">
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-5 gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;

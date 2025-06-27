@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, EmailTemplates } from "@/lib/email";
 import { z } from "zod";
 
 const signContractSchema = z.object({
@@ -102,6 +103,22 @@ export async function POST(
       },
     });
 
+    // Send contract signed email
+    try {
+      const contractEmail = EmailTemplates.contractSigned(
+        order.id,
+        client.name,
+        order.items[0].serviceName
+      );
+
+      await sendEmail({
+        to: client.email,
+        ...contractEmail,
+      });
+    } catch (error) {
+      console.error("Failed to send contract signed email:", error);
+    }
+
     // Now provision the services
     await provisionServicesAfterContract(order);
 
@@ -182,6 +199,59 @@ async function provisionServicesAfterContract(order: any) {
     },
   });
 
-  // TODO: Generate and send invoice
-  // await invoiceService.generateInvoice(order.id);
+  // Generate invoice and send emails
+  try {
+    const invoice = await prisma.invoice.create({
+      data: {
+        orderId: order.id,
+        invoiceNumber: generateInvoiceNumber(),
+        total: order.total,
+        tax: 0,
+        subtotal: order.total,
+        issuedAt: new Date(),
+        status: "PAID",
+      },
+    });
+
+    // Get client details
+    const client = await prisma.client.findUnique({
+      where: { id: order.clientId },
+    });
+
+    if (client) {
+      // Send invoice email
+      const invoiceEmail = EmailTemplates.invoiceGenerated(
+        invoice.invoiceNumber,
+        client.name,
+        order.total
+      );
+
+      await sendEmail({
+        to: client.email,
+        ...invoiceEmail,
+      });
+
+      // Send service provisioned email
+      const serviceEmail = EmailTemplates.serviceProvisioned(
+        order.id,
+        client.name,
+        order.items.map((item: any) => item.serviceName).join(", ")
+      );
+
+      await sendEmail({
+        to: client.email,
+        ...serviceEmail,
+      });
+    }
+  } catch (error) {
+    console.error("Failed to generate invoice or send emails:", error);
+  }
+}
+
+// Helper function to generate invoice numbers
+function generateInvoiceNumber(): string {
+  const prefix = process.env.INVOICE_PREFIX || "INV";
+  const year = new Date().getFullYear();
+  const timestamp = Date.now().toString().slice(-6);
+  return `${prefix}-${year}-${timestamp}`;
 }

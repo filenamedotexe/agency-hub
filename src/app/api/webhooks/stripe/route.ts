@@ -2,7 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { stripeService } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, EmailTemplates } from "@/lib/email";
+import OrderConfirmationEmail from "@/components/emails/order-confirmation";
 import Stripe from "stripe";
+
+// Helper function to generate invoice numbers
+function generateInvoiceNumber(): string {
+  const prefix = process.env.INVOICE_PREFIX || "INV";
+  const year = new Date().getFullYear();
+  const timestamp = Date.now().toString().slice(-6);
+  return `${prefix}-${year}-${timestamp}`;
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -140,8 +150,56 @@ async function handleCheckoutSessionCompleted(
   await updateSalesMetrics(order);
 
   // Send confirmation email
-  // TODO: Implement email service
-  // await emailService.sendOrderConfirmation(order);
+  try {
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_URL || "http://localhost:3001"}/store/orders/${order.id}`;
+
+    // Send customer email with React template
+    await sendEmail({
+      to: order.client.email,
+      subject: `Order Confirmation #${order.id}`,
+      react: OrderConfirmationEmail({
+        orderId: order.id,
+        clientName: order.client.name,
+        total: order.total,
+        items: order.items.map((item) => ({
+          name: item.serviceName,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        dashboardUrl,
+      }),
+    });
+
+    // Send admin notification
+    const adminEmail = EmailTemplates.adminOrderNotification(
+      order.id,
+      order.client.name,
+      order.total,
+      order.items.map((item) => `${item.serviceName} (${item.quantity}x)`)
+    );
+
+    await sendEmail({
+      to: process.env.ADMIN_EMAIL || "admin@agencyhub.com",
+      ...adminEmail,
+    });
+
+    // If contract required, send contract notification
+    if (requiresContract) {
+      const contractEmail = EmailTemplates.contractReady(
+        order.id,
+        order.client.name,
+        order.items[0].serviceName
+      );
+
+      await sendEmail({
+        to: order.client.email,
+        ...contractEmail,
+      });
+    }
+  } catch (error) {
+    console.error("Failed to send order confirmation email:", error);
+    // Don't fail the webhook if email fails
+  }
 }
 
 async function handlePaymentIntentSucceeded(
@@ -179,6 +237,9 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
 async function handleChargeRefunded(charge: Stripe.Charge) {
   const order = await prisma.order.findFirst({
     where: { stripePaymentIntentId: charge.payment_intent as string },
+    include: {
+      client: true,
+    },
   });
 
   if (order) {
@@ -200,6 +261,22 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
         },
       },
     });
+
+    // Send refund email
+    try {
+      const refundEmail = EmailTemplates.refundProcessed(
+        order.id,
+        order.client.name,
+        charge.amount_refunded
+      );
+
+      await sendEmail({
+        to: order.client.email,
+        ...refundEmail,
+      });
+    } catch (error) {
+      console.error("Failed to send refund email:", error);
+    }
 
     // Update client lifetime value
     await updateClientLifetimeValue(order.clientId);
@@ -259,8 +336,45 @@ async function provisionServices(order: any) {
   });
 
   // Generate invoice
-  // TODO: Implement invoice service
-  // await invoiceService.generateInvoice(order.id);
+  try {
+    const invoice = await prisma.invoice.create({
+      data: {
+        orderId: order.id,
+        invoiceNumber: generateInvoiceNumber(),
+        total: order.total,
+        tax: 0,
+        subtotal: order.total,
+        issuedAt: new Date(),
+        status: "PAID",
+      },
+    });
+
+    // Send invoice email
+    const invoiceEmail = EmailTemplates.invoiceGenerated(
+      invoice.invoiceNumber,
+      order.client.name,
+      order.total
+    );
+
+    await sendEmail({
+      to: order.client.email,
+      ...invoiceEmail,
+    });
+
+    // Send service provisioned email
+    const serviceEmail = EmailTemplates.serviceProvisioned(
+      order.id,
+      order.client.name,
+      order.items.map((item) => item.serviceName).join(", ")
+    );
+
+    await sendEmail({
+      to: order.client.email,
+      ...serviceEmail,
+    });
+  } catch (error) {
+    console.error("Failed to generate invoice or send email:", error);
+  }
 }
 
 async function updateClientLifetimeValue(clientId: string) {

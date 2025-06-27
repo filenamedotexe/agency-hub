@@ -128,3 +128,70 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession();
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get client ID based on user role
+    let clientId: string | undefined;
+
+    if (session.user.role === "CLIENT") {
+      const client = await prisma.client.findFirst({
+        where: {
+          metadata: {
+            path: ["userId"],
+            equals: session.user.id,
+          },
+        },
+      });
+
+      if (!client) {
+        return NextResponse.json(
+          { error: "Client not found" },
+          { status: 404 }
+        );
+      }
+
+      clientId = client.id;
+    }
+
+    // Fetch orders based on role
+    const whereClause = session.user.role === "CLIENT" ? { clientId } : {}; // Admin sees all orders
+
+    const orders = await prisma.order.findMany({
+      where: whereClause,
+      include: {
+        items: {
+          include: {
+            serviceTemplate: true,
+            service: true,
+          },
+        },
+        invoice: true,
+        contract: true,
+        timeline: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+        client: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch orders" },
+      { status: 500 }
+    );
+  }
+}
