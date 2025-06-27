@@ -4,6 +4,8 @@ import { BookingService } from "@/lib/services/booking-service";
 import { UserRole, BookingStatus } from "@prisma/client";
 import { CreateBookingInput } from "@/types/booking";
 
+export const dynamic = "force-dynamic";
+
 const bookingService = new BookingService();
 
 // GET /api/bookings - List bookings

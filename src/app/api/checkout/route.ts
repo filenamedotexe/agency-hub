@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { stripeService } from "@/lib/stripe";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const checkoutSchema = z.object({
   items: z.array(
     z.object({

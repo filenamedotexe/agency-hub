@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { BookingService } from "@/lib/services/booking-service";
 
+export const dynamic = "force-dynamic";
+
 const bookingService = new BookingService();
 
 // GET /api/bookings/slots - Get available time slots for a specific date

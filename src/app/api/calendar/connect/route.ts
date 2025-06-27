@@ -3,6 +3,8 @@ import { getServerSession } from "@/lib/auth";
 import { getAuthUrl } from "@/lib/google-calendar";
 import { UserRole } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const session = await getServerSession();

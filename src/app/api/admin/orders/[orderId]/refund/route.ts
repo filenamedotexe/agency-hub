@@ -5,6 +5,8 @@ import { stripe } from "@/lib/stripe";
 import { z } from "zod";
 import { UserRole, OrderStatus, PaymentStatus } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 const refundSchema = z.object({
   type: z.enum(["full", "partial"]),
   amount: z.number().positive().optional(),

@@ -3,6 +3,8 @@ import { getServerSession } from "@/lib/auth";
 import { BookingService } from "@/lib/services/booking-service";
 import { UserRole } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 const bookingService = new BookingService();
 
 // POST /api/bookings/availability - Check if a time slot is available

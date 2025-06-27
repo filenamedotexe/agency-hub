@@ -3,6 +3,8 @@ import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/availability - Get user's availability settings
 export async function GET(req: NextRequest) {
   try {
