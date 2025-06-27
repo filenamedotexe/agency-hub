@@ -19,7 +19,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { OrderTimeline } from "../../../store/components/order-timeline";
+import { OrderTimeline } from "@/app/(dashboard)/store/components/order-timeline";
 import { toast } from "sonner";
 import { useState } from "react";
 

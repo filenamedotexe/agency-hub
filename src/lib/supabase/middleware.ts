@@ -31,6 +31,9 @@ const protectedRoutes: Record<string, UserRole[]> = {
     UserRole.COPYWRITER,
     UserRole.EDITOR,
   ],
+  "/calendar": [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
+  "/store": [UserRole.ADMIN, UserRole.SERVICE_MANAGER, UserRole.CLIENT],
+  "/admin": [UserRole.ADMIN],
   "/client-dashboard": [UserRole.CLIENT],
 };
 
@@ -54,6 +57,15 @@ const authenticatedApiRoutes = [
   "/api/debug",
   "/api/client/forms",
   "/api/client/services",
+  "/api/admin",
+  "/api/orders",
+  "/api/bookings",
+  "/api/availability",
+  "/api/calendar",
+  "/api/cart",
+  "/api/checkout",
+  "/api/contracts",
+  "/api/store",
 ];
 
 export async function updateSession(request: NextRequest) {

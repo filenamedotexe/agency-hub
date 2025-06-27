@@ -12,10 +12,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Only clients can access the store
-    if (session.user.role !== "CLIENT") {
+    // Store is available for clients, admins, and service managers
+    const allowedRoles = ["CLIENT", "ADMIN", "SERVICE_MANAGER"];
+    if (!allowedRoles.includes(session.user.role)) {
       return NextResponse.json(
-        { error: "Store is only available for clients" },
+        { error: "You don't have permission to access the store" },
         { status: 403 }
       );
     }

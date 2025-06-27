@@ -210,17 +210,20 @@ export default function SalesAnalyticsPage() {
                     tickFormatter={(value) => format(new Date(value), "MMM d")}
                   />
                   <YAxis />
+                  <YAxis yAxisId="right" orientation="right" />
                   <Tooltip
                     formatter={(value: any) => `$${value}`}
                     labelFormatter={(label) =>
                       format(new Date(label), "MMM d, yyyy")
                     }
                   />
+                  <Legend />
                   <Line
                     type="monotone"
                     dataKey="revenue"
                     stroke="#8884d8"
                     strokeWidth={2}
+                    name="Revenue"
                   />
                   <Line
                     type="monotone"
@@ -228,6 +231,7 @@ export default function SalesAnalyticsPage() {
                     stroke="#82ca9d"
                     strokeWidth={2}
                     yAxisId="right"
+                    name="Orders"
                   />
                 </LineChart>
               </ResponsiveContainer>

@@ -22,6 +22,8 @@ import {
   Calendar,
   Package,
   TrendingUp,
+  ShoppingBag,
+  History,
 } from "lucide-react";
 
 interface NavItem {
@@ -91,6 +93,18 @@ const navItems: NavItem[] = [
     href: "/automations",
     icon: Webhook,
     roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
+  },
+  {
+    label: "Store",
+    href: "/store",
+    icon: ShoppingBag,
+    roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER, UserRole.CLIENT],
+  },
+  {
+    label: "Order History",
+    href: "/store/orders",
+    icon: History,
+    roles: [UserRole.CLIENT],
   },
   {
     label: "Orders",

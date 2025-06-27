@@ -11,6 +11,11 @@
 - **React DnD Kit** - Drag-and-drop for form builder and Kanban
 - **Recharts** - Analytics dashboards
 - **@radix-ui/react-tooltip** - Enhanced tooltips for improved UX and ngrok setup guidance
+- **Stripe** - Payment processing and subscription management
+- **@stripe/stripe-js** - Stripe JavaScript SDK for frontend
+- **@stripe/react-stripe-js** - React components for Stripe integration
+- **@react-pdf/renderer** - PDF generation for invoices
+- **signature_pad** - Canvas-based e-signature capture
 
 ## UI Components Library
 

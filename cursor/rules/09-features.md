@@ -17,6 +17,8 @@
 - ✅ **UI Component Library**: Complete shadcn/ui implementation with custom enhancements
 - ✅ **Tooltip System**: Interactive help and guidance throughout the application
 - ✅ **ngrok Integration**: Seamless local development with automated setup guidance
+- ✅ **Calendar System**: Full calendar with bookings, availability, and multiple views
+- 🔄 **Stripe Store Integration**: E-commerce store with payment processing (in progress)
 
 ## Task Checklist Feature
 
@@ -181,3 +183,63 @@ All dynamic fields (displayed in the format `{{fieldName}}`) throughout the appl
   - `/src/components/providers/auth-error-boundary.tsx` - Error boundary component
 - **Test Coverage**: 100% (13/13 Playwright tests passing)
 - **Documentation**: Comprehensive documentation in `/docs/auth-optimization-changes.md`
+
+## 🛍️ Stripe Store Feature (In Progress)
+
+### Overview
+
+A comprehensive e-commerce store integration allowing clients to purchase services directly through Stripe. Services purchased through the store are automatically provisioned to the client's account with proper contracts, invoicing, and business intelligence.
+
+### Current Status
+
+- ✅ **Stripe Setup**: Test API keys configured and MCP integration ready
+- ✅ **Environment Configuration**: All necessary environment variables set
+- ✅ **Implementation Plan**: Comprehensive 4-phase rollout plan created
+- 🔄 **Database Schema**: Store models designed and ready for migration
+- 🔄 **Phase 1 Development**: Foundation components in progress
+
+### Key Features Planned
+
+#### Phase 1 - Foundation
+
+- **Shopping Cart**: LocalStorage/API synchronized cart system
+- **Service Store Settings**: Price, description, images for purchasable services
+- **My Services Widget**: Dashboard component for clients to track active services
+- **Store Page Structure**: Service grid, detail pages, cart UI
+
+#### Phase 2 - Stripe Integration
+
+- **Checkout Flow**: Stripe-hosted checkout with test mode support
+- **Payment Processing**: Webhook handling for payment events
+- **E-Signature Contracts**: Service agreement signing before access
+- **Auto-Provisioning**: Services automatically assigned after payment
+
+#### Phase 3 - Order Management
+
+- **Order History**: Visual timeline showing order progress
+- **Admin Dashboard**: Comprehensive order management interface
+- **Invoice Generation**: Professional PDF invoices with custom numbering
+- **Sales Analytics**: Revenue tracking, client LTV, and business metrics
+
+#### Phase 4 - Polish & Launch
+
+- **Refund Management**: UI for processing full/partial refunds
+- **UI/UX Improvements**: Enhanced shopping experience
+- **Testing Suite**: Comprehensive E2E tests for purchase flow
+- **Production Deployment**: Feature flag controlled rollout
+
+### Technical Implementation
+
+- **Database Models**: Cart, Order, OrderItem, ServiceContract, Invoice, SalesMetrics
+- **API Endpoints**: `/api/cart`, `/api/checkout`, `/api/webhooks/stripe`, `/api/orders`
+- **Stripe Integration**: Using `@stripe/stripe-js` and webhook signature verification
+- **Contract System**: Canvas-based signature capture with legal compliance
+- **Invoice System**: PDF generation with `@react-pdf/renderer`
+
+### Business Value
+
+- **New Revenue Stream**: Enable impulse purchases and self-service
+- **Legal Protection**: E-signature contracts protect agency interests
+- **Automated Workflows**: Reduce manual service assignment overhead
+- **Business Intelligence**: Track client lifetime value and revenue metrics
+- **Professional Experience**: Automated invoicing and order management

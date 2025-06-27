@@ -38,6 +38,8 @@ We are building an app for my agency to manage my clients and the services that 
   - Forms assigned to the client (To Do, Done)
   - Services for the client & overall service status
   - Tasks that are viewable by clients (toggled by admin/service manager)
+  - Store access to purchase additional services
+  - Order history and invoices
 
 ## Menu Items (Pages)
 
@@ -95,8 +97,17 @@ We are building an app for my agency to manage my clients and the services that 
 - Webhook integration for generated content
 - Tools: Blog Writer, Facebook Ad Scripts, Google Ad Writer, SEO Research
 
+### Store (In Progress)
+
+- Service marketplace for clients to purchase services
+- Shopping cart with Stripe checkout integration
+- E-signature contracts for service agreements
+- Order history and tracking
+- Professional invoice generation
+- Sales analytics dashboard (Admin only)
+
 ### Settings
 
 - Account Settings
-- API Keys (Anthropic, OpenAI)
+- API Keys (Anthropic, OpenAI, Stripe)
 - Team member management (add admins, service managers, etc.)

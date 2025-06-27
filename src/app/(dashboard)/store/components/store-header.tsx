@@ -18,7 +18,7 @@ export function StoreHeader() {
           Browse and purchase services for your business
         </p>
       </div>
-      <Button asChild className="relative">
+      <Button asChild className="relative" data-testid="cart-icon">
         <Link href="/store/cart">
           <ShoppingCart className="mr-2 h-4 w-4" />
           Cart
@@ -26,6 +26,7 @@ export function StoreHeader() {
             <Badge
               variant="secondary"
               className="ml-2 flex h-5 w-5 items-center justify-center rounded-full p-0"
+              data-testid="cart-badge"
             >
               {itemCount}
             </Badge>

@@ -10,7 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AddToCartButton } from "./add-to-cart-button";
 import Link from "next/link";
-import { ArrowRight, FileText } from "lucide-react";
+import { ArrowRight, FileText, Sparkles, Clock, Shield } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ServiceCardProps {
   service: {
@@ -23,6 +29,7 @@ interface ServiceCardProps {
     type: string;
     requiresContract: boolean;
     maxQuantity: number;
+    metadata?: any;
   };
 }
 
@@ -52,38 +59,103 @@ export function ServiceCard({ service }: ServiceCardProps) {
     }
   };
 
+  const isPopular = service.metadata?.popular || false;
+  const estimatedDelivery = service.metadata?.estimatedDelivery || "2-3 weeks";
+
   return (
-    <Card className="flex h-full flex-col transition-shadow hover:shadow-lg">
-      <CardHeader>
-        <div className="mb-2 flex items-start justify-between">
-          <Badge variant="secondary">{getTypeLabel(service.type)}</Badge>
-          {service.requiresContract && (
-            <div title="Contract required">
-              <FileText className="h-4 w-4 text-gray-400" />
+    <TooltipProvider>
+      <Card
+        className="group relative flex h-full flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+        data-testid="service-card"
+      >
+        {/* Popular badge */}
+        {isPopular && (
+          <div className="absolute right-4 top-4 z-10">
+            <Badge className="border-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
+              <Sparkles className="mr-1 h-3 w-3" />
+              Popular
+            </Badge>
+          </div>
+        )}
+
+        <CardHeader className="relative">
+          <div className="mb-3 flex items-start justify-between">
+            <Badge
+              variant="secondary"
+              className="border-indigo-200 bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-700"
+              data-testid="service-type-badge"
+            >
+              {getTypeLabel(service.type)}
+            </Badge>
+          </div>
+
+          <h3 className="line-clamp-2 text-xl font-semibold transition-colors group-hover:text-primary">
+            {displayTitle}
+          </h3>
+
+          <div className="mt-3 space-y-2">
+            <p
+              className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-2xl font-bold text-transparent"
+              data-testid="service-price"
+            >
+              {formatPrice(service.price)}
+            </p>
+
+            {/* Service features */}
+            <div className="flex flex-wrap gap-2 text-sm">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 text-gray-500">
+                    <Clock className="h-3 w-3" />
+                    <span>{estimatedDelivery}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Estimated delivery time</p>
+                </TooltipContent>
+              </Tooltip>
+
+              {service.requiresContract && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <Shield className="h-3 w-3" />
+                      <span>Contract</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Service agreement required</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
-          )}
-        </div>
-        <h3 className="text-xl font-semibold">{displayTitle}</h3>
-        <p className="mt-2 text-2xl font-bold text-primary">
-          {formatPrice(service.price)}
-        </p>
-      </CardHeader>
-      <CardContent className="flex-1">
-        <p className="line-clamp-3 text-gray-600">{displayDescription}</p>
-      </CardContent>
-      <CardFooter className="flex gap-2">
-        <Button variant="outline" asChild className="flex-1">
-          <Link href={`/store/${service.id}`}>
-            Details
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-        <AddToCartButton
-          serviceTemplateId={service.id}
-          maxQuantity={service.maxQuantity}
-          disabled={!service.price}
-        />
-      </CardFooter>
-    </Card>
+          </div>
+        </CardHeader>
+
+        <CardContent className="flex-1">
+          <p className="line-clamp-3 leading-relaxed text-gray-600">
+            {displayDescription}
+          </p>
+        </CardContent>
+
+        <CardFooter className="flex gap-2 border-t bg-gray-50/50 pt-6">
+          <Button
+            variant="outline"
+            asChild
+            className="flex-1 transition-all hover:bg-primary hover:text-white"
+          >
+            <Link href={`/store/${service.id}`}>
+              Details
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Button>
+          <AddToCartButton
+            serviceTemplateId={service.id}
+            maxQuantity={service.maxQuantity}
+            disabled={!service.price}
+          />
+        </CardFooter>
+      </Card>
+    </TooltipProvider>
   );
 }

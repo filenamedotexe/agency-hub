@@ -70,14 +70,25 @@ GRANT SELECT ON request_comments TO authenticated;
 
 ## API Endpoints
 
+For comprehensive API documentation with request/response examples, see: [`/docs/api-reference.md`](/docs/api-reference.md)
+
 ### Core APIs
 
 - `/api/clients` - Client management
 - `/api/services` - Service templates and assignments
+- `/api/tasks` - Task management and checklists
 - `/api/forms` - Form builder and responses
 - `/api/requests` - Request management
+- `/api/bookings` - Calendar bookings
 - `/api/content-tools` - AI content generation
 - `/api/settings` - Application settings
+
+### Store APIs (Stripe Integration)
+
+- `/api/cart` - Shopping cart management
+- `/api/checkout` - Stripe checkout sessions
+- `/api/orders` - Order management and history
+- `/api/contracts` - E-signature contracts
 
 ### Webhook APIs
 
@@ -85,6 +96,7 @@ GRANT SELECT ON request_comments TO authenticated;
 - `/api/webhooks/[id]` - Individual webhook management
 - `/api/webhooks/execute` - Execute webhook programmatically
 - `/api/test-webhook` - Test webhook endpoints
+- `/api/webhooks/stripe` - Stripe payment webhooks
 - `/api/webhooks/duda` - Duda webhook receiver
 
 ### Content Tool APIs
@@ -93,9 +105,17 @@ GRANT SELECT ON request_comments TO authenticated;
 - `/api/content-tools/[id]/generated-content` - Retrieve generated content (with optional client filtering)
 - `/api/content-tools/[id]/callback` - Webhook callback endpoint
 
+### Admin APIs
+
+- `/api/admin/users` - User management
+- `/api/admin/analytics` - Sales and business analytics
+- `/api/admin/orders` - Order administration
+
 ### Utility APIs
 
 - `/api/health` - Health check endpoint
+- `/api/attachments` - File upload and management
+- `/api/activities` - Activity logging
 - `/api/debug/current-user` - Debug current user info
 - `/api/debug/role` - Debug role information
 

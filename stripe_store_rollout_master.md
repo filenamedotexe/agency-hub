@@ -2022,7 +2022,6 @@ trackEvent("refund_processed", { orderId, amount, reason });
 - **Bundles**: Package multiple services with discounts
 - **Client Portal**: Self-service invoice downloads and order management
 - **Automated Dunning**: Follow up on failed payments
-- **Multi-language Contracts**: Support international clients
 
 ### Phase 6: Optimization
 
