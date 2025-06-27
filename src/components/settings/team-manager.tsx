@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2, Edit, Mail, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -207,18 +207,20 @@ export function TeamManager() {
         {teamMembers.map((member) => (
           <div
             key={member.id}
-            className="flex items-center justify-between rounded-lg border p-3"
+            className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <div className="flex items-start gap-3 sm:items-center">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
                 <Mail className="h-5 w-5 text-muted-foreground" />
               </div>
-              <div>
-                <p className="font-medium">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">
                   {member.profileData?.name || member.email.split("@")[0]}
                 </p>
-                <p className="text-sm text-muted-foreground">{member.email}</p>
-                <div className="flex items-center gap-2">
+                <p className="truncate text-sm text-muted-foreground">
+                  {member.email}
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
                   <Badge variant={getRoleBadgeVariant(member.role)}>
                     {ROLES.find((r) => r.value === member.role)?.label ||
                       member.role}
@@ -230,8 +232,8 @@ export function TeamManager() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
+            <div className="flex shrink-0 items-center gap-2 self-end sm:self-center">
+              <MotionButton
                 size="sm"
                 variant="ghost"
                 onClick={() => {
@@ -246,28 +248,31 @@ export function TeamManager() {
                 }}
               >
                 <Edit className="h-4 w-4" />
-              </Button>
-              <Button
+              </MotionButton>
+              <MotionButton
                 size="sm"
                 variant="ghost"
                 className="text-destructive"
                 onClick={() => setDeleteMemberId(member.id)}
               >
                 <Trash2 className="h-4 w-4" />
-              </Button>
+              </MotionButton>
             </div>
           </div>
         ))}
       </div>
 
-      <Button onClick={() => setShowAddForm(true)} className="w-full sm:w-auto">
+      <MotionButton
+        onClick={() => setShowAddForm(true)}
+        className="w-full sm:w-auto"
+      >
         <Plus className="mr-2 h-4 w-4" />
         Add Team Member
-      </Button>
+      </MotionButton>
 
       {/* Add Member Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
               {editingMember ? "Edit Team Member" : "Add Team Member"}
@@ -302,6 +307,7 @@ export function TeamManager() {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 placeholder="member@example.com"
+                disabled={!!editingMember}
               />
             </div>
 
@@ -332,8 +338,8 @@ export function TeamManager() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button
+          <DialogFooter className="gap-2 sm:gap-0">
+            <MotionButton
               variant="outline"
               onClick={() => {
                 setShowAddForm(false);
@@ -342,12 +348,12 @@ export function TeamManager() {
               }}
             >
               Cancel
-            </Button>
-            <Button
+            </MotionButton>
+            <MotionButton
               onClick={editingMember ? handleUpdateMember : handleAddMember}
             >
               {editingMember ? "Update Member" : "Add Member"}
-            </Button>
+            </MotionButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

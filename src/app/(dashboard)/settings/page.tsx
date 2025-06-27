@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Key, Users, Settings as SettingsIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -27,23 +27,37 @@ export default function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
-          <TabsTrigger value="api-keys" className="flex items-center gap-2">
-            <Key className="h-4 w-4" />
-            API Keys
-          </TabsTrigger>
-          <TabsTrigger value="team" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Team Members
-          </TabsTrigger>
-          <TabsTrigger value="account" className="flex items-center gap-2">
-            <SettingsIcon className="h-4 w-4" />
-            Account
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2">
+          <TabsList className="inline-flex h-10 w-full items-center justify-start rounded-md bg-muted p-1 text-muted-foreground md:w-auto">
+            <TabsTrigger
+              value="api-keys"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              <Key className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">API Keys</span>
+              <span className="sm:hidden">API</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="team"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Team Members</span>
+              <span className="sm:hidden">Team</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="account"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              <SettingsIcon className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Account</span>
+              <span className="sm:hidden">Account</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="api-keys" className="space-y-4">
-          <Card>
+          <EnhancedCard>
             <CardHeader>
               <CardTitle>API Key Management</CardTitle>
               <CardDescription>
@@ -54,11 +68,11 @@ export default function SettingsPage() {
             <CardContent>
               <ApiKeyManager />
             </CardContent>
-          </Card>
+          </EnhancedCard>
         </TabsContent>
 
         <TabsContent value="team" className="space-y-4">
-          <Card>
+          <EnhancedCard>
             <CardHeader>
               <CardTitle>Team Members</CardTitle>
               <CardDescription>
@@ -68,11 +82,11 @@ export default function SettingsPage() {
             <CardContent>
               <TeamManager />
             </CardContent>
-          </Card>
+          </EnhancedCard>
         </TabsContent>
 
         <TabsContent value="account" className="space-y-4">
-          <Card>
+          <EnhancedCard>
             <CardHeader>
               <CardTitle>Account Settings</CardTitle>
               <CardDescription>
@@ -82,7 +96,7 @@ export default function SettingsPage() {
             <CardContent>
               <AccountSettings />
             </CardContent>
-          </Card>
+          </EnhancedCard>
         </TabsContent>
       </Tabs>
     </div>

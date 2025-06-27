@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Eye, EyeOff, Plus, Trash2, Edit, Save, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -181,31 +181,34 @@ export function ApiKeyManager() {
           <div
             key={key.id}
             data-testid="api-key-row"
-            className="flex items-center justify-between rounded-lg border p-3"
+            className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="font-medium capitalize">{key.service}</p>
-                <p className="text-sm text-muted-foreground">
-                  {editingKey === key.id ? (
-                    <Input
-                      type={showKey[key.id] ? "text" : "password"}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      className="w-64"
-                      placeholder="Enter new API key"
-                    />
-                  ) : (
-                    <span data-testid="masked-api-key">{key.maskedKey}</span>
-                  )}
-                </p>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium capitalize">{key.service}</p>
+              <div className="text-sm text-muted-foreground">
+                {editingKey === key.id ? (
+                  <Input
+                    type={showKey[key.id] ? "text" : "password"}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="mt-1 w-full max-w-xs"
+                    placeholder="Enter new API key"
+                  />
+                ) : (
+                  <span
+                    data-testid="masked-api-key"
+                    className="block truncate pr-2"
+                  >
+                    {key.maskedKey}
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               {editingKey === key.id ? (
                 <>
-                  <Button
+                  <MotionButton
                     size="sm"
                     variant="ghost"
                     onClick={() =>
@@ -217,11 +220,14 @@ export function ApiKeyManager() {
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
-                  </Button>
-                  <Button size="sm" onClick={() => handleUpdateKey(key.id)}>
+                  </MotionButton>
+                  <MotionButton
+                    size="sm"
+                    onClick={() => handleUpdateKey(key.id)}
+                  >
                     <Save className="h-4 w-4" />
-                  </Button>
-                  <Button
+                  </MotionButton>
+                  <MotionButton
                     size="sm"
                     variant="ghost"
                     onClick={() => {
@@ -230,11 +236,11 @@ export function ApiKeyManager() {
                     }}
                   >
                     <X className="h-4 w-4" />
-                  </Button>
+                  </MotionButton>
                 </>
               ) : (
                 <>
-                  <Button
+                  <MotionButton
                     size="sm"
                     variant="ghost"
                     aria-label="Update API key"
@@ -244,8 +250,8 @@ export function ApiKeyManager() {
                     }}
                   >
                     <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
+                  </MotionButton>
+                  <MotionButton
                     size="sm"
                     variant="ghost"
                     className="text-destructive"
@@ -253,7 +259,7 @@ export function ApiKeyManager() {
                     onClick={() => setDeleteKeyId(key.id)}
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </MotionButton>
                 </>
               )}
             </div>
@@ -264,42 +270,44 @@ export function ApiKeyManager() {
       {/* Add New Key Form */}
       {showAddForm ? (
         <div className="space-y-4 rounded-lg border p-4">
-          <div>
-            <Label htmlFor="service">Service</Label>
-            <Select
-              value={newKey.service}
-              onValueChange={(value) =>
-                setNewKey({
-                  ...newKey,
-                  service: value as "anthropic" | "openai",
-                })
-              }
-            >
-              <SelectTrigger id="service">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="anthropic">Anthropic</SelectItem>
-                <SelectItem value="openai">OpenAI</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="service">Service</Label>
+              <Select
+                value={newKey.service}
+                onValueChange={(value) =>
+                  setNewKey({
+                    ...newKey,
+                    service: value as "anthropic" | "openai",
+                  })
+                }
+              >
+                <SelectTrigger id="service">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="anthropic">Anthropic</SelectItem>
+                  <SelectItem value="openai">OpenAI</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="key">API Key</Label>
+              <Input
+                id="key"
+                name="key"
+                type="password"
+                value={newKey.key}
+                onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
+                placeholder={`Enter your ${newKey.service} API key`}
+              />
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="key">API Key</Label>
-            <Input
-              id="key"
-              name="key"
-              type="password"
-              value={newKey.key}
-              onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
-              placeholder={`Enter your ${newKey.service} API key`}
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button onClick={handleAddKey}>Save API Key</Button>
-            <Button
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <MotionButton onClick={handleAddKey}>Save API Key</MotionButton>
+            <MotionButton
               variant="outline"
               onClick={() => {
                 setShowAddForm(false);
@@ -307,11 +315,11 @@ export function ApiKeyManager() {
               }}
             >
               Cancel
-            </Button>
+            </MotionButton>
           </div>
         </div>
       ) : (
-        <Button
+        <MotionButton
           onClick={() => setShowAddForm(true)}
           className="w-full sm:w-auto"
         >
@@ -319,7 +327,7 @@ export function ApiKeyManager() {
           {apiKeys.some((k) => k.service === "anthropic")
             ? "Add OpenAI Key"
             : "Add Anthropic Key"}
-        </Button>
+        </MotionButton>
       )}
 
       {/* Delete Confirmation Dialog */}
