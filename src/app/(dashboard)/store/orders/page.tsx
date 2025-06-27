@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MotionDiv, MotionListItem } from "@/components/ui/motion-elements";
 import { Package, ChevronRight, FileText, Clock } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -85,118 +86,133 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Order History</h1>
+    <MotionDiv
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <MotionDiv
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <h1 className="text-3xl font-bold">Order History</h1>
+      </MotionDiv>
 
       <div className="space-y-4">
-        {orders.map((order: any) => (
-          <Card key={order.id} className="transition-shadow hover:shadow-lg">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg">
-                    Order #{order.orderNumber}
-                  </CardTitle>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {format(
-                      new Date(order.createdAt),
-                      "MMM d, yyyy 'at' h:mm a"
-                    )}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Badge className={getStatusColor(order.status)}>
-                    {order.status.replace(/_/g, " ")}
-                  </Badge>
-                  <Badge className={getPaymentStatusColor(order.paymentStatus)}>
-                    {order.paymentStatus}
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Order Items */}
-                <div className="space-y-2">
-                  {order.items.map((item: any) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between py-2"
+        {orders.map((order: any, index: number) => (
+          <MotionListItem key={order.id} index={index} className="block">
+            <Card className="transition-shadow hover:shadow-lg">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg">
+                      Order #{order.orderNumber}
+                    </CardTitle>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {format(
+                        new Date(order.createdAt),
+                        "MMM d, yyyy 'at' h:mm a"
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge className={getStatusColor(order.status)}>
+                      {order.status.replace(/_/g, " ")}
+                    </Badge>
+                    <Badge
+                      className={getPaymentStatusColor(order.paymentStatus)}
                     >
-                      <div>
-                        <p className="font-medium">{item.serviceName}</p>
-                        <p className="text-sm text-gray-600">
-                          Quantity: {item.quantity}
+                      {order.paymentStatus}
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Order Items */}
+                  <div className="space-y-2">
+                    {order.items.map((item: any) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between py-2"
+                      >
+                        <div>
+                          <p className="font-medium">{item.serviceName}</p>
+                          <p className="text-sm text-gray-600">
+                            Quantity: {item.quantity}
+                          </p>
+                        </div>
+                        <p className="font-medium">
+                          ${item.total.toLocaleString()}
                         </p>
                       </div>
-                      <p className="font-medium">
-                        ${item.total.toLocaleString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Order Total */}
-                <div className="border-t pt-4">
-                  <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>${order.total.toLocaleString()}</span>
+                    ))}
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex gap-2">
-                    {order.invoice && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a
-                          href={order.invoice.pdfUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          Invoice
-                        </a>
-                      </Button>
-                    )}
-                    {order.contract && order.contract.signedAt && (
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/store/orders/${order.id}/contract`}>
-                          <FileText className="mr-2 h-4 w-4" />
-                          Contract
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/store/orders/${order.id}`}>
-                      View Details
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-
-                {/* Contract Required Notice */}
-                {order.status === "AWAITING_CONTRACT" && (
-                  <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-yellow-600" />
-                      <p className="text-sm text-yellow-800">
-                        Contract signature required to activate services
-                      </p>
+                  {/* Order Total */}
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between font-semibold">
+                      <span>Total</span>
+                      <span>${order.total.toLocaleString()}</span>
                     </div>
-                    <Button size="sm" className="mt-2" asChild>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex gap-2">
+                      {order.invoice && (
+                        <Button variant="outline" size="sm" asChild>
+                          <a
+                            href={order.invoice.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Invoice
+                          </a>
+                        </Button>
+                      )}
+                      {order.contract && order.contract.signedAt && (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/store/orders/${order.id}/contract`}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Contract
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                    <Button variant="ghost" size="sm" asChild>
                       <Link href={`/store/orders/${order.id}`}>
-                        Sign Contract
+                        View Details
+                        <ChevronRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+
+                  {/* Contract Required Notice */}
+                  {order.status === "AWAITING_CONTRACT" && (
+                    <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-yellow-600" />
+                        <p className="text-sm text-yellow-800">
+                          Contract signature required to activate services
+                        </p>
+                      </div>
+                      <Button size="sm" className="mt-2" asChild>
+                        <Link href={`/store/orders/${order.id}`}>
+                          Sign Contract
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </MotionListItem>
         ))}
       </div>
-    </div>
+    </MotionDiv>
   );
 }

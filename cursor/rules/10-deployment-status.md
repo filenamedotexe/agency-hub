@@ -109,6 +109,11 @@ DATABASE_URL=your_postgresql_url
 ANTHROPIC_API_KEY=your_anthropic_key
 OPENAI_API_KEY=your_openai_key
 
+# Stripe Integration
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
 # Callback URLs
 NEXT_PUBLIC_CALLBACK_BASE_URL_PRODUCTION=https://agency-hub-two.vercel.app
 NEXT_PUBLIC_CALLBACK_BASE_URL_TESTING=https://your-ngrok-url.ngrok.io
@@ -125,6 +130,9 @@ All environment variables are properly configured in Vercel production environme
 5. ANTHROPIC_API_KEY ✅
 6. OPENAI_API_KEY ✅
 7. NEXT_PUBLIC_CALLBACK_BASE_URL_PRODUCTION ✅
+8. NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ✅
+9. STRIPE_SECRET_KEY ✅
+10. STRIPE_WEBHOOK_SECRET ✅
 
 ### Local Development Setup
 

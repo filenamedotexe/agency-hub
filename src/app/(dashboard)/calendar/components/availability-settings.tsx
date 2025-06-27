@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -206,9 +206,13 @@ export function AvailabilitySettings({
 
         <div className="space-y-4 py-4">
           <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={copyToAllWeekdays}>
+            <MotionButton
+              variant="outline"
+              size="sm"
+              onClick={copyToAllWeekdays}
+            >
               Copy Monday to Weekdays
-            </Button>
+            </MotionButton>
           </div>
 
           {DAYS_OF_WEEK.map((day, index) => {
@@ -251,12 +255,16 @@ export function AvailabilitySettings({
           })}
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={isSaving}>
+            <MotionButton
+              variant="outline"
+              onClick={onClose}
+              disabled={isSaving}
+            >
               Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            </MotionButton>
+            <MotionButton onClick={handleSave} disabled={isSaving}>
               {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
+            </MotionButton>
           </div>
         </div>
       </DialogContent>

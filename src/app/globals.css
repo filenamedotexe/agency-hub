@@ -104,29 +104,6 @@
     --input: 240 6% 90%;
     --ring: 243 75% 59%;
   }
-
-  .dark {
-    /* Dark mode overrides - keeping minimal for now */
-    --background: 0 0% 7%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 243 75% 59%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 4% 16%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 95%;
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 243 75% 59%;
-  }
 }
 
 @layer base {
@@ -242,8 +219,8 @@
 
   /* Primary Button */
   .btn-primary {
-    @apply bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)];
-    @apply hover:-translate-y-0.5 hover:shadow-md focus:ring-[var(--brand-primary)];
+    @apply bg-indigo-600 text-white hover:bg-indigo-700;
+    @apply hover:-translate-y-0.5 hover:shadow-md focus:ring-indigo-500;
   }
 
   /* Secondary Button */
@@ -256,8 +233,8 @@
   .input-custom {
     @apply w-full px-4 py-2.5 border border-gray-300 rounded-md bg-white;
     @apply text-base transition-all duration-150 min-h-[44px];
-    @apply hover:border-gray-400 focus:outline-none focus:border-[var(--brand-primary)];
-    @apply focus:ring-2 focus:ring-[var(--brand-primary-ring)] placeholder:text-gray-400;
+    @apply hover:border-gray-400 focus:outline-none focus:border-indigo-500;
+    @apply focus:ring-2 focus:ring-indigo-500/20 placeholder:text-gray-400;
   }
 
   /* Table Styles */
@@ -285,7 +262,7 @@
   }
 
   .nav-item.active {
-    @apply bg-[var(--brand-primary-light)] text-[var(--brand-primary)];
+    @apply bg-indigo-50 text-indigo-600;
   }
 
   /* Loading States */
@@ -298,27 +275,6 @@
   @keyframes loading {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
-  }
-
-  /* Shimmer animation */
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-    100% {
-      background-position: 200% 0;
-    }
-  }
-
-  .animate-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.05) 25%,
-      rgba(0, 0, 0, 0.1) 50%,
-      rgba(0, 0, 0, 0.05) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
   }
 
   /* Empty States */

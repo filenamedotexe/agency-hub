@@ -5,6 +5,7 @@ import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import type { VariantProps } from "class-variance-authority";
+import { haptics } from "@/lib/haptics";
 
 export interface MotionButtonProps
   extends HTMLMotionProps<"button">,
@@ -13,8 +14,13 @@ export interface MotionButtonProps
 }
 
 const MotionButton = React.forwardRef<HTMLButtonElement, MotionButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, onClick, ...props }, ref) => {
     const Comp = asChild ? motion.span : motion.button;
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      haptics.light();
+      onClick?.(e);
+    };
 
     return (
       <Comp
@@ -27,6 +33,7 @@ const MotionButton = React.forwardRef<HTMLButtonElement, MotionButtonProps>(
           stiffness: 400,
           damping: 17,
         }}
+        onClick={handleClick}
         {...props}
       />
     );

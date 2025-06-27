@@ -38,12 +38,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error: null,
   });
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
   const authService = useMemo(() => new AuthClientService(), []);
 
   const checkUser = useCallback(async () => {
+    // Prevent multiple simultaneous auth checks
+    if (isCheckingAuth) {
+      authLog("checkUser already in progress, skipping");
+      return;
+    }
+
+    setIsCheckingAuth(true);
     authLog("checkUser started");
     authTime("checkUser");
+
     try {
       const user = await authService.getCurrentUser();
       authTimeEnd("checkUser");
@@ -61,8 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearAuthState();
 
       setSession({ user: null, isLoading: false, error: null });
+    } finally {
+      setIsCheckingAuth(false);
     }
-  }, [authService]);
+  }, [authService, isCheckingAuth]);
 
   useEffect(() => {
     // Only check if we should check auth (not initialized or expired)
@@ -93,21 +104,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!session.isLoading) return;
 
     const timeout = setTimeout(() => {
-      if (session.isLoading) {
-        console.error(
-          "[AuthProvider] Loading timeout after 5s - forcing complete"
+      if (session.isLoading && !isCheckingAuth) {
+        authLog(
+          "Loading timeout after 10s - using cached state or forcing complete"
         );
-        setSession({
-          user: null,
-          isLoading: false,
-          error: { message: "Loading timeout" },
-        });
+
+        // Try to use cached global state first
+        const cachedState = getAuthState();
+        if (cachedState.user && cachedState.isInitialized) {
+          authLog("Using cached auth state");
+          setSession({
+            user: cachedState.user,
+            isLoading: false,
+            error: null,
+          });
+        } else {
+          // If no cache, force complete with no user
+          setSession({
+            user: null,
+            isLoading: false,
+            error: null,
+          });
+        }
         setLoadingTimeout(true);
       }
-    }, 5000); // 5 second timeout
+    }, 3000); // 3 second timeout with optimized auth calls
 
     return () => clearTimeout(timeout);
-  }, [session.isLoading]);
+  }, [session.isLoading, isCheckingAuth]);
 
   const signIn = async (email: string, password: string) => {
     setSession((prev) => ({ ...prev, isLoading: true, error: null }));

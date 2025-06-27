@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
-import { Button } from "@/components/ui/button";
 import { MotionButton } from "@/components/ui/motion-button";
 import { Badge } from "@/components/ui/badge";
 import { AddToCartButton } from "./add-to-cart-button";

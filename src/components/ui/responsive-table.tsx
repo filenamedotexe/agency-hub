@@ -107,13 +107,18 @@ export function ResponsiveDataTable({
             {columns
               .filter((col) => col.priority !== "low")
               .map((col) => (
-                <div key={col.key} className="flex justify-between">
-                  <span className="text-sm text-gray-600">{col.label}:</span>
-                  <span className="text-sm font-medium">
+                <div
+                  key={col.key}
+                  className="flex flex-col gap-1 sm:flex-row sm:justify-between"
+                >
+                  <span className="text-sm font-medium text-gray-600">
+                    {col.label}:
+                  </span>
+                  <div className="text-sm">
                     {col.renderCell
                       ? col.renderCell(row[col.key], row)
                       : row[col.key]}
-                  </span>
+                  </div>
                 </div>
               ))}
           </div>

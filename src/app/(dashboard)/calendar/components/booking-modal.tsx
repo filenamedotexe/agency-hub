@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import {
   Select,
   SelectContent,
@@ -48,6 +48,7 @@ import { useServices } from "@/hooks/use-services";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useCreateBooking, useUpdateBooking } from "../hooks/use-bookings";
 import { BookingWithRelations, CreateBookingInput } from "@/types/booking";
+import { Skeleton } from "@/components/ui/skeleton-loader";
 
 const bookingSchema = z
   .object({
@@ -297,7 +298,7 @@ export function BookingModal({
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button
+                          <MotionButton
                             variant="outline"
                             className={cn(
                               "h-11 w-full justify-start text-left font-normal",
@@ -310,7 +311,7 @@ export function BookingModal({
                             ) : (
                               <span>Pick a date</span>
                             )}
-                          </Button>
+                          </MotionButton>
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -431,7 +432,7 @@ export function BookingModal({
                 Quick set duration:
               </span>
               {commonDurations.map((duration) => (
-                <Button
+                <MotionButton
                   key={duration.value}
                   type="button"
                   variant="outline"
@@ -440,7 +441,7 @@ export function BookingModal({
                   className="h-8 px-3 text-sm"
                 >
                   {duration.label}
-                </Button>
+                </MotionButton>
               ))}
             </div>
 
@@ -469,9 +470,11 @@ export function BookingModal({
                       </FormControl>
                       <SelectContent>
                         {isLoadingClients ? (
-                          <SelectItem value="loading" disabled>
-                            Loading clients...
-                          </SelectItem>
+                          <div className="p-2">
+                            <Skeleton className="mb-2 h-8 w-full" />
+                            <Skeleton className="mb-2 h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                          </div>
                         ) : clients && clients.length > 0 ? (
                           clients.map((client) => (
                             <SelectItem key={client.id} value={client.id}>
@@ -525,9 +528,11 @@ export function BookingModal({
                               No specific service
                             </SelectItem>
                             {isLoadingServices ? (
-                              <SelectItem value="loading" disabled>
-                                Loading services...
-                              </SelectItem>
+                              <div className="p-2">
+                                <Skeleton className="mb-2 h-8 w-full" />
+                                <Skeleton className="mb-2 h-8 w-full" />
+                                <Skeleton className="h-8 w-full" />
+                              </div>
                             ) : services && services.length > 0 ? (
                               services.map((service) => (
                                 <SelectItem key={service.id} value={service.id}>
@@ -670,7 +675,7 @@ export function BookingModal({
                       }
                       className="h-11 flex-1"
                     />
-                    <Button
+                    <MotionButton
                       type="button"
                       variant="outline"
                       onClick={addAttendee}
@@ -678,7 +683,7 @@ export function BookingModal({
                       className="h-11 px-4"
                     >
                       Add
-                    </Button>
+                    </MotionButton>
                   </div>
                 </div>
 
@@ -701,7 +706,7 @@ export function BookingModal({
                               {attendee.email}
                             </div>
                           </div>
-                          <Button
+                          <MotionButton
                             type="button"
                             variant="ghost"
                             size="sm"
@@ -709,7 +714,7 @@ export function BookingModal({
                             className="text-red-600 hover:bg-red-50 hover:text-red-800"
                           >
                             <X className="h-4 w-4" />
-                          </Button>
+                          </MotionButton>
                         </div>
                       ))}
                     </div>
@@ -744,7 +749,7 @@ export function BookingModal({
 
             {/* Submit Buttons */}
             <div className="flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row">
-              <Button
+              <MotionButton
                 type="button"
                 variant="outline"
                 onClick={onClose}
@@ -752,8 +757,8 @@ export function BookingModal({
                 disabled={isSubmitting}
               >
                 Cancel
-              </Button>
-              <Button
+              </MotionButton>
+              <MotionButton
                 type="submit"
                 disabled={isSubmitting}
                 className="h-11 sm:ml-auto"
@@ -766,7 +771,7 @@ export function BookingModal({
                 ) : (
                   <>{isEditMode ? "Update Booking" : "Create Booking"}</>
                 )}
-              </Button>
+              </MotionButton>
             </div>
           </form>
         </Form>

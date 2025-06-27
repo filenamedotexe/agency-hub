@@ -7,11 +7,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signInSchema, type SignInInput } from "@/lib/validations/auth";
 import { useAuth } from "@/components/providers/auth-provider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { MotionButton } from "@/components/ui/motion-button";
+import { MotionInput } from "@/components/ui/motion-elements";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -76,23 +75,23 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-center text-2xl font-bold">
-            Sign in to your account
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 to-white px-4 py-12 sm:px-6 lg:px-8">
+      <EnhancedCard className="w-full max-w-md border-0 shadow-xl">
+        <CardHeader className="space-y-1 pb-8 text-center">
+          <CardTitle className="mb-2 text-3xl font-bold text-gray-900">
+            Welcome back
           </CardTitle>
-          <CardDescription className="text-center">
-            Or{" "}
+          <CardDescription className="text-gray-600">
+            Sign in to your account or{" "}
             <Link
               href="/signup"
-              className="font-medium text-brand-primary hover:text-brand-primary-hover"
+              className="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
             >
               create a new account
             </Link>
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-8 pb-8">
           <Form {...form}>
             <form
               onSubmit={(e) => {
@@ -103,12 +102,12 @@ function LoginForm() {
               }}
               method="post"
               action="#"
-              className="space-y-4"
+              className="space-y-6"
               data-testid="login-form"
             >
               {justRegistered && (
-                <Alert className="border-brand-success bg-brand-success-light">
-                  <AlertDescription className="text-brand-success">
+                <Alert className="border-green-200 bg-green-50">
+                  <AlertDescription className="text-green-700">
                     Account created successfully! Please sign in.
                   </AlertDescription>
                 </Alert>
@@ -125,13 +124,16 @@ function LoginForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email address</FormLabel>
+                    <FormLabel className="font-medium text-gray-700">
+                      Email address
+                    </FormLabel>
                     <FormControl>
-                      <Input
+                      <MotionInput
                         {...field}
                         type="email"
                         placeholder="you@example.com"
                         autoComplete="email"
+                        className="h-12 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
                       />
                     </FormControl>
                     <FormMessage />
@@ -144,13 +146,16 @@ function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="font-medium text-gray-700">
+                      Password
+                    </FormLabel>
                     <FormControl>
-                      <Input
+                      <MotionInput
                         {...field}
                         type="password"
                         placeholder="••••••••"
                         autoComplete="current-password"
+                        className="h-12 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
                       />
                     </FormControl>
                     <FormMessage />
@@ -158,19 +163,26 @@ function LoginForm() {
                 )}
               />
 
-              <Button
+              <MotionButton
                 type="submit"
-                className="w-full"
+                className="h-12 w-full rounded-lg bg-indigo-600 text-base font-semibold shadow-lg transition-all hover:bg-indigo-700 hover:shadow-xl"
                 disabled={isLoading}
                 data-testid="login-submit"
                 onClick={() => console.log("[LoginForm] Submit button clicked")}
               >
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Button>
+                {isLoading ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign in"
+                )}
+              </MotionButton>
             </form>
           </Form>
         </CardContent>
-      </Card>
+      </EnhancedCard>
     </div>
   );
 }
@@ -179,12 +191,12 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 to-white px-4 py-12 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
+            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
             </div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="font-medium text-indigo-600">Loading...</p>
           </div>
         </div>
       }

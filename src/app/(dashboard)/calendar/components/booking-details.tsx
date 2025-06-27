@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -237,7 +237,7 @@ export function BookingDetails({
 
           <DialogFooter className="gap-2">
             {canEdit && (
-              <Button
+              <MotionButton
                 variant="outline"
                 onClick={() => {
                   onEdit?.(booking);
@@ -246,20 +246,20 @@ export function BookingDetails({
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
-              </Button>
+              </MotionButton>
             )}
             {canCancel && (
-              <Button
+              <MotionButton
                 variant="destructive"
                 onClick={() => setShowCancelDialog(true)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Cancel Booking
-              </Button>
+              </MotionButton>
             )}
-            <Button variant="outline" onClick={onClose}>
+            <MotionButton variant="outline" onClick={onClose}>
               Close
-            </Button>
+            </MotionButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

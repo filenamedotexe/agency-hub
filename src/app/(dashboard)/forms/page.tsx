@@ -3,22 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Edit, Trash2, FileText, ExternalLink, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
+import { MotionIconButton } from "@/components/ui/motion-elements";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton, TableSkeleton } from "@/components/ui/skeleton-loader";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ResponsiveDataTable } from "@/components/ui/responsive-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,8 +76,23 @@ export default function FormsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-muted-foreground">Loading forms...</div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-28" />
+        </div>
+        <EnhancedCard>
+          <CardHeader>
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent>
+            <TableSkeleton rows={5} columns={6} />
+          </CardContent>
+        </EnhancedCard>
       </div>
     );
   }
@@ -95,28 +106,26 @@ export default function FormsPage() {
             Create and manage forms for collecting client information
           </p>
         </div>
-        <Button onClick={() => router.push("/forms/new")}>
+        <MotionButton onClick={() => router.push("/forms/new")}>
           <Plus className="mr-2 h-4 w-4" />
           Create Form
-        </Button>
+        </MotionButton>
       </div>
 
       {forms.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-semibold">No forms yet</h3>
-            <p className="mb-4 text-center text-muted-foreground">
-              Create your first form to start collecting client information
-            </p>
-            <Button onClick={() => router.push("/forms/new")}>
+        <EmptyState
+          icon={<FileText className="h-8 w-8" />}
+          title="No forms yet"
+          description="Create your first form to start collecting client information"
+          action={
+            <MotionButton onClick={() => router.push("/forms/new")}>
               <Plus className="mr-2 h-4 w-4" />
               Create Your First Form
-            </Button>
-          </CardContent>
-        </Card>
+            </MotionButton>
+          }
+        />
       ) : (
-        <Card>
+        <EnhancedCard>
           <CardHeader>
             <CardTitle>All Forms</CardTitle>
             <CardDescription>
@@ -124,84 +133,116 @@ export default function FormsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Fields</TableHead>
-                  <TableHead>Responses</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {forms.map((form) => (
-                  <TableRow key={form.id}>
-                    <TableCell className="font-medium">{form.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {form.description || "-"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {form.schema.length} fields
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge>{form._count?.responses || 0} responses</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(form.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => router.push(`/forms/${form.id}`)}
-                          title="View Details"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            router.push(`/forms/${form.id}/preview`)
-                          }
-                          title="Preview Form"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => router.push(`/forms/${form.id}/edit`)}
-                          title="Edit Form"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteFormId(form.id)}
-                          disabled={
-                            form._count?.responses
-                              ? form._count.responses > 0
-                              : false
-                          }
-                          title="Delete Form"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ResponsiveDataTable
+              columns={[
+                {
+                  key: "name",
+                  label: "Name",
+                  priority: "high",
+                  renderCell: (value) => (
+                    <div className="font-medium">{value}</div>
+                  ),
+                },
+                {
+                  key: "description",
+                  label: "Description",
+                  priority: "medium",
+                  renderCell: (value) => (
+                    <span className="text-muted-foreground">
+                      {value || "-"}
+                    </span>
+                  ),
+                },
+                {
+                  key: "schema",
+                  label: "Fields",
+                  priority: "low",
+                  renderCell: (value) => (
+                    <Badge variant="secondary">{value.length} fields</Badge>
+                  ),
+                },
+                {
+                  key: "_count",
+                  label: "Responses",
+                  priority: "high",
+                  renderCell: (value) => (
+                    <Badge>{value?.responses || 0} responses</Badge>
+                  ),
+                },
+                {
+                  key: "createdAt",
+                  label: "Created",
+                  priority: "low",
+                  renderCell: (value) => (
+                    <span className="text-muted-foreground">
+                      {new Date(value).toLocaleDateString()}
+                    </span>
+                  ),
+                },
+                {
+                  key: "actions",
+                  label: "Actions",
+                  priority: "high",
+                  renderCell: (_, form) => (
+                    <div className="flex items-center justify-end gap-2">
+                      <MotionIconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/forms/${form.id}`);
+                        }}
+                        title="View Details"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </MotionIconButton>
+                      <MotionIconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/forms/${form.id}/preview`);
+                        }}
+                        title="Preview Form"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </MotionIconButton>
+                      <MotionIconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/forms/${form.id}/edit`);
+                        }}
+                        title="Edit Form"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </MotionIconButton>
+                      <MotionIconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteFormId(form.id);
+                        }}
+                        disabled={
+                          form._count?.responses
+                            ? form._count.responses > 0
+                            : false
+                        }
+                        title="Delete Form"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </MotionIconButton>
+                    </div>
+                  ),
+                },
+              ]}
+              data={forms}
+              onRowClick={(form) => router.push(`/forms/${form.id}`)}
+            />
           </CardContent>
-        </Card>
+        </EnhancedCard>
       )}
 
       <AlertDialog

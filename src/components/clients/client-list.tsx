@@ -3,17 +3,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus, Search, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { MotionButton } from "@/components/ui/motion-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { MotionInput } from "@/components/ui/motion-elements";
+import { ResponsiveDataTable } from "@/components/ui/responsive-table";
 import {
   Select,
   SelectContent,
@@ -81,13 +76,17 @@ export function ClientList() {
     );
   }
 
+  if (isLoading) {
+    return <TableSkeleton />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Header with search and add button */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <MotionInput
             placeholder="Search"
             value={search}
             onChange={(e) => {
@@ -97,10 +96,10 @@ export function ClientList() {
             className="pl-9"
           />
         </div>
-        <Button onClick={() => router.push("/clients/new")}>
+        <MotionButton onClick={() => router.push("/clients/new")}>
           <Plus className="mr-2 h-4 w-4" />
           Add Client
-        </Button>
+        </MotionButton>
       </div>
 
       {/* Sorting controls */}
@@ -130,46 +129,59 @@ export function ClientList() {
       </div>
 
       {/* Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Business</TableHead>
-            <TableHead className="hidden sm:table-cell">Duda Site ID</TableHead>
-            <TableHead className="hidden md:table-cell">Added</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
-            <TableSkeleton columns={4} rows={5} />
-          ) : data?.clients.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={4} className="h-32 text-center">
-                No clients found
-              </TableCell>
-            </TableRow>
-          ) : (
-            data?.clients.map((client) => (
-              <TableRow
-                key={client.id}
-                className="cursor-pointer transition-all duration-base hover:bg-gray-50 hover:shadow-sm"
-                onClick={() => handleRowClick(client.id)}
-              >
-                <TableCell className="font-medium">{client.name}</TableCell>
-                <TableCell>{client.businessName}</TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  {client.dudaSiteId || "-"}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {formatDistanceToNow(new Date(client.createdAt), {
+      {data?.clients.length === 0 ? (
+        <EmptyState
+          icon={<Users className="h-8 w-8" />}
+          title="No clients found"
+          description={
+            search
+              ? "No clients match your search criteria"
+              : "Start by adding your first client"
+          }
+          action={
+            <MotionButton size="sm" onClick={() => router.push("/clients/new")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Client
+            </MotionButton>
+          }
+        />
+      ) : (
+        <ResponsiveDataTable
+          columns={[
+            {
+              key: "name",
+              label: "Name",
+              priority: "high",
+              renderCell: (value) => <div className="font-medium">{value}</div>,
+            },
+            {
+              key: "businessName",
+              label: "Business",
+              priority: "high",
+            },
+            {
+              key: "dudaSiteId",
+              label: "Duda Site ID",
+              priority: "low",
+              renderCell: (value) => value || "-",
+            },
+            {
+              key: "createdAt",
+              label: "Added",
+              priority: "medium",
+              renderCell: (value) => (
+                <span className="text-sm text-gray-500">
+                  {formatDistanceToNow(new Date(value), {
                     addSuffix: true,
                   })}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+                </span>
+              ),
+            },
+          ]}
+          data={data?.clients || []}
+          onRowClick={(client) => handleRowClick(client.id)}
+        />
+      )}
 
       {/* Pagination */}
       {data && data.totalPages > 1 && (
@@ -179,7 +191,7 @@ export function ClientList() {
             {Math.min(page * pageSize, data.total)} of {data.total} clients
           </p>
           <div className="flex items-center gap-2">
-            <Button
+            <MotionButton
               variant="outline"
               size="sm"
               onClick={() => setPage(page - 1)}
@@ -187,11 +199,11 @@ export function ClientList() {
             >
               <ChevronLeft className="h-4 w-4" />
               Previous
-            </Button>
+            </MotionButton>
             <div className="flex items-center gap-1 text-sm">
               Page {page} of {data.totalPages}
             </div>
-            <Button
+            <MotionButton
               variant="outline"
               size="sm"
               onClick={() => setPage(page + 1)}
@@ -199,7 +211,7 @@ export function ClientList() {
             >
               Next
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </MotionButton>
           </div>
         </div>
       )}

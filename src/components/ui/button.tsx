@@ -5,20 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all duration-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-brand-primary text-white hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-brand-primary",
+          "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:ring-indigo-500",
         destructive:
-          "bg-brand-error text-white hover:bg-brand-error/90 hover:shadow-md focus-visible:ring-brand-error",
+          "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500",
         outline:
           "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-gray-400",
         secondary:
           "bg-gray-100 text-gray-700 hover:bg-gray-200 focus-visible:ring-gray-400",
         ghost: "hover:bg-gray-100 hover:text-gray-900",
-        link: "text-brand-primary underline-offset-4 hover:underline hover:text-brand-primary-hover",
+        link: "text-indigo-600 underline-offset-4 hover:underline hover:text-indigo-700",
       },
       size: {
         default: "h-11 px-5 py-2.5 text-sm",

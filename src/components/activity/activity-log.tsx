@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Activity, User, Calendar, FileText } from "lucide-react";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -13,6 +12,7 @@ import {
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { MotionListItem } from "@/components/ui/motion-elements";
 import type { ActivityLog } from "@/services/activity.service";
 
 interface ActivityLogProps {
@@ -85,13 +85,17 @@ export function ActivityLogComponent({
         <CardContent>
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-start gap-3">
+              <MotionListItem
+                key={i}
+                index={i}
+                className="flex items-start gap-3"
+              >
                 <Skeleton className="h-8 w-8 rounded-full" />
                 <div className="flex-1 space-y-1">
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-3 w-1/2" />
                 </div>
-              </div>
+              </MotionListItem>
             ))}
           </div>
         </CardContent>
@@ -112,9 +116,10 @@ export function ActivityLogComponent({
         <ScrollArea className="h-[300px] pr-4">
           {activities && activities.length > 0 ? (
             <div className="space-y-4">
-              {activities.map((activity) => (
-                <div
+              {activities.map((activity, index) => (
+                <MotionListItem
                   key={activity.id}
+                  index={index}
                   className="group -mx-2 flex cursor-pointer items-start gap-3 rounded-md p-2 transition-all duration-base hover:bg-gray-50"
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted transition-all duration-base group-hover:bg-brand-primary-light group-hover:text-brand-primary">
@@ -131,7 +136,7 @@ export function ActivityLogComponent({
                       })}
                     </p>
                   </div>
-                </div>
+                </MotionListItem>
               ))}
             </div>
           ) : (

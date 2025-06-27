@@ -15,12 +15,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { MotionButton } from "@/components/ui/motion-button";
-import { MotionIconButton } from "@/components/ui/motion-elements";
-import { Badge } from "@/components/ui/badge";
 import {
-  Card,
+  MotionIconButton,
+  MotionDiv,
+  MotionBadge,
+} from "@/components/ui/motion-elements";
+import {
   CardContent,
   CardDescription,
   CardHeader,
@@ -111,25 +112,43 @@ export default function ServicesPage() {
 
   if (loading) {
     return (
-      <div>
-        <div className="mb-6 flex items-center justify-between">
+      <MotionDiv
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <MotionDiv
+          className="mb-6 flex items-center justify-between"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <h1 className="text-2xl font-bold text-gray-900">
             Service Templates
           </h1>
           <Skeleton className="h-10 w-40" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        </MotionDiv>
+        <MotionDiv className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <CardSkeleton key={i} />
           ))}
-        </div>
-      </div>
+        </MotionDiv>
+      </MotionDiv>
     );
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
+    <MotionDiv
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <MotionDiv
+        className="mb-6 flex items-center justify-between"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
             Service Templates
@@ -144,10 +163,10 @@ export default function ServicesPage() {
             New Template
           </Link>
         </MotionButton>
-      </div>
+      </MotionDiv>
 
       {templates.length === 0 ? (
-        <Card>
+        <EnhancedCard>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="mb-4 text-center text-gray-600">
               No service templates yet. Create your first template to get
@@ -160,9 +179,14 @@ export default function ServicesPage() {
               </Link>
             </MotionButton>
           </CardContent>
-        </Card>
+        </EnhancedCard>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <MotionDiv
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           {templates.map((template) => (
             <EnhancedCard
               key={template.id}
@@ -175,12 +199,12 @@ export default function ServicesPage() {
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold">{template.name}</h3>
                     <div className="mt-1">
-                      <Badge
+                      <MotionBadge
                         variant="secondary"
                         className={typeColors[template.type]}
                       >
                         {typeLabels[template.type]}
-                      </Badge>
+                      </MotionBadge>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -245,7 +269,7 @@ export default function ServicesPage() {
               </div>
             </EnhancedCard>
           ))}
-        </div>
+        </MotionDiv>
       )}
 
       <AlertDialog
@@ -272,6 +296,6 @@ export default function ServicesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </MotionDiv>
   );
 }

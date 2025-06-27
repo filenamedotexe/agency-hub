@@ -17,6 +17,7 @@ import { Search, Filter, Sparkles, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MotionButton } from "@/components/ui/motion-button";
+import { MotionDiv, MotionInput } from "@/components/ui/motion-elements";
 import { cn } from "@/lib/utils";
 
 export default function StorePage() {
@@ -63,19 +64,29 @@ export default function StorePage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="space-y-2 text-center">
+      <MotionDiv
+        className="space-y-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <MotionDiv
+          className="space-y-2 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <h1 className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-4xl font-bold text-transparent">
             Service Store
           </h1>
           <p className="text-gray-600">Loading amazing services for you...</p>
-        </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        </MotionDiv>
+        <MotionDiv className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="h-[400px] rounded-lg" />
           ))}
-        </div>
-      </div>
+        </MotionDiv>
+      </MotionDiv>
     );
   }
 
@@ -101,11 +112,21 @@ export default function StorePage() {
   const resultCount = filteredServices?.length || 0;
 
   return (
-    <div className="space-y-8">
+    <MotionDiv
+      className="space-y-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <StoreHeader />
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-blue-500/10 to-purple-500/10 p-8 text-center">
+      <MotionDiv
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-blue-500/10 to-purple-500/10 p-8 text-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
         <div className="relative z-10">
           <Badge className="mb-4 bg-white/90 text-primary">
             <Sparkles className="mr-1 h-3 w-3" />
@@ -120,14 +141,19 @@ export default function StorePage() {
           </p>
         </div>
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5" />
-      </div>
+      </MotionDiv>
 
       {/* Filters and Search */}
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
+      <MotionDiv
+        className="rounded-lg border bg-white p-4 shadow-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
+            <MotionInput
               placeholder="Search services by name or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -170,11 +196,16 @@ export default function StorePage() {
             Showing {resultCount} of {totalServices} services
           </div>
         ) : null}
-      </div>
+      </MotionDiv>
 
       {/* Services Grid */}
       {filteredServices?.length === 0 ? (
-        <div className="py-16 text-center">
+        <MotionDiv
+          className="py-16 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           <ShoppingBag className="mx-auto mb-4 h-12 w-12 text-gray-400" />
           <h3 className="mb-2 text-lg font-semibold text-gray-900">
             No services found
@@ -191,24 +222,34 @@ export default function StorePage() {
           >
             Clear filters
           </MotionButton>
-        </div>
+        </MotionDiv>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <MotionDiv
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
             {filteredServices?.map((service: any) => (
               <ServiceCard key={service.id} service={service} />
             ))}
-          </div>
+          </MotionDiv>
 
           {/* Call to action */}
-          <div className="mt-12 py-8 text-center">
+          <MotionDiv
+            className="mt-12 py-8 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
             <p className="mb-4 text-gray-600">
               Need something specific? We&apos;re here to help!
             </p>
             <MotionButton variant="outline">Contact Sales Team</MotionButton>
-          </div>
+          </MotionDiv>
         </>
       )}
-    </div>
+    </MotionDiv>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Save, User, Mail, Building } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -196,9 +196,9 @@ export function AccountSettings() {
                 Receive email updates about your account
               </p>
             </div>
-            <Button variant="outline" size="sm">
+            <MotionButton variant="outline" size="sm">
               Configure
-            </Button>
+            </MotionButton>
           </div>
 
           <div className="flex items-center justify-between">
@@ -208,9 +208,9 @@ export function AccountSettings() {
                 Download all your data in CSV format
               </p>
             </div>
-            <Button variant="outline" size="sm">
+            <MotionButton variant="outline" size="sm">
               Export Data
-            </Button>
+            </MotionButton>
           </div>
 
           <div className="flex items-center justify-between">
@@ -220,18 +220,18 @@ export function AccountSettings() {
                 Manage password and security settings
               </p>
             </div>
-            <Button variant="outline" size="sm">
+            <MotionButton variant="outline" size="sm">
               Security Settings
-            </Button>
+            </MotionButton>
           </div>
         </div>
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={loading}>
+        <MotionButton onClick={handleSave} disabled={loading}>
           <Save className="mr-2 h-4 w-4" />
           {loading ? "Saving..." : "Save Changes"}
-        </Button>
+        </MotionButton>
       </div>
     </div>
   );

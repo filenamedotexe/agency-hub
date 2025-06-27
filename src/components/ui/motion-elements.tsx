@@ -4,6 +4,20 @@ import * as React from "react";
 import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+// Motion Div component for general animations
+export const MotionDiv = React.forwardRef<
+  HTMLDivElement,
+  HTMLMotionProps<"div">
+>(({ className, children, ...props }, ref) => {
+  return (
+    <motion.div ref={ref} className={className} {...props}>
+      {children}
+    </motion.div>
+  );
+});
+
+MotionDiv.displayName = "MotionDiv";
+
 // Motion Link component for navigation links
 export const MotionLink = React.forwardRef<
   HTMLAnchorElement,

@@ -21,6 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
+  MotionListItem,
+  MotionIconButton,
+} from "@/components/ui/motion-elements";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -285,13 +289,14 @@ export function ServiceTasks({
 
           {/* Task list */}
           <div className="space-y-2">
-            {tasks.map((task) => {
+            {tasks.map((task, index) => {
               const status = statusConfig[task.status];
               const StatusIcon = status.icon;
 
               return (
-                <div
+                <MotionListItem
                   key={task.id}
+                  index={index}
                   className={cn(
                     "flex items-start gap-3 rounded-lg border p-3 transition-all",
                     task.status === "DONE" && "opacity-60"
@@ -413,12 +418,14 @@ export function ServiceTasks({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <button
+                        <MotionIconButton
                           onClick={() =>
                             setExpandedTaskId(
                               expandedTaskId === task.id ? null : task.id
                             )
                           }
+                          variant="ghost"
+                          size="sm"
                           className="text-gray-500 hover:text-gray-700"
                           title="Manage attachments"
                         >
@@ -428,16 +435,18 @@ export function ServiceTasks({
                               ({attachmentCounts[task.id]})
                             </span>
                           )}
-                        </button>
+                        </MotionIconButton>
                         {!isReadOnly && (
                           <>
-                            <button
+                            <MotionIconButton
                               onClick={() =>
                                 handleVisibilityToggle(
                                   task.id,
                                   !task.clientVisible
                                 )
                               }
+                              variant="ghost"
+                              size="sm"
                               className="text-gray-500 hover:text-gray-700"
                               title={
                                 task.clientVisible
@@ -450,14 +459,16 @@ export function ServiceTasks({
                               ) : (
                                 <EyeOff className="h-4 w-4" />
                               )}
-                            </button>
-                            <button
+                            </MotionIconButton>
+                            <MotionIconButton
                               onClick={() => deleteTaskMutation.mutate(task.id)}
+                              variant="ghost"
+                              size="sm"
                               className="text-red-500 hover:text-red-700"
                               title="Delete task"
                             >
                               <Trash2 className="h-4 w-4" />
-                            </button>
+                            </MotionIconButton>
                           </>
                         )}
                       </div>
@@ -477,7 +488,7 @@ export function ServiceTasks({
                       </div>
                     )}
                   </div>
-                </div>
+                </MotionListItem>
               );
             })}
           </div>

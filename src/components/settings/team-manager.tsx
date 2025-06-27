@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2, Edit, Mail, Shield } from "lucide-react";
 import { MotionButton } from "@/components/ui/motion-button";
+import { MotionListItem } from "@/components/ui/motion-elements";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -31,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { MotionBadge } from "@/components/ui/motion-elements";
 import { useToast } from "@/hooks/use-toast";
 
 interface TeamMember {
@@ -204,9 +206,10 @@ export function TeamManager() {
     <div className="space-y-4">
       {/* Team Members List */}
       <div className="space-y-2">
-        {teamMembers.map((member) => (
-          <div
+        {teamMembers.map((member, index) => (
+          <MotionListItem
             key={member.id}
+            index={index}
             className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex items-start gap-3 sm:items-center">
@@ -221,10 +224,10 @@ export function TeamManager() {
                   {member.email}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <Badge variant={getRoleBadgeVariant(member.role)}>
+                  <MotionBadge variant={getRoleBadgeVariant(member.role)}>
                     {ROLES.find((r) => r.value === member.role)?.label ||
                       member.role}
-                  </Badge>
+                  </MotionBadge>
                   <span className="text-xs text-muted-foreground">
                     Added {new Date(member.createdAt).toLocaleDateString()}
                   </span>
@@ -258,7 +261,7 @@ export function TeamManager() {
                 <Trash2 className="h-4 w-4" />
               </MotionButton>
             </div>
-          </div>
+          </MotionListItem>
         ))}
       </div>
 

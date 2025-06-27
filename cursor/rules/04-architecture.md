@@ -21,6 +21,18 @@ generated_content (id, tool_id, client_id, prompt, content, metadata, created_by
 webhooks (id, name, url, production_url, testing_url, is_production, type, entity_id, headers, is_active)
 webhook_executions (id, webhook_id, payload, response, status_code, error)
 
+-- Calendar & Booking tables
+bookings (id, client_id, service_id, user_id, title, start_time, end_time, status, notes, metadata)
+availability (id, user_id, day_of_week, start_time, end_time, is_available)
+
+-- Store & E-commerce tables
+cart (id, user_id, items, created_at, updated_at)
+orders (id, client_id, stripe_payment_intent_id, amount, currency, status, metadata)
+order_items (id, order_id, service_template_id, quantity, price, metadata)
+service_contracts (id, order_id, client_id, contract_url, signed_at, signature_data)
+invoices (id, order_id, invoice_number, pdf_url, created_at, sent_at)
+sales_metrics (id, date, revenue, order_count, new_customers, returning_customers, ltv_data)
+
 -- Key Features
 - Tasks include checklist field for internal tracking (never visible to clients)
 - Content tools support AI generation with metadata tracking

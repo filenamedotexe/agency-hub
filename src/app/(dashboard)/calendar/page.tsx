@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { View } from "react-big-calendar";
 import { useAuth } from "@/components/providers/auth-provider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MotionButton } from "@/components/ui/motion-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Calendar as CalendarIcon,
@@ -126,9 +127,9 @@ export default function CalendarPage() {
           {/* Mobile sidebar toggle */}
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="md:hidden">
+              <MotionButton variant="outline" size="sm" className="md:hidden">
                 <Menu className="h-4 w-4" />
-              </Button>
+              </MotionButton>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
               <CalendarSidebar
@@ -141,19 +142,20 @@ export default function CalendarPage() {
                   }
                 }}
                 upcomingBookings={upcomingBookings}
+                isLoadingBookings={isLoadingBookings}
               />
             </SheetContent>
           </Sheet>
 
-          <Button
+          <MotionButton
             variant="outline"
             size="sm"
             onClick={() => setIsAvailabilityOpen(true)}
           >
             <Settings2 className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Availability</span>
-          </Button>
-          <Button
+          </MotionButton>
+          <MotionButton
             size="sm"
             onClick={() => {
               const now = new Date();
@@ -168,12 +170,12 @@ export default function CalendarPage() {
             <Plus className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">New Booking</span>
             <span className="sm:hidden">New</span>
-          </Button>
+          </MotionButton>
         </div>
       </div>
 
       {/* Calendar Connection Status - Optional */}
-      <Card className="border-blue-200 bg-blue-50">
+      <EnhancedCard className="border-blue-200 bg-blue-50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <CalendarIcon className="h-5 w-5" />
@@ -198,7 +200,7 @@ export default function CalendarPage() {
                     <p className="text-xs text-gray-600">{status.email}</p>
                   </div>
                 </div>
-                <Button
+                <MotionButton
                   variant="outline"
                   size="sm"
                   onClick={() => disconnect()}
@@ -215,7 +217,7 @@ export default function CalendarPage() {
                       Disconnect
                     </>
                   )}
-                </Button>
+                </MotionButton>
               </div>
               {status.isExpired && (
                 <div className="flex items-center gap-2 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
@@ -232,7 +234,7 @@ export default function CalendarPage() {
                   conflict detection
                 </p>
               </div>
-              <Button
+              <MotionButton
                 variant="outline"
                 size="sm"
                 onClick={() => connect()}
@@ -246,11 +248,11 @@ export default function CalendarPage() {
                 ) : (
                   "Connect Calendar"
                 )}
-              </Button>
+              </MotionButton>
             </div>
           )}
         </CardContent>
-      </Card>
+      </EnhancedCard>
 
       {/* Calendar View */}
       <div className="flex flex-col gap-4 md:flex-row">
@@ -265,12 +267,13 @@ export default function CalendarPage() {
               }
             }}
             upcomingBookings={upcomingBookings}
+            isLoadingBookings={isLoadingBookings}
           />
         </div>
 
         {/* Main Calendar */}
         <div className="min-w-0 flex-1">
-          <Card className="min-h-[500px] md:min-h-[700px]">
+          <EnhancedCard className="min-h-[500px] md:min-h-[700px]">
             <CardContent className="p-3 md:p-6">
               <CalendarView
                 bookings={bookings}
@@ -291,7 +294,7 @@ export default function CalendarPage() {
                 }}
               />
             </CardContent>
-          </Card>
+          </EnhancedCard>
         </div>
       </div>
 

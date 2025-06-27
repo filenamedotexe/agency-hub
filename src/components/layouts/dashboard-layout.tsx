@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
 import { UserRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import {
   Breadcrumbs,
   CommandPalette,
@@ -223,12 +224,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Mobile sidebar */}
-      <div
+      <motion.div
         ref={sidebarRef}
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-white shadow-xl transition-transform duration-300 ease-in-out lg:hidden",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
+        className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl lg:hidden"
+        initial={false}
+        animate={{ x: sidebarOpen ? 0 : -256 }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        drag="x"
+        dragConstraints={{ left: -256, right: 0 }}
+        dragElastic={0.2}
+        onDragEnd={(e, { offset, velocity }) => {
+          if (offset.x < -100 || velocity.x < -500) {
+            setSidebarOpen(false);
+          }
+        }}
         role="navigation"
         aria-label="Mobile navigation"
         data-testid="mobile-menu"
@@ -248,21 +257,28 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
-              <Link
+              <motion.div
                 key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn("nav-item text-sm", isActive && "active")}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <Icon className="mr-3 h-5 w-5" />
-                {item.label}
-              </Link>
+                <Link
+                  href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn("nav-item text-sm", isActive && "active")}
+                >
+                  <Icon className="mr-3 h-5 w-5" />
+                  {item.label}
+                </Link>
+              </motion.div>
             );
           })}
 
           {/* Mobile Sign Out Button */}
           <div className="mt-4 border-t border-gray-200 pt-4">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -275,10 +291,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             >
               <LogOut className="mr-3 h-5 w-5" />
               Sign out
-            </button>
+            </motion.button>
           </div>
         </nav>
-      </div>
+      </motion.div>
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:flex lg:w-64 lg:flex-col lg:bg-white lg:shadow-lg">
@@ -309,14 +325,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <header className="border-b border-gray-200 bg-white shadow-sm">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             {/* Mobile menu button */}
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
               onClick={() => setSidebarOpen(true)}
               className="rounded-md p-2 transition-colors duration-150 hover:bg-gray-100 lg:hidden"
               aria-label="Toggle navigation"
               data-testid="mobile-menu-trigger"
             >
               <Menu className="h-5 w-5 text-gray-600" />
-            </button>
+            </motion.button>
 
             {/* Breadcrumbs and title */}
             <div className="flex flex-1 items-center justify-between">

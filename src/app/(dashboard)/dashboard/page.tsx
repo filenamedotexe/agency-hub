@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { useRealtimeDashboard } from "@/hooks/use-realtime-dashboard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton, CardSkeleton } from "@/components/ui/skeleton-loader";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { MyServicesWidget } from "@/components/dashboard/my-services-widget";
@@ -12,6 +11,7 @@ import { DashboardWidget } from "@/components/ui/dashboard-widget";
 import { QuickActions, type QuickAction } from "@/components/ui/quick-actions";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MotionButton } from "@/components/ui/motion-button";
+import { MotionDiv } from "@/components/ui/motion-elements";
 import {
   Users,
   Briefcase,
@@ -96,7 +96,7 @@ function StatCard({
   );
 }
 
-function ActivityItem({ activity }: { activity: any }) {
+function ActivityItem({ activity, index }: { activity: any; index: number }) {
   const getActivityIcon = () => {
     switch (activity.entityType) {
       case "client":
@@ -111,7 +111,12 @@ function ActivityItem({ activity }: { activity: any }) {
   };
 
   return (
-    <div className="flex items-start space-x-3 py-3">
+    <MotionDiv
+      className="flex items-start space-x-3 py-3"
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.1 }}
+    >
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
         {getActivityIcon()}
       </div>
@@ -129,7 +134,7 @@ function ActivityItem({ activity }: { activity: any }) {
           })}
         </p>
       </div>
-    </div>
+    </MotionDiv>
   );
 }
 
@@ -203,22 +208,31 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
+      <MotionDiv
+        className="space-y-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <MotionDiv
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <Skeleton className="mt-1 h-4 w-64" />
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        </MotionDiv>
+        <MotionDiv className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <CardSkeleton key={i} />
           ))}
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        </MotionDiv>
+        <MotionDiv className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <CardSkeleton key={i} />
           ))}
-        </div>
-      </div>
+        </MotionDiv>
+      </MotionDiv>
     );
   }
 
@@ -250,14 +264,28 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
+    <MotionDiv
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <MotionDiv
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600">Welcome back, {user?.email}</p>
-      </div>
+      </MotionDiv>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <MotionDiv
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
         <StatCard
           title="Total Clients"
           value={stats?.overview.totalClients || 0}
@@ -292,19 +320,28 @@ export default function DashboardPage() {
           icon={CheckCircle2}
           color="text-green-600"
         />
-      </div>
+      </MotionDiv>
 
       {/* Quick Actions */}
-      <div>
+      <MotionDiv
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
         <h2 className="mb-4 text-lg font-semibold">Quick Actions</h2>
         <QuickActions actions={quickActions} />
-      </div>
+      </MotionDiv>
 
       {/* My Services Widget for Clients */}
       {user?.role === "CLIENT" && <MyServicesWidget />}
 
       {/* Charts Row - Mobile optimized with horizontal scroll */}
-      <div className="-mx-4 grid grid-cols-1 gap-6 overflow-x-auto px-4 lg:mx-0 lg:grid-cols-3 lg:overflow-x-visible lg:px-0">
+      <MotionDiv
+        className="-mx-4 grid grid-cols-1 gap-6 overflow-x-auto px-4 lg:mx-0 lg:grid-cols-3 lg:overflow-x-visible lg:px-0"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
         {/* Services by Status */}
         <DashboardWidget title="Services by Status" icon={Briefcase}>
           <div className="h-64">
@@ -389,7 +426,7 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </div>
         </DashboardWidget>
-      </div>
+      </MotionDiv>
 
       {/* Activity Timeline */}
       <DashboardWidget title="Recent Activity" icon={Activity}>
@@ -401,12 +438,16 @@ export default function DashboardPage() {
               description="Activity from your team will appear here"
             />
           ) : (
-            stats?.recentActivity.map((activity) => (
-              <ActivityItem key={activity.id} activity={activity} />
+            stats?.recentActivity.map((activity, index) => (
+              <ActivityItem
+                key={activity.id}
+                activity={activity}
+                index={index}
+              />
             ))
           )}
         </div>
       </DashboardWidget>
-    </div>
+    </MotionDiv>
   );
 }

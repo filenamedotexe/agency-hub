@@ -9,6 +9,8 @@ interface EnhancedCardProps {
   onClick?: () => void;
   expandable?: boolean;
   className?: string;
+  icon?: React.ReactNode;
+  iconColor?: string;
 }
 
 export function EnhancedCard({
@@ -16,6 +18,8 @@ export function EnhancedCard({
   onClick,
   expandable = false,
   className,
+  icon,
+  iconColor,
 }: EnhancedCardProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -25,13 +29,16 @@ export function EnhancedCard({
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "rounded-lg border bg-white shadow-sm transition-shadow",
+        "relative rounded-lg border bg-white shadow-sm transition-shadow",
         "hover:shadow-md",
         onClick && "cursor-pointer",
         className
       )}
       onClick={onClick}
     >
+      {icon && (
+        <div className={cn("absolute right-4 top-4", iconColor)}>{icon}</div>
+      )}
       {children}
 
       {expandable && (

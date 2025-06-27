@@ -10,6 +10,8 @@ import {
 
 export class AuthClientService {
   private supabase;
+  private userCache: { user: AuthUser | null; expiry: number } | null = null;
+  private readonly CACHE_DURATION = 30000; // 30 seconds
 
   constructor() {
     this.supabase = getSupabaseClient();
@@ -75,6 +77,9 @@ export class AuthClientService {
     try {
       console.log("[AuthClient] Starting logout process...");
 
+      // Clear user cache immediately
+      this.userCache = null;
+
       // Call server logout endpoint first
       await fetch("/api/auth/logout", {
         method: "POST",
@@ -99,6 +104,13 @@ export class AuthClientService {
 
   async getCurrentUser(): Promise<AuthUser | null> {
     authLog("getCurrentUser called");
+
+    // Check cache first
+    if (this.userCache && Date.now() < this.userCache.expiry) {
+      authLog("Returning cached user:", this.userCache.user?.email);
+      return this.userCache.user;
+    }
+
     authTime("getCurrentUser");
     try {
       authTime("supabase.auth.getUser");
@@ -109,16 +121,27 @@ export class AuthClientService {
 
       if (!user) {
         authLog("No user from supabase.auth.getUser");
+        // Cache null result briefly to prevent rapid re-calls
+        this.userCache = { user: null, expiry: Date.now() + 5000 };
         authTimeEnd("getCurrentUser");
         return null;
       }
 
       authLog("Supabase user found:", user.email);
 
-      // Fetch user profile from API
+      // Fetch user profile from API with timeout
       try {
         authTime("fetch /api/auth/me");
-        const response = await fetch("/api/auth/me");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+        const response = await fetch("/api/auth/me", {
+          signal: controller.signal,
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        });
+        clearTimeout(timeoutId);
         authTimeEnd("fetch /api/auth/me");
 
         if (!response.ok) {
@@ -129,6 +152,13 @@ export class AuthClientService {
 
         const data = await response.json();
         authLog("User profile fetched:", data.user?.email, data.user?.role);
+
+        // Cache the successful result
+        this.userCache = {
+          user: data.user,
+          expiry: Date.now() + this.CACHE_DURATION,
+        };
+
         authTimeEnd("getCurrentUser");
         return data.user;
       } catch (fetchError) {

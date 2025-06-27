@@ -15,15 +15,30 @@ export function authLog(...args: any[]) {
   }
 }
 
+// Track active timers to prevent collisions
+const activeTimers = new Set<string>();
+
 export function authTime(label: string) {
   if (AUTH_DEBUG) {
-    console.time(`[AUTH-TIMING] ${label}`);
+    const timerKey = `[AUTH-TIMING] ${label}`;
+    if (activeTimers.has(timerKey)) {
+      console.warn(`Timer '${timerKey}' already exists, skipping`);
+      return;
+    }
+    activeTimers.add(timerKey);
+    console.time(timerKey);
   }
 }
 
 export function authTimeEnd(label: string) {
   if (AUTH_DEBUG) {
-    console.timeEnd(`[AUTH-TIMING] ${label}`);
+    const timerKey = `[AUTH-TIMING] ${label}`;
+    if (!activeTimers.has(timerKey)) {
+      console.warn(`Timer '${timerKey}' does not exist, skipping`);
+      return;
+    }
+    activeTimers.delete(timerKey);
+    console.timeEnd(timerKey);
   }
 }
 

@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MotionListItem } from "@/components/ui/motion-elements";
 import {
   Dialog,
   DialogContent,
@@ -131,9 +132,10 @@ export function FormResponses({ clientId }: FormResponsesProps) {
         <ScrollArea className="h-[400px] pr-4">
           {responses && responses.length > 0 ? (
             <div className="space-y-6">
-              {responses.map((response) => (
-                <div
+              {responses.map((response, index) => (
+                <MotionListItem
                   key={response.id}
+                  index={index}
                   className="space-y-3 rounded-lg border p-4"
                 >
                   <div className="flex items-center justify-between">
@@ -171,7 +173,7 @@ export function FormResponses({ clientId }: FormResponsesProps) {
                       )
                     )}
                   </div>
-                </div>
+                </MotionListItem>
               ))}
             </div>
           ) : (
@@ -200,8 +202,12 @@ function DynamicFieldsManager({
 
       <TabsContent value="overview" className="space-y-4">
         <div className="grid gap-4">
-          {Object.entries(dynamicFields).map(([key, field]) => (
-            <div key={key} className="space-y-3 rounded-lg border p-4">
+          {Object.entries(dynamicFields).map(([key, field], index) => (
+            <MotionListItem
+              key={key}
+              index={index}
+              className="space-y-3 rounded-lg border p-4"
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium">{field.label || key}</h4>
@@ -243,7 +249,7 @@ function DynamicFieldsManager({
                   </span>
                 </div>
               </div>
-            </div>
+            </MotionListItem>
           ))}
         </div>
       </TabsContent>
@@ -301,8 +307,12 @@ function DynamicFieldsManager({
                     Client&apos;s name
                   </span>
                 </div>
-                {Object.keys(dynamicFields).map((key) => (
-                  <div key={key} className="flex items-center gap-2">
+                {Object.keys(dynamicFields).map((key, index) => (
+                  <MotionListItem
+                    key={key}
+                    index={index}
+                    className="flex items-center gap-2"
+                  >
                     <DynamicField
                       field={`{{${key}}}`}
                       variant="code"
@@ -312,7 +322,7 @@ function DynamicFieldsManager({
                       {dynamicFields[key].label} (from{" "}
                       {dynamicFields[key].fromForm})
                     </span>
-                  </div>
+                  </MotionListItem>
                 ))}
               </div>
             </div>

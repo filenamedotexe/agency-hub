@@ -97,14 +97,26 @@ We are building an app for my agency to manage my clients and the services that 
 - Webhook integration for generated content
 - Tools: Blog Writer, Facebook Ad Scripts, Google Ad Writer, SEO Research
 
-### Store (In Progress)
+### Calendar
+
+- Full calendar system with booking management
+- Multi-view support (Month, Week, Day, Agenda)
+- Availability settings for team members
+- Service-linked bookings
+- Client meeting scheduling
+- Real-time availability tracking
+- **Phase 4 Complete**: All features fully tested and operational
+
+### Store (Phase 1 In Progress)
 
 - Service marketplace for clients to purchase services
-- Shopping cart with Stripe checkout integration
+- Shopping cart with localStorage/API synchronization
+- Stripe checkout integration with test mode
 - E-signature contracts for service agreements
 - Order history and tracking
-- Professional invoice generation
+- Professional invoice generation (PDF)
 - Sales analytics dashboard (Admin only)
+- **Current Status**: Foundation phase - implementing cart and service templates
 
 ### Settings
 

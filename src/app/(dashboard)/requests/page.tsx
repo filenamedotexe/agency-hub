@@ -9,9 +9,11 @@ import {
   EyeOff,
   Search,
   Filter,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -289,13 +291,7 @@ export default function RequestsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-muted-foreground">Loading requests...</div>
-      </div>
-    );
-  }
+  // Don't show global loading spinner, let components handle it
 
   return (
     <div className="space-y-6">
@@ -306,10 +302,10 @@ export default function RequestsPage() {
             Manage client requests and track their progress
           </p>
         </div>
-        <Button onClick={() => setShowNewRequest(true)}>
+        <MotionButton onClick={() => setShowNewRequest(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Request
-        </Button>
+        </MotionButton>
       </div>
 
       {/* Filters and Search */}
@@ -381,12 +377,14 @@ export default function RequestsPage() {
           requests={filteredRequests}
           onUpdateStatus={handleUpdateStatus}
           onViewRequest={setSelectedRequest}
+          isLoading={loading}
         />
       ) : (
         <ListView
           requests={filteredRequests}
           onUpdateStatus={handleUpdateStatus}
           onViewRequest={setSelectedRequest}
+          isLoading={loading}
         />
       )}
 
@@ -469,10 +467,15 @@ export default function RequestsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewRequest(false)}>
+            <MotionButton
+              variant="outline"
+              onClick={() => setShowNewRequest(false)}
+            >
               Cancel
-            </Button>
-            <Button onClick={handleCreateRequest}>Create Request</Button>
+            </MotionButton>
+            <MotionButton onClick={handleCreateRequest}>
+              Create Request
+            </MotionButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -484,6 +487,7 @@ export default function RequestsPage() {
         onUpdateStatus={handleUpdateStatus}
         onUpdateVisibility={handleUpdateVisibility}
         onAddComment={handleAddComment}
+        isLoading={loading && !!selectedRequest}
       />
     </div>
   );

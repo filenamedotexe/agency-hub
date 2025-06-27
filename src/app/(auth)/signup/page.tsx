@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { MotionButton } from "@/components/ui/motion-button";
 import { Input } from "@/components/ui/input";
+import { MotionInput } from "@/components/ui/motion-elements";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -171,7 +172,7 @@ export default function SignUpPage() {
                 <FormItem>
                   <FormLabel>Email address</FormLabel>
                   <FormControl>
-                    <Input
+                    <MotionInput
                       {...field}
                       type="email"
                       placeholder="you@example.com"
@@ -190,7 +191,7 @@ export default function SignUpPage() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input
+                    <MotionInput
                       {...field}
                       type="password"
                       placeholder="Minimum 8 characters"
@@ -209,7 +210,7 @@ export default function SignUpPage() {
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input
+                    <MotionInput
                       {...field}
                       type="password"
                       placeholder="Re-enter your password"
@@ -279,7 +280,7 @@ export default function SignUpPage() {
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input
+                    <MotionInput
                       {...field}
                       type="text"
                       placeholder="John Doe"
@@ -299,7 +300,7 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Business Name</FormLabel>
                     <FormControl>
-                      <Input
+                      <MotionInput
                         {...field}
                         type="text"
                         placeholder="Your Company Name"

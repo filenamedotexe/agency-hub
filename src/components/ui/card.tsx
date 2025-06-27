@@ -4,12 +4,16 @@ import { cn } from "@/lib/utils";
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & {
+    interactive?: boolean;
+  }
+>(({ className, interactive = false, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border border-gray-200 bg-white text-gray-900 transition-all duration-base hover:border-gray-300 hover:shadow-md",
+      "rounded-lg border border-gray-200 bg-white text-gray-900 transition-colors",
+      "dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100",
+      interactive && "cursor-pointer hover:border-gray-300 hover:shadow-md",
       className
     )}
     {...props}
@@ -23,10 +27,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(
-      "flex flex-col space-y-1.5 border-b border-gray-100 p-6",
-      className
-    )}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
     {...props}
   />
 ));

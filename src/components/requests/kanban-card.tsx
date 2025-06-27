@@ -3,8 +3,10 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { Calendar, MessageSquare, Building2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MotionBadge } from "@/components/ui/motion-elements";
 import { Request } from "@/types/requests";
 import { formatDistanceToNow } from "date-fns";
 
@@ -35,11 +37,11 @@ export function KanbanCard({ request, onView, isDragging }: KanbanCardProps) {
 
   if (isDragging) {
     return (
-      <Card className="cursor-grabbing opacity-50">
+      <EnhancedCard className="cursor-grabbing opacity-50">
         <CardContent className="p-4">
           <p className="text-sm">{request.description}</p>
         </CardContent>
-      </Card>
+      </EnhancedCard>
     );
   }
 
@@ -51,7 +53,7 @@ export function KanbanCard({ request, onView, isDragging }: KanbanCardProps) {
       {...listeners}
       className="touch-none"
     >
-      <Card
+      <EnhancedCard
         className={`cursor-grab transition-shadow hover:shadow-md ${isCurrentlyDragging ? "opacity-50" : ""}`}
         onClick={() => {
           if (!isCurrentlyDragging && onView) {
@@ -81,10 +83,10 @@ export function KanbanCard({ request, onView, isDragging }: KanbanCardProps) {
             </div>
 
             {request.comments && request.comments.length > 0 && (
-              <Badge variant="outline" className="px-1.5 py-0 text-xs">
+              <MotionBadge variant="outline" className="px-1.5 py-0 text-xs">
                 <MessageSquare className="mr-1 h-3 w-3" />
                 {request.comments.length}
-              </Badge>
+              </MotionBadge>
             )}
           </div>
 
@@ -97,7 +99,7 @@ export function KanbanCard({ request, onView, isDragging }: KanbanCardProps) {
             </div>
           )}
         </CardContent>
-      </Card>
+      </EnhancedCard>
     </div>
   );
 }

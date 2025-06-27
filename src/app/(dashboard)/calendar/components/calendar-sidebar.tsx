@@ -1,11 +1,14 @@
 "use client";
 
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ListSkeleton } from "@/components/ui/skeleton-loader";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Clock, MapPin, User } from "lucide-react";
+import { MotionListItem } from "@/components/ui/motion-elements";
 import { BookingWithRelations } from "@/types/booking";
 import { format } from "date-fns";
 
@@ -13,12 +16,14 @@ interface CalendarSidebarProps {
   selectedDate: Date;
   onDateSelect: (date: Date | undefined) => void;
   upcomingBookings?: BookingWithRelations[];
+  isLoadingBookings?: boolean;
 }
 
 export function CalendarSidebar({
   selectedDate,
   onDateSelect,
   upcomingBookings = [],
+  isLoadingBookings = false,
 }: CalendarSidebarProps) {
   const getStatusBadgeVariant = (status: string) => {
     const variants: Record<
@@ -39,32 +44,39 @@ export function CalendarSidebar({
     <aside className="h-full w-80 border-r bg-gray-50/50 p-4">
       <div className="mb-4">
         <h3 className="mb-3 text-sm font-semibold text-gray-700">Calendar</h3>
-        <div className="rounded-lg border bg-white">
+        <EnhancedCard className="p-0">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={(date) => onDateSelect(date)}
             className="rounded-md border-0"
           />
-        </div>
+        </EnhancedCard>
       </div>
 
       <div>
         <h3 className="mb-3 text-sm font-semibold text-gray-700">
           Upcoming Bookings
         </h3>
-        <div className="rounded-lg border bg-white">
+        <EnhancedCard className="p-0">
           <ScrollArea className="h-[400px]">
-            {upcomingBookings.length === 0 ? (
-              <div className="p-8 text-center">
-                <Clock className="mx-auto mb-2 h-8 w-8 text-gray-300" />
-                <p className="text-sm text-gray-500">No upcoming bookings</p>
+            {isLoadingBookings ? (
+              <div className="p-4">
+                <ListSkeleton items={3} />
               </div>
+            ) : upcomingBookings.length === 0 ? (
+              <EmptyState
+                icon={<Clock className="h-8 w-8" />}
+                title="No upcoming bookings"
+                description="Your upcoming bookings will appear here"
+                className="py-8"
+              />
             ) : (
               <div className="divide-y">
-                {upcomingBookings.map((booking) => (
-                  <div
+                {upcomingBookings.map((booking, index) => (
+                  <MotionListItem
                     key={booking.id}
+                    index={index}
                     className="cursor-pointer p-3 transition-colors hover:bg-gray-50"
                   >
                     <div className="space-y-1">
@@ -104,12 +116,12 @@ export function CalendarSidebar({
                         )}
                       </div>
                     </div>
-                  </div>
+                  </MotionListItem>
                 ))}
               </div>
             )}
           </ScrollArea>
-        </div>
+        </EnhancedCard>
       </div>
     </aside>
   );

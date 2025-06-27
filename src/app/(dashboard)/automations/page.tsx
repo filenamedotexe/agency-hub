@@ -16,22 +16,15 @@ import {
   Zap,
   History,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ResponsiveDataTable } from "@/components/ui/responsive-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -381,7 +374,7 @@ export default function AutomationsPage() {
           </p>
         </div>
 
-        <Card>
+        <EnhancedCard>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5" />
@@ -408,9 +401,9 @@ export default function AutomationsPage() {
               />
             )}
           </CardContent>
-        </Card>
+        </EnhancedCard>
 
-        <Card>
+        <EnhancedCard>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5" />
@@ -437,9 +430,9 @@ export default function AutomationsPage() {
               />
             )}
           </CardContent>
-        </Card>
+        </EnhancedCard>
 
-        <Card>
+        <EnhancedCard>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -451,10 +444,10 @@ export default function AutomationsPage() {
                   General webhooks for custom automation
                 </CardDescription>
               </div>
-              <Button onClick={() => openForm("GENERAL")}>
+              <MotionButton onClick={() => openForm("GENERAL")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Webhook
-              </Button>
+              </MotionButton>
             </div>
           </CardHeader>
           <CardContent>
@@ -474,7 +467,7 @@ export default function AutomationsPage() {
               />
             )}
           </CardContent>
-        </Card>
+        </EnhancedCard>
 
         {/* Webhook Execution History Dialog */}
         <Dialog
@@ -606,213 +599,246 @@ function EnhancedWebhookTable({
   onCopy: (text: string, label: string) => void;
 }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name & Environment</TableHead>
-          <TableHead>URLs</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Executions</TableHead>
-          <TableHead>Created</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {webhooks.map((webhook) => {
-          const activeUrl = webhook.isProduction
-            ? webhook.productionUrl || webhook.url
-            : webhook.testingUrl || webhook.url;
-
-          return (
-            <TableRow key={webhook.id}>
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="font-medium">{webhook.name}</div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={webhook.isProduction ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {webhook.isProduction ? "Production" : "Testing"}
-                    </Badge>
-                    {webhook.type === "CONTENT_TOOL" && (
-                      <Badge variant="outline" className="text-xs">
-                        Content Tool
-                      </Badge>
-                    )}
-                  </div>
+    <ResponsiveDataTable
+      columns={[
+        {
+          key: "name",
+          label: "Name & Environment",
+          priority: "high",
+          renderCell: (_, webhook) => (
+            <div className="space-y-1">
+              <div className="font-medium">{webhook.name}</div>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={webhook.isProduction ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {webhook.isProduction ? "Production" : "Testing"}
+                </Badge>
+                {webhook.type === "CONTENT_TOOL" && (
+                  <Badge variant="outline" className="text-xs">
+                    Content Tool
+                  </Badge>
+                )}
+              </div>
+            </div>
+          ),
+        },
+        {
+          key: "urls",
+          label: "URLs",
+          priority: "medium",
+          renderCell: (_, webhook) => {
+            const activeUrl = webhook.isProduction
+              ? webhook.productionUrl || webhook.url
+              : webhook.testingUrl || webhook.url;
+            return (
+              <div className="space-y-1">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
+                  <span className="text-xs text-muted-foreground">Active:</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="max-w-[200px] truncate text-left font-mono text-xs hover:text-foreground sm:max-w-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCopy(activeUrl, "Active URL");
+                        }}
+                      >
+                        {activeUrl}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="max-w-sm break-all">{activeUrl}</div>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-              </TableCell>
 
-              <TableCell>
-                <div className="max-w-xs space-y-1">
-                  <div className="flex items-center gap-1">
+                {webhook.type === "CONTENT_TOOL" && (
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
                     <span className="text-xs text-muted-foreground">
-                      Active:
+                      Callback:
                     </span>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          className="truncate text-left font-mono text-xs hover:text-foreground"
-                          onClick={() => onCopy(activeUrl, "Active URL")}
+                          className="max-w-[200px] truncate text-left font-mono text-xs hover:text-foreground sm:max-w-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCopy(
+                              getCallbackUrlClient(
+                                "{{toolId}}",
+                                webhook.isProduction
+                              ),
+                              "Callback URL"
+                            );
+                          }}
                         >
-                          {activeUrl}
+                          {getCallbackUrlClient(
+                            "{{toolId}}",
+                            webhook.isProduction
+                          )}
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <div className="max-w-sm break-all">{activeUrl}</div>
+                        <div className="max-w-sm break-all">
+                          {getCallbackUrlClient(
+                            "{{toolId}}",
+                            webhook.isProduction
+                          )}
+                        </div>
                       </TooltipContent>
                     </Tooltip>
                   </div>
+                )}
+              </div>
+            );
+          },
+        },
+        {
+          key: "isActive",
+          label: "Status",
+          priority: "high",
+          renderCell: (value) => (
+            <Badge variant={value ? "default" : "secondary"}>
+              {value ? (
+                <>
+                  <CheckCircle className="mr-1 h-3 w-3" />
+                  Active
+                </>
+              ) : (
+                <>
+                  <XCircle className="mr-1 h-3 w-3" />
+                  Inactive
+                </>
+              )}
+            </Badge>
+          ),
+        },
+        {
+          key: "_count",
+          label: "Executions",
+          priority: "medium",
+          renderCell: (value, webhook) => (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewHistory(webhook);
+                  }}
+                  className="flex items-center gap-1 hover:text-foreground"
+                >
+                  <Badge variant="outline">
+                    <Activity className="mr-1 h-3 w-3" />
+                    {value?.executions || 0}
+                  </Badge>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>View execution history</TooltipContent>
+            </Tooltip>
+          ),
+        },
+        {
+          key: "createdAt",
+          label: "Created",
+          priority: "low",
+          renderCell: (value) => (
+            <span className="text-muted-foreground">
+              {new Date(value).toLocaleDateString()}
+            </span>
+          ),
+        },
+        {
+          key: "actions",
+          label: "Actions",
+          priority: "high",
+          renderCell: (_, webhook) => (
+            <div className="flex items-center justify-end gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Switch
+                    checked={webhook.isActive}
+                    onCheckedChange={() => {
+                      onToggle(webhook);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Toggle active state</TooltipContent>
+              </Tooltip>
 
-                  {webhook.type === "CONTENT_TOOL" && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-muted-foreground">
-                        Callback:
-                      </span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            className="truncate text-left font-mono text-xs hover:text-foreground"
-                            onClick={() =>
-                              onCopy(
-                                getCallbackUrlClient(
-                                  "{{toolId}}",
-                                  webhook.isProduction
-                                ),
-                                "Callback URL"
-                              )
-                            }
-                          >
-                            {getCallbackUrlClient(
-                              "{{toolId}}",
-                              webhook.isProduction
-                            )}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <div className="max-w-sm break-all">
-                            {getCallbackUrlClient(
-                              "{{toolId}}",
-                              webhook.isProduction
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-
-              <TableCell>
-                <Badge variant={webhook.isActive ? "default" : "secondary"}>
-                  {webhook.isActive ? (
-                    <>
-                      <CheckCircle className="mr-1 h-3 w-3" />
-                      Active
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="mr-1 h-3 w-3" />
-                      Inactive
-                    </>
-                  )}
-                </Badge>
-              </TableCell>
-
-              <TableCell>
+              {webhook.type !== "CONTENT_TOOL" && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onViewHistory(webhook)}
-                      className="flex items-center gap-1 hover:text-foreground"
+                    <MotionButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTest(webhook);
+                      }}
+                      disabled={!webhook.isActive}
                     >
-                      <Badge variant="outline">
-                        <Activity className="mr-1 h-3 w-3" />
-                        {webhook._count?.executions || 0}
-                      </Badge>
-                    </button>
+                      <TestTube className="h-4 w-4" />
+                    </MotionButton>
                   </TooltipTrigger>
-                  <TooltipContent>View execution history</TooltipContent>
+                  <TooltipContent>Test webhook</TooltipContent>
                 </Tooltip>
-              </TableCell>
+              )}
 
-              <TableCell className="text-muted-foreground">
-                {new Date(webhook.createdAt).toLocaleDateString()}
-              </TableCell>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <MotionButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewHistory(webhook);
+                    }}
+                  >
+                    <History className="h-4 w-4" />
+                  </MotionButton>
+                </TooltipTrigger>
+                <TooltipContent>View execution history</TooltipContent>
+              </Tooltip>
 
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Switch
-                        checked={webhook.isActive}
-                        onCheckedChange={() => onToggle(webhook)}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>Toggle active state</TooltipContent>
-                  </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <MotionButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(webhook);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </MotionButton>
+                </TooltipTrigger>
+                <TooltipContent>Edit webhook</TooltipContent>
+              </Tooltip>
 
-                  {webhook.type !== "CONTENT_TOOL" && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onTest(webhook)}
-                          disabled={!webhook.isActive}
-                        >
-                          <TestTube className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Test webhook</TooltipContent>
-                    </Tooltip>
-                  )}
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewHistory(webhook)}
-                      >
-                        <History className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>View execution history</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(webhook)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit webhook</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(webhook.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete webhook</TooltipContent>
-                  </Tooltip>
-                </div>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <MotionButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(webhook.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </MotionButton>
+                </TooltipTrigger>
+                <TooltipContent>Delete webhook</TooltipContent>
+              </Tooltip>
+            </div>
+          ),
+        },
+      ]}
+      data={webhooks}
+    />
   );
 }

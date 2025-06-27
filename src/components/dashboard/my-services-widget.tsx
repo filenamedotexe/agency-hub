@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { ArrowRight, Package, Clock, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -50,9 +50,9 @@ export function MyServicesWidget() {
         <CardContent className="p-6 text-center">
           <Package className="mx-auto mb-4 h-12 w-12 text-gray-400" />
           <p className="mb-4 text-gray-600">No active services yet</p>
-          <Button asChild>
+          <MotionButton asChild>
             <Link href="/store">Browse Services</Link>
-          </Button>
+          </MotionButton>
         </CardContent>
       </EnhancedCard>
     );
@@ -63,11 +63,11 @@ export function MyServicesWidget() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>My Active Services</span>
-          <Button variant="ghost" size="sm" asChild>
+          <MotionButton variant="ghost" size="sm" asChild>
             <Link href="/services">
               View All <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
-          </Button>
+          </MotionButton>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -82,9 +82,9 @@ export function MyServicesWidget() {
                     completed
                   </p>
                 </div>
-                <Button variant="outline" size="sm" asChild>
+                <MotionButton variant="outline" size="sm" asChild>
                   <Link href={`/services/${service.id}`}>View</Link>
-                </Button>
+                </MotionButton>
               </div>
               <Progress
                 value={(service.completedTasks / service.totalTasks) * 100}
