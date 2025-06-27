@@ -4,15 +4,8 @@ import { stripeService } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, EmailTemplates } from "@/lib/email";
 import OrderConfirmationEmail from "@/components/emails/order-confirmation";
+import { InvoiceService } from "@/lib/services/invoice-service";
 import Stripe from "stripe";
-
-// Helper function to generate invoice numbers
-function generateInvoiceNumber(): string {
-  const prefix = process.env.INVOICE_PREFIX || "INV";
-  const year = new Date().getFullYear();
-  const timestamp = Date.now().toString().slice(-6);
-  return `${prefix}-${year}-${timestamp}`;
-}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -151,20 +144,29 @@ async function handleCheckoutSessionCompleted(
 
   // Send confirmation email
   try {
+    // Get the customer email from Stripe session
+    const customerEmail =
+      session.customer_details?.email || session.customer_email;
+
+    if (!customerEmail) {
+      console.error("No customer email found in Stripe session");
+      return;
+    }
+
     const dashboardUrl = `${process.env.NEXT_PUBLIC_URL || "http://localhost:3001"}/store/orders/${order.id}`;
 
     // Send customer email with React template
     await sendEmail({
-      to: order.client.email,
+      to: customerEmail,
       subject: `Order Confirmation #${order.id}`,
       react: OrderConfirmationEmail({
         orderId: order.id,
         clientName: order.client.name,
-        total: order.total,
+        total: order.total.toNumber(),
         items: order.items.map((item) => ({
           name: item.serviceName,
           quantity: item.quantity,
-          price: item.price,
+          price: item.unitPrice.toNumber(),
         })),
         dashboardUrl,
       }),
@@ -174,7 +176,7 @@ async function handleCheckoutSessionCompleted(
     const adminEmail = EmailTemplates.adminOrderNotification(
       order.id,
       order.client.name,
-      order.total,
+      order.total.toNumber(),
       order.items.map((item) => `${item.serviceName} (${item.quantity}x)`)
     );
 
@@ -192,7 +194,7 @@ async function handleCheckoutSessionCompleted(
       );
 
       await sendEmail({
-        to: order.client.email,
+        to: customerEmail,
         ...contractEmail,
       });
     }
@@ -264,16 +266,33 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
     // Send refund email
     try {
-      const refundEmail = EmailTemplates.refundProcessed(
-        order.id,
-        order.client.name,
-        charge.amount_refunded
-      );
+      // Get the user email from the client's metadata
+      const userId =
+        order.client.metadata &&
+        typeof order.client.metadata === "object" &&
+        "userId" in order.client.metadata
+          ? (order.client.metadata as any).userId
+          : null;
 
-      await sendEmail({
-        to: order.client.email,
-        ...refundEmail,
-      });
+      if (userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId as string },
+          select: { email: true },
+        });
+
+        if (user) {
+          const refundEmail = EmailTemplates.refundProcessed(
+            order.id,
+            order.client.name,
+            charge.amount_refunded
+          );
+
+          await sendEmail({
+            to: user.email,
+            ...refundEmail,
+          });
+        }
+      }
     } catch (error) {
       console.error("Failed to send refund email:", error);
     }
@@ -337,41 +356,50 @@ async function provisionServices(order: any) {
 
   // Generate invoice
   try {
-    const invoice = await prisma.invoice.create({
-      data: {
-        orderId: order.id,
-        invoiceNumber: generateInvoiceNumber(),
-        total: order.total,
-        tax: 0,
-        subtotal: order.total,
-        issuedAt: new Date(),
-        status: "PAID",
-      },
-    });
+    const invoiceService = new InvoiceService();
+    const invoice = await invoiceService.generateInvoice(order.id);
 
     // Send invoice email
     const invoiceEmail = EmailTemplates.invoiceGenerated(
-      invoice.invoiceNumber,
+      invoice.number,
       order.client.name,
-      order.total
+      order.total.toNumber()
     );
 
-    await sendEmail({
-      to: order.client.email,
-      ...invoiceEmail,
-    });
+    // Get the user email from the client's metadata
+    const userId =
+      order.client.metadata &&
+      typeof order.client.metadata === "object" &&
+      "userId" in order.client.metadata
+        ? (order.client.metadata as any).userId
+        : null;
 
-    // Send service provisioned email
-    const serviceEmail = EmailTemplates.serviceProvisioned(
-      order.id,
-      order.client.name,
-      order.items.map((item) => item.serviceName).join(", ")
-    );
+    let user = null;
+    if (userId) {
+      user = await prisma.user.findUnique({
+        where: { id: userId as string },
+        select: { email: true },
+      });
+    }
 
-    await sendEmail({
-      to: order.client.email,
-      ...serviceEmail,
-    });
+    if (user) {
+      await sendEmail({
+        to: user.email,
+        ...invoiceEmail,
+      });
+
+      // Send service provisioned email
+      const serviceEmail = EmailTemplates.serviceProvisioned(
+        order.id,
+        order.client.name,
+        order.items.map((item: any) => item.serviceName).join(", ")
+      );
+
+      await sendEmail({
+        to: user.email,
+        ...serviceEmail,
+      });
+    }
   } catch (error) {
     console.error("Failed to generate invoice or send email:", error);
   }

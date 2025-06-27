@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TableSkeleton } from "@/components/ui/skeleton-loader";
 import type { ClientListResponse } from "@/services/client.service";
 import { formatDistanceToNow } from "date-fns";
 
@@ -141,22 +141,7 @@ export function ClientList() {
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell>
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-40" />
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <Skeleton className="h-4 w-20" />
-                </TableCell>
-              </TableRow>
-            ))
+            <TableSkeleton columns={4} rows={5} />
           ) : data?.clients.length === 0 ? (
             <TableRow>
               <TableCell colSpan={4} className="h-32 text-center">

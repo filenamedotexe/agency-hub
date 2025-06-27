@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, EmailTemplates } from "@/lib/email";
+import { InvoiceService } from "@/lib/services/invoice-service";
 import { z } from "zod";
 
 const signContractSchema = z.object({
@@ -112,7 +113,7 @@ export async function POST(
       );
 
       await sendEmail({
-        to: client.email,
+        to: email,
         ...contractEmail,
       });
     } catch (error) {
@@ -120,7 +121,7 @@ export async function POST(
     }
 
     // Now provision the services
-    await provisionServicesAfterContract(order);
+    await provisionServicesAfterContract(order, email);
 
     return NextResponse.json({
       success: true,
@@ -135,7 +136,7 @@ export async function POST(
   }
 }
 
-async function provisionServicesAfterContract(order: any) {
+async function provisionServicesAfterContract(order: any, userEmail: string) {
   // Create services for each order item
   for (const item of order.items) {
     const service = await prisma.service.create({
@@ -201,17 +202,8 @@ async function provisionServicesAfterContract(order: any) {
 
   // Generate invoice and send emails
   try {
-    const invoice = await prisma.invoice.create({
-      data: {
-        orderId: order.id,
-        invoiceNumber: generateInvoiceNumber(),
-        total: order.total,
-        tax: 0,
-        subtotal: order.total,
-        issuedAt: new Date(),
-        status: "PAID",
-      },
-    });
+    const invoiceService = new InvoiceService();
+    const invoice = await invoiceService.generateInvoice(order.id);
 
     // Get client details
     const client = await prisma.client.findUnique({
@@ -221,13 +213,13 @@ async function provisionServicesAfterContract(order: any) {
     if (client) {
       // Send invoice email
       const invoiceEmail = EmailTemplates.invoiceGenerated(
-        invoice.invoiceNumber,
+        invoice.number,
         client.name,
         order.total
       );
 
       await sendEmail({
-        to: client.email,
+        to: userEmail,
         ...invoiceEmail,
       });
 
@@ -239,19 +231,11 @@ async function provisionServicesAfterContract(order: any) {
       );
 
       await sendEmail({
-        to: client.email,
+        to: userEmail,
         ...serviceEmail,
       });
     }
   } catch (error) {
     console.error("Failed to generate invoice or send emails:", error);
   }
-}
-
-// Helper function to generate invoice numbers
-function generateInvoiceNumber(): string {
-  const prefix = process.env.INVOICE_PREFIX || "INV";
-  const year = new Date().getFullYear();
-  const timestamp = Date.now().toString().slice(-6);
-  return `${prefix}-${year}-${timestamp}`;
 }

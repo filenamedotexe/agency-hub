@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Package, Clock, CheckCircle } from "lucide-react";
@@ -31,7 +32,7 @@ export function MyServicesWidget() {
 
   if (isLoading) {
     return (
-      <Card>
+      <EnhancedCard>
         <CardContent className="p-6">
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
@@ -39,13 +40,13 @@ export function MyServicesWidget() {
             ))}
           </div>
         </CardContent>
-      </Card>
+      </EnhancedCard>
     );
   }
 
   if (!services?.length) {
     return (
-      <Card>
+      <EnhancedCard>
         <CardContent className="p-6 text-center">
           <Package className="mx-auto mb-4 h-12 w-12 text-gray-400" />
           <p className="mb-4 text-gray-600">No active services yet</p>
@@ -53,12 +54,12 @@ export function MyServicesWidget() {
             <Link href="/store">Browse Services</Link>
           </Button>
         </CardContent>
-      </Card>
+      </EnhancedCard>
     );
   }
 
   return (
-    <Card>
+    <EnhancedCard>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>My Active Services</span>
@@ -99,6 +100,6 @@ export function MyServicesWidget() {
           ))}
         </div>
       </CardContent>
-    </Card>
+    </EnhancedCard>
   );
 }

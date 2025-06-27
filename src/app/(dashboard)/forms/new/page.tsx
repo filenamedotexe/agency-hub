@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FormBuilder } from "@/components/forms/form-builder";
+import { MultiStepFormBuilder } from "@/components/forms/multi-step-form-builder";
 
 export default function NewFormPage() {
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function NewFormPage() {
         </div>
       </div>
 
-      <FormBuilder onSave={handleSave} />
+      <MultiStepFormBuilder onSave={handleSave} />
     </div>
   );
 }

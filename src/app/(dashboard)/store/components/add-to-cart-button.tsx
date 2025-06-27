@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCart } from "@/contexts/cart-context";
 import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { ShoppingCart, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,15 +48,19 @@ export function AddToCartButton({
 
   if (justAdded) {
     return (
-      <Button variant="default" className={cn("flex-1", className)} disabled>
+      <MotionButton
+        variant="default"
+        className={cn("flex-1", className)}
+        disabled
+      >
         <Check className="mr-2 h-4 w-4" />
         Added!
-      </Button>
+      </MotionButton>
     );
   }
 
   return (
-    <Button
+    <MotionButton
       variant="default"
       onClick={handleAddToCart}
       disabled={disabled || isAdding || !canAddMore}
@@ -67,6 +72,6 @@ export function AddToCartButton({
         : itemInCart
           ? `Add More (${currentQuantity})`
           : "Add to Cart"}
-    </Button>
+    </MotionButton>
   );
 }

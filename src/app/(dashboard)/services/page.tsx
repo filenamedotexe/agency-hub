@@ -16,6 +16,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
+import { MotionIconButton } from "@/components/ui/motion-elements";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -24,7 +26,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, CardSkeleton } from "@/components/ui/skeleton-loader";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 
 interface ServiceTemplate {
   id: string;
@@ -117,7 +120,7 @@ export default function ServicesPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-48" />
+            <CardSkeleton key={i} />
           ))}
         </div>
       </div>
@@ -135,12 +138,12 @@ export default function ServicesPage() {
             Create and manage templates for services you offer to clients
           </p>
         </div>
-        <Button asChild>
+        <MotionButton asChild>
           <Link href="/services/templates/new">
             <Plus className="mr-2 h-4 w-4" />
             New Template
           </Link>
-        </Button>
+        </MotionButton>
       </div>
 
       {templates.length === 0 ? (
@@ -150,62 +153,65 @@ export default function ServicesPage() {
               No service templates yet. Create your first template to get
               started.
             </p>
-            <Button asChild>
+            <MotionButton asChild>
               <Link href="/services/templates/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Template
               </Link>
-            </Button>
+            </MotionButton>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {templates.map((template) => (
-            <Card
+            <EnhancedCard
               key={template.id}
-              className="transition-shadow hover:shadow-lg"
+              onClick={() =>
+                router.push(`/services/templates/${template.id}/edit`)
+              }
             >
-              <CardHeader>
+              <div className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription className="mt-1">
+                    <h3 className="text-lg font-semibold">{template.name}</h3>
+                    <div className="mt-1">
                       <Badge
                         variant="secondary"
                         className={typeColors[template.type]}
                       >
                         {typeLabels[template.type]}
                       </Badge>
-                    </CardDescription>
+                    </div>
                   </div>
                   <div className="flex gap-1">
-                    <Button
+                    <MotionIconButton
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       asChild
-                      className="h-8 w-8"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Link href={`/services/templates/${template.id}/edit`}>
                         <Edit className="h-4 w-4" />
                       </Link>
-                    </Button>
-                    <Button
+                    </MotionIconButton>
+                    <MotionIconButton
                       variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-600 hover:text-red-700"
-                      onClick={() => setDeleteTemplateId(template.id)}
+                      size="sm"
+                      className="text-red-600 hover:text-red-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTemplateId(template.id);
+                      }}
                       disabled={
                         !!template._count?.services &&
                         template._count.services > 0
                       }
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </MotionIconButton>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+                <div className="mt-4 space-y-3">
                   {template.price && (
                     <div className="flex items-center text-sm text-gray-600">
                       <DollarSign className="mr-1 h-4 w-4" />$
@@ -236,8 +242,8 @@ export default function ServicesPage() {
                     </p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </EnhancedCard>
           ))}
         </div>
       )}

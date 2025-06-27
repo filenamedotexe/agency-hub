@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Filter, Sparkles, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { cn } from "@/lib/utils";
 
 export default function StorePage() {
@@ -181,7 +182,7 @@ export default function StorePage() {
           <p className="mb-6 text-gray-500">
             Try adjusting your search or filters
           </p>
-          <Button
+          <MotionButton
             variant="outline"
             onClick={() => {
               setSearchTerm("");
@@ -189,7 +190,7 @@ export default function StorePage() {
             }}
           >
             Clear filters
-          </Button>
+          </MotionButton>
         </div>
       ) : (
         <>
@@ -204,7 +205,7 @@ export default function StorePage() {
             <p className="mb-4 text-gray-600">
               Need something specific? We&apos;re here to help!
             </p>
-            <Button variant="outline">Contact Sales Team</Button>
+            <MotionButton variant="outline">Contact Sales Team</MotionButton>
           </div>
         </>
       )}

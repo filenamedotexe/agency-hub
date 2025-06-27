@@ -7,6 +7,10 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { UserRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import {
+  Breadcrumbs,
+  CommandPalette,
+} from "@/components/navigation/navigation-utils";
+import {
   Menu,
   X,
   Home,
@@ -24,6 +28,7 @@ import {
   TrendingUp,
   ShoppingBag,
   History,
+  Search,
 } from "lucide-react";
 
 interface NavItem {
@@ -226,6 +231,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         )}
         role="navigation"
         aria-label="Mobile navigation"
+        data-testid="mobile-menu"
       >
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
           <h2 className="text-xl font-semibold text-gray-900">Agency Hub</h2>
@@ -307,69 +313,89 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               onClick={() => setSidebarOpen(true)}
               className="rounded-md p-2 transition-colors duration-150 hover:bg-gray-100 lg:hidden"
               aria-label="Toggle navigation"
+              data-testid="mobile-menu-trigger"
             >
               <Menu className="h-5 w-5 text-gray-600" />
             </button>
 
-            {/* Page title (desktop) */}
-            <div className="hidden lg:block">
-              <h1 className="text-xl font-semibold text-gray-900">
-                {filteredNavItems.find((item) => item.href === pathname)
-                  ?.label || "Dashboard"}
-              </h1>
+            {/* Breadcrumbs and title */}
+            <div className="flex flex-1 items-center justify-between">
+              <div className="flex flex-col">
+                <Breadcrumbs />
+                <h1 className="text-xl font-semibold text-gray-900 lg:hidden">
+                  {filteredNavItems.find((item) => item.href === pathname)
+                    ?.label || "Dashboard"}
+                </h1>
+              </div>
             </div>
 
-            {/* User menu */}
-            <div className="relative">
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              {/* Command palette trigger */}
               <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center rounded-md p-2 transition-colors duration-150 hover:bg-gray-100"
-                aria-label="User menu"
+                onClick={() => {}}
+                className="hidden items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-500 transition-colors hover:bg-gray-200 md:flex"
+                title="Press ⌘K to open command palette"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-primary)] font-medium text-white transition-colors duration-150 hover:bg-[var(--brand-primary-hover)]">
-                  {user.email[0].toUpperCase()}
-                </div>
-                <ChevronDown
-                  className={cn(
-                    "ml-2 h-4 w-4 text-gray-600 transition-transform duration-150",
-                    userMenuOpen && "rotate-180"
-                  )}
-                />
+                <Search className="h-4 w-4" />
+                <span>Search</span>
+                <kbd className="pointer-events-none ml-2 inline-flex h-5 select-none items-center gap-1 rounded border bg-white px-1.5 font-mono text-[10px] font-medium opacity-100">
+                  <span className="text-xs">⌘K</span>
+                </kbd>
               </button>
 
-              {userMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setUserMenuOpen(false)}
-                  />
-                  <div className="absolute right-0 z-40 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-xl duration-200 animate-in fade-in slide-in-from-top-2">
-                    <div className="border-b border-gray-100 px-4 py-3">
-                      <p className="truncate text-sm font-medium text-gray-900">
-                        {user.email}
-                      </p>
-                      <p className="text-xs capitalize text-gray-500">
-                        {user.role.toLowerCase().replace("_", " ")}
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log(
-                          "[DashboardLayout] Desktop logout button clicked"
-                        );
-                        signOut();
-                      }}
-                      className="flex w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-900"
-                      type="button"
-                    >
-                      <LogOut className="mr-2 h-4 w-4 text-gray-500" />
-                      Sign out
-                    </button>
+              {/* User menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center rounded-md p-2 transition-colors duration-150 hover:bg-gray-100"
+                  aria-label="User menu"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-primary)] font-medium text-white transition-colors duration-150 hover:bg-[var(--brand-primary-hover)]">
+                    {user.email[0].toUpperCase()}
                   </div>
-                </>
-              )}
+                  <ChevronDown
+                    className={cn(
+                      "ml-2 h-4 w-4 text-gray-600 transition-transform duration-150",
+                      userMenuOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 z-40 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-xl duration-200 animate-in fade-in slide-in-from-top-2">
+                      <div className="border-b border-gray-100 px-4 py-3">
+                        <p className="truncate text-sm font-medium text-gray-900">
+                          {user.email}
+                        </p>
+                        <p className="text-xs capitalize text-gray-500">
+                          {user.role.toLowerCase().replace("_", " ")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log(
+                            "[DashboardLayout] Desktop logout button clicked"
+                          );
+                          signOut();
+                        }}
+                        className="flex w-full cursor-pointer items-center px-4 py-2.5 text-left text-sm text-gray-700 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-900"
+                        type="button"
+                      >
+                        <LogOut className="mr-2 h-4 w-4 text-gray-500" />
+                        Sign out
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </header>
@@ -407,6 +433,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette />
     </div>
   );
 }

@@ -34,6 +34,14 @@ export interface FormField {
   description?: string;
   options?: FieldOption[];
   validation?: FieldValidation;
+  stepId?: string; // For multi-step forms
+}
+
+export interface FormStep {
+  id: string;
+  title: string;
+  description?: string;
+  order: number;
 }
 
 export interface FormSettings {
@@ -41,6 +49,10 @@ export interface FormSettings {
   redirectUrl?: string;
   submitButtonText?: string;
   successMessage?: string;
+  multiStep?: boolean;
+  progressIndicator?: "steps" | "circular" | "linear";
+  allowStepNavigation?: boolean; // Allow users to go back/forward between steps
+  validateStepBeforeNext?: boolean; // Validate current step before moving to next
 }
 
 export interface Form {
@@ -48,6 +60,7 @@ export interface Form {
   name: string;
   description?: string;
   schema: FormField[];
+  steps?: FormStep[]; // For multi-step forms
   settings?: FormSettings;
   serviceId?: string;
   createdBy: string;

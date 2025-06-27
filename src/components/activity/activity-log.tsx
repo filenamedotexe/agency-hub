@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ActivityLog } from "@/services/activity.service";
@@ -73,7 +74,7 @@ export function ActivityLogComponent({
 
   if (isLoading) {
     return (
-      <Card className={className}>
+      <EnhancedCard className={className}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
@@ -94,12 +95,12 @@ export function ActivityLogComponent({
             ))}
           </div>
         </CardContent>
-      </Card>
+      </EnhancedCard>
     );
   }
 
   return (
-    <Card className={className}>
+    <EnhancedCard className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5" />
@@ -138,6 +139,6 @@ export function ActivityLogComponent({
           )}
         </ScrollArea>
       </CardContent>
-    </Card>
+    </EnhancedCard>
   );
 }

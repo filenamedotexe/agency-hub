@@ -6,7 +6,9 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Button } from "@/components/ui/button";
+import { MotionButton } from "@/components/ui/motion-button";
 import { Badge } from "@/components/ui/badge";
 import { AddToCartButton } from "./add-to-cart-button";
 import Link from "next/link";
@@ -64,8 +66,8 @@ export function ServiceCard({ service }: ServiceCardProps) {
 
   return (
     <TooltipProvider>
-      <Card
-        className="group relative flex h-full flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      <EnhancedCard
+        className="group relative flex h-full flex-col overflow-hidden"
         data-testid="service-card"
       >
         {/* Popular badge */}
@@ -139,7 +141,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
         </CardContent>
 
         <CardFooter className="flex gap-2 border-t bg-gray-50/50 pt-6">
-          <Button
+          <MotionButton
             variant="outline"
             asChild
             className="flex-1 transition-all hover:bg-primary hover:text-white"
@@ -148,14 +150,14 @@ export function ServiceCard({ service }: ServiceCardProps) {
               Details
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
-          </Button>
+          </MotionButton>
           <AddToCartButton
             serviceTemplateId={service.id}
             maxQuantity={service.maxQuantity}
             disabled={!service.price}
           />
         </CardFooter>
-      </Card>
+      </EnhancedCard>
     </TooltipProvider>
   );
 }

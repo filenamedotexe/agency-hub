@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FormBuilder } from "@/components/forms/form-builder";
+import { MultiStepFormBuilder } from "@/components/forms/multi-step-form-builder";
 import { Form } from "@/types/forms";
 
 export default function EditFormPage({ params }: { params: { id: string } }) {
@@ -98,7 +98,7 @@ export default function EditFormPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <FormBuilder form={form} onSave={handleSave} />
+      <MultiStepFormBuilder form={form} onSave={handleSave} />
     </div>
   );
 }
