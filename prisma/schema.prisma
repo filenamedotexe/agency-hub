@@ -34,27 +34,47 @@ model Client {
   metadata         Json?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+  firstOrderDate   DateTime?
+  lastOrderDate    DateTime?
+  lifetimeValue    Decimal            @default(0) @db.Decimal(10, 2)
+  totalOrders      Int                @default(0)
   activityLogs     ActivityLog[]
   bookings         Booking[]
+  carts            Cart?
   formResponses    FormResponse[]
   generatedContent GeneratedContent[]
+  orders           Order[]
   requests         Request[]
   services         Service[]
 
+  @@index([lifetimeValue])
   @@map("clients")
 }
 
 model ServiceTemplate {
-  id              String      @id @default(uuid())
-  name            String
-  type            ServiceType
-  defaultTasks    Json[]      @default([])
-  price           Float?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  requiredFormIds String[]    @default([])
-  services        Service[]
+  id               String      @id @default(uuid())
+  name             String
+  type             ServiceType
+  defaultTasks     Json[]      @default([])
+  price            Float?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  requiredFormIds  String[]    @default([])
+  contractTemplate String?
+  currency         String      @default("USD")
+  isPurchasable    Boolean     @default(false)
+  maxQuantity      Int         @default(1)
+  requiresContract Boolean     @default(false)
+  sortOrder        Int         @default(0)
+  storeDescription String?
+  storeImages      Json?
+  storeTitle       String?
+  stripePriceId    String?     @unique
+  cartItems        CartItem[]
+  orderItems       OrderItem[]
+  services         Service[]
 
+  @@index([isPurchasable, sortOrder])
   @@map("service_templates")
 }
 
@@ -66,6 +86,7 @@ model Service {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   bookings   Booking[]
+  orderItem  OrderItem?
   client     Client          @relation(fields: [clientId], references: [id])
   template   ServiceTemplate @relation(fields: [templateId], references: [id])
   tasks      Task[]
@@ -362,6 +383,134 @@ model BookingSlot {
   @@map("booking_slots")
 }
 
+model Cart {
+  id        String     @id @default(uuid())
+  clientId  String     @unique
+  expiresAt DateTime
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[]
+  client    Client     @relation(fields: [clientId], references: [id])
+
+  @@map("carts")
+}
+
+model CartItem {
+  id                String          @id @default(uuid())
+  cartId            String
+  serviceTemplateId String
+  quantity          Int             @default(1)
+  addedAt           DateTime        @default(now())
+  cart              Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  serviceTemplate   ServiceTemplate @relation(fields: [serviceTemplateId], references: [id])
+
+  @@unique([cartId, serviceTemplateId])
+  @@map("cart_items")
+}
+
+model Order {
+  id                    String           @id @default(uuid())
+  orderNumber           String           @unique @default(cuid())
+  clientId              String
+  status                OrderStatus      @default(PENDING)
+  subtotal              Decimal          @db.Decimal(10, 2)
+  tax                   Decimal          @default(0) @db.Decimal(10, 2)
+  total                 Decimal          @db.Decimal(10, 2)
+  currency              String           @default("USD")
+  stripePaymentIntentId String?          @unique
+  stripeSessionId       String?          @unique
+  paymentMethod         String?
+  paymentStatus         PaymentStatus    @default(PENDING)
+  metadata              Json?
+  notes                 String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  paidAt                DateTime?
+  completedAt           DateTime?
+  invoice               Invoice?
+  items                 OrderItem[]
+  timeline              OrderTimeline[]
+  client                Client           @relation(fields: [clientId], references: [id])
+  contract              ServiceContract?
+
+  @@index([clientId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                String          @id @default(uuid())
+  orderId           String
+  serviceTemplateId String
+  serviceName       String
+  quantity          Int             @default(1)
+  unitPrice         Decimal         @db.Decimal(10, 2)
+  total             Decimal         @db.Decimal(10, 2)
+  metadata          Json?
+  serviceId         String?         @unique
+  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  service           Service?        @relation(fields: [serviceId], references: [id])
+  serviceTemplate   ServiceTemplate @relation(fields: [serviceTemplateId], references: [id])
+
+  @@map("order_items")
+}
+
+model ServiceContract {
+  id              String    @id @default(uuid())
+  orderId         String    @unique
+  templateContent String
+  signedAt        DateTime?
+  signatureData   Json?
+  signedByName    String?
+  signedByEmail   String?
+  ipAddress       String?
+  userAgent       String?
+  order           Order     @relation(fields: [orderId], references: [id])
+
+  @@map("service_contracts")
+}
+
+model Invoice {
+  id      String    @id @default(uuid())
+  number  String    @unique
+  orderId String    @unique
+  pdfUrl  String?
+  sentAt  DateTime?
+  dueDate DateTime?
+  order   Order     @relation(fields: [orderId], references: [id])
+
+  @@index([number])
+  @@map("invoices")
+}
+
+model OrderTimeline {
+  id          String    @id @default(uuid())
+  orderId     String
+  status      String
+  title       String
+  description String?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  order       Order     @relation(fields: [orderId], references: [id])
+
+  @@map("order_timeline")
+}
+
+model SalesMetrics {
+  id              String   @id @default(uuid())
+  date            DateTime @unique @db.Date
+  revenue         Decimal  @db.Decimal(10, 2)
+  orderCount      Int
+  newCustomers    Int
+  avgOrderValue   Decimal  @db.Decimal(10, 2)
+  refundAmount    Decimal  @default(0) @db.Decimal(10, 2)
+  contractsSigned Int      @default(0)
+
+  @@index([date])
+  @@map("sales_metrics")
+}
+
 enum UserRole {
   ADMIN
   SERVICE_MANAGER
@@ -416,4 +565,22 @@ enum BookingStatus {
   COMPLETED
   NO_SHOW
   RESCHEDULED
+}
+
+enum OrderStatus {
+  PENDING
+  AWAITING_CONTRACT
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
 }

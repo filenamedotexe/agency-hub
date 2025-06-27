@@ -30,6 +30,14 @@ const updateServiceTemplateSchema = z.object({
     .optional(),
   price: z.number().positive().optional().nullable(),
   requiredForms: z.array(z.string()).optional(),
+  // Store settings
+  isPurchasable: z.boolean().optional(),
+  currency: z.string().optional(),
+  storeTitle: z.string().optional().nullable(),
+  storeDescription: z.string().optional().nullable(),
+  maxQuantity: z.number().min(1).optional(),
+  requiresContract: z.boolean().optional(),
+  contractTemplate: z.string().optional().nullable(),
 });
 
 export async function GET(

@@ -78,6 +78,14 @@ const formSchema = z.object({
     )
     .min(1, "At least one task is required"),
   requiredForms: z.array(z.string()).optional(),
+  // Store settings
+  isPurchasable: z.boolean().default(false),
+  currency: z.string().default("USD"),
+  storeTitle: z.string().optional(),
+  storeDescription: z.string().optional(),
+  maxQuantity: z.number().min(1).default(1),
+  requiresContract: z.boolean().default(false),
+  contractTemplate: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -98,6 +106,13 @@ export default function NewServiceTemplatePage() {
       defaultTasks: [
         { name: "", description: "", clientVisible: false, checklist: [] },
       ],
+      isPurchasable: false,
+      currency: "USD",
+      storeTitle: "",
+      storeDescription: "",
+      maxQuantity: 1,
+      requiresContract: false,
+      contractTemplate: "",
       requiredForms: [],
     },
   });

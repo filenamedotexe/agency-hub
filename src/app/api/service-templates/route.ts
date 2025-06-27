@@ -30,6 +30,14 @@ const createServiceTemplateSchema = z.object({
     .default([]),
   price: z.number().positive().optional(),
   requiredForms: z.array(z.string()).optional(),
+  // Store settings
+  isPurchasable: z.boolean().default(false),
+  currency: z.string().default("USD"),
+  storeTitle: z.string().optional(),
+  storeDescription: z.string().optional(),
+  maxQuantity: z.number().min(1).default(1),
+  requiresContract: z.boolean().default(false),
+  contractTemplate: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -76,13 +84,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createServiceTemplateSchema.parse(body);
 
+    const { requiredForms, ...dataWithoutForms } = validatedData;
+
     const template = await prisma.serviceTemplate.create({
       data: {
-        name: validatedData.name,
-        type: validatedData.type,
-        defaultTasks: validatedData.defaultTasks,
-        price: validatedData.price,
-        requiredFormIds: validatedData.requiredForms || [],
+        ...dataWithoutForms,
+        requiredFormIds: requiredForms || [],
       },
     });
 

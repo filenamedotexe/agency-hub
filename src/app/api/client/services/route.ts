@@ -1,60 +1,92 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "@/lib/auth";
 
-export async function GET() {
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (error || !user) {
+    const session = await getServerSession();
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get services for this client
-    const services = await prisma.service.findMany({
+    // Only clients can access their own services through this endpoint
+    if (session.user.role !== "CLIENT") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+    const status = searchParams.get("status");
+
+    // Get the client's ID based on their user email
+    const client = await prisma.client.findFirst({
       where: {
-        clientId: user.id,
-      },
-      include: {
-        template: {
-          select: {
-            name: true,
-            type: true,
-            price: true,
-          },
+        metadata: {
+          path: ["userId"],
+          equals: session.user.id,
         },
-        tasks: {
-          where: {
-            clientVisible: true,
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-        },
-        _count: {
-          select: {
-            tasks: {
-              where: {
-                clientVisible: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
       },
     });
 
-    return NextResponse.json(services);
+    if (!client) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    // Build where clause
+    const where: any = { clientId: client.id };
+    if (status === "active") {
+      where.status = { in: ["TO_DO", "IN_PROGRESS"] };
+    } else if (status) {
+      where.status = status;
+    }
+
+    const services = await prisma.service.findMany({
+      where,
+      include: {
+        template: true,
+        tasks: {
+          orderBy: { createdAt: "asc" },
+        },
+        _count: {
+          select: {
+            tasks: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Transform the data to include progress information
+    const servicesWithProgress = services.map((service) => {
+      const completedTasks = service.tasks.filter(
+        (task) => task.status === "DONE"
+      ).length;
+      const nextTask = service.tasks.find((task) => task.status !== "DONE");
+
+      return {
+        id: service.id,
+        name: service.template.name,
+        status: service.status,
+        completedTasks,
+        totalTasks: service.tasks.length,
+        nextMilestone: nextTask
+          ? {
+              name: nextTask.name,
+              dueDate: nextTask.dueDate,
+            }
+          : undefined,
+        createdAt: service.createdAt,
+        updatedAt: service.updatedAt,
+      };
+    });
+
+    return NextResponse.json(servicesWithProgress);
   } catch (error) {
-    console.error("[CLIENT_SERVICES_GET]", error);
+    console.error("Error fetching client services:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch services" },
       { status: 500 }
     );
   }

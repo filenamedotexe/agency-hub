@@ -71,6 +71,14 @@ const formSchema = z.object({
     )
     .min(1, "At least one task is required"),
   requiredForms: z.array(z.string()).optional(),
+  // Store settings
+  isPurchasable: z.boolean().default(false),
+  currency: z.string().default("USD"),
+  storeTitle: z.string().optional(),
+  storeDescription: z.string().optional(),
+  maxQuantity: z.number().min(1).default(1),
+  requiresContract: z.boolean().default(false),
+  contractTemplate: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -115,6 +123,14 @@ export default function EditServiceTemplatePage({
           price: template.price?.toString() || "",
           defaultTasks: template.defaultTasks,
           requiredForms: template.requiredForms || [],
+          // Store settings
+          isPurchasable: template.isPurchasable || false,
+          currency: template.currency || "USD",
+          storeTitle: template.storeTitle || "",
+          storeDescription: template.storeDescription || "",
+          maxQuantity: template.maxQuantity || 1,
+          requiresContract: template.requiresContract || false,
+          contractTemplate: template.contractTemplate || "",
         });
       } catch (error) {
         toast.error("Failed to load template");
@@ -317,6 +333,153 @@ export default function EditServiceTemplatePage({
                   </FormItem>
                 )}
               />
+            </CardContent>
+          </Card>
+
+          {/* Store Settings Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Store Settings</CardTitle>
+              <CardDescription>
+                Configure how this service appears in the store
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="isPurchasable"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel>Available in Store</FormLabel>
+                      <FormDescription>
+                        Allow clients to purchase this service directly
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("isPurchasable") && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="storeTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Store Title</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., Professional Google Ads Setup"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How this service appears in the store (defaults to
+                          template name)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="storeDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Store Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Detailed description for store listing..."
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          This will be shown on the store product page
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="maxQuantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Maximum Quantity</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value) || 1)
+                            }
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Maximum units a client can purchase at once
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="requiresContract"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel>Require Contract Signature</FormLabel>
+                          <FormDescription>
+                            Client must sign service agreement before access
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch("requiresContract") && (
+                    <FormField
+                      control={form.control}
+                      name="contractTemplate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contract Template</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Enter your service agreement terms..."
+                              className="min-h-[200px] font-mono text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Use {`{{clientName}}`}, {`{{serviceName}}`},{" "}
+                            {`{{price}}`} for dynamic fields
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
 

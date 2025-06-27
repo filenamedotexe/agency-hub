@@ -5,6 +5,7 @@ import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { useRealtimeDashboard } from "@/hooks/use-realtime-dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MyServicesWidget } from "@/components/dashboard/my-services-widget";
 import {
   Users,
   Briefcase,
@@ -227,6 +228,9 @@ export default function DashboardPage() {
           color="text-green-600"
         />
       </div>
+
+      {/* My Services Widget for Clients */}
+      {user?.role === "CLIENT" && <MyServicesWidget />}
 
       {/* Charts Row - Mobile optimized with horizontal scroll */}
       <div className="-mx-4 grid grid-cols-1 gap-6 overflow-x-auto px-4 lg:mx-0 lg:grid-cols-3 lg:overflow-x-visible lg:px-0">
