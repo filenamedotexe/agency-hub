@@ -17,6 +17,7 @@ import {
   Copy,
   Info,
 } from "lucide-react";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import {
   Card,
   CardContent,
@@ -25,7 +26,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  MotionButton,
+  MotionButton as Button,
+} from "@/components/ui/motion-button";
+import { MotionDiv, MotionListItem } from "@/components/ui/motion-elements";
 import { getCallbackUrlClient } from "@/lib/callback-urls";
 import {
   Dialog,
@@ -289,6 +294,7 @@ function ContentToolsPageOriginal() {
         clients={clients}
         selectedClientId={selectedClientId}
         onClientSelect={setSelectedClientId}
+        onBackToTools={() => setSelectedTool(null)}
       />
     );
   }
@@ -321,7 +327,7 @@ function ContentToolsPageOriginal() {
   }
 
   return (
-    <div className="space-y-6">
+    <MotionDiv className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Content Tools</h1>
@@ -497,54 +503,56 @@ function ContentToolsPageOriginal() {
             const Icon = toolIcons[tool.type] || FileText;
 
             return (
-              <Card key={tool.id} className="transition-shadow hover:shadow-lg">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <Icon className="h-8 w-8 text-primary" />
-                    <div className="flex items-center space-x-1">
-                      {tool.webhookId && (
-                        <Badge variant="secondary" className="text-xs">
-                          <Webhook className="mr-1 h-3 w-3" />
-                          Webhook
-                        </Badge>
-                      )}
-                      {tool._count && tool._count.generatedContent > 0 && (
-                        <Badge variant="secondary">
-                          <History className="mr-1 h-3 w-3" />
-                          {tool._count.generatedContent}
-                        </Badge>
-                      )}
+              <MotionListItem key={tool.id} index={tools.indexOf(tool)}>
+                <EnhancedCard className="h-full transition-shadow hover:shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <Icon className="h-8 w-8 text-primary" />
+                      <div className="flex items-center space-x-1">
+                        {tool.webhookId && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Webhook className="mr-1 h-3 w-3" />
+                            Webhook
+                          </Badge>
+                        )}
+                        {tool._count && tool._count.generatedContent > 0 && (
+                          <Badge variant="secondary">
+                            <History className="mr-1 h-3 w-3" />
+                            {tool._count.generatedContent}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <CardTitle className="text-lg">{tool.name}</CardTitle>
-                  <CardDescription>{tool.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button
-                    className="w-full"
-                    onClick={() => setSelectedTool(tool)}
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Content
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setSettingsTool(tool)}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Button>
-                </CardContent>
-              </Card>
+                    <CardTitle className="text-lg">{tool.name}</CardTitle>
+                    <CardDescription>{tool.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button
+                      className="w-full"
+                      onClick={() => setSelectedTool(tool)}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate Content
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setSettingsTool(tool)}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Button>
+                  </CardContent>
+                </EnhancedCard>
+              </MotionListItem>
             );
           })
         )}
       </div>
 
       {/* Webhooks Section */}
-      <Card>
+      <EnhancedCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Webhook className="h-5 w-5" />
@@ -561,36 +569,40 @@ function ContentToolsPageOriginal() {
             </p>
           ) : (
             <div className="space-y-2">
-              {webhooks.map((webhook) => (
-                <div
-                  key={webhook.id}
-                  className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{webhook.name}</p>
-                      <Badge
-                        variant={webhook.isProduction ? "default" : "secondary"}
-                        className="text-xs"
-                      >
-                        {webhook.isProduction ? "Production" : "Testing"}
-                      </Badge>
+              {webhooks.map((webhook, index) => (
+                <MotionListItem key={webhook.id} index={index}>
+                  <div
+                    key={webhook.id}
+                    className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{webhook.name}</p>
+                        <Badge
+                          variant={
+                            webhook.isProduction ? "default" : "secondary"
+                          }
+                          className="text-xs"
+                        >
+                          {webhook.isProduction ? "Production" : "Testing"}
+                        </Badge>
+                      </div>
+                      <p className="font-mono text-sm text-muted-foreground">
+                        {webhook.url}
+                      </p>
                     </div>
-                    <p className="font-mono text-sm text-muted-foreground">
-                      {webhook.url}
-                    </p>
+                    <Badge variant={webhook.isActive ? "default" : "outline"}>
+                      {webhook.isActive ? "Active" : "Inactive"}
+                    </Badge>
                   </div>
-                  <Badge variant={webhook.isActive ? "default" : "outline"}>
-                    {webhook.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
+                </MotionListItem>
               ))}
             </div>
           )}
         </CardContent>
-      </Card>
+      </EnhancedCard>
 
-      <Card className="mt-8">
+      <EnhancedCard className="mt-8">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -607,7 +619,7 @@ function ContentToolsPageOriginal() {
           <p>4. Click generate to create AI-powered content</p>
           <p>5. Copy, download, or send the content via configured webhooks</p>
         </CardContent>
-      </Card>
+      </EnhancedCard>
 
       {/* Settings Dialog */}
       <Dialog open={!!settingsTool} onOpenChange={() => setSettingsTool(null)}>
@@ -634,7 +646,7 @@ function ContentToolsPageOriginal() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </MotionDiv>
   );
 }
 

@@ -19,11 +19,15 @@ import {
   TestTube,
 } from "lucide-react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
+import {
+  MotionButton,
+  MotionButton as Button,
+} from "@/components/ui/motion-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import {
   Card,
   CardContent,
@@ -31,6 +35,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { MotionDiv, MotionListItem } from "@/components/ui/motion-elements";
 import {
   Select,
   SelectContent,
@@ -62,6 +67,7 @@ interface ContentGeneratorProps {
   clients: any[];
   selectedClientId: string | null;
   onClientSelect: (clientId: string | null) => void;
+  onBackToTools: () => void;
 }
 
 export function ContentGenerator({
@@ -69,6 +75,7 @@ export function ContentGenerator({
   clients,
   selectedClientId,
   onClientSelect,
+  onBackToTools,
 }: ContentGeneratorProps) {
   const [generatedContent, setGeneratedContent] = useState<string>("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -583,13 +590,13 @@ export function ContentGenerator({
           <h2 className="text-2xl font-bold">{tool.name}</h2>
           <p className="text-muted-foreground">{tool.description}</p>
         </div>
-        <Button variant="outline" onClick={() => onClientSelect(null)}>
+        <Button variant="outline" onClick={onBackToTools}>
           Back to Tools
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
+        <EnhancedCard>
           <CardHeader>
             <CardTitle>Configuration</CardTitle>
             <CardDescription>
@@ -991,9 +998,9 @@ export function ContentGenerator({
               </div>
             )}
           </CardContent>
-        </Card>
+        </EnhancedCard>
 
-        <Card>
+        <EnhancedCard>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -1172,7 +1179,7 @@ export function ContentGenerator({
               </div>
             ) : null}
           </CardContent>
-        </Card>
+        </EnhancedCard>
       </div>
 
       {/* Field Editor Dialog */}

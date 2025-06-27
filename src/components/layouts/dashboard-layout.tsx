@@ -16,7 +16,6 @@ import {
   X,
   Home,
   Users,
-  Briefcase,
   FileText,
   Edit3,
   Settings,
@@ -26,9 +25,6 @@ import {
   Webhook,
   Calendar,
   Package,
-  TrendingUp,
-  ShoppingBag,
-  History,
   Search,
 } from "lucide-react";
 
@@ -61,8 +57,8 @@ const navItems: NavItem[] = [
   {
     label: "Services",
     href: "/services",
-    icon: Briefcase,
-    roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
+    icon: Package,
+    roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER, UserRole.CLIENT],
   },
   {
     label: "Requests",
@@ -99,30 +95,6 @@ const navItems: NavItem[] = [
     href: "/automations",
     icon: Webhook,
     roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
-  },
-  {
-    label: "Store",
-    href: "/store",
-    icon: ShoppingBag,
-    roles: [UserRole.ADMIN, UserRole.SERVICE_MANAGER, UserRole.CLIENT],
-  },
-  {
-    label: "Order History",
-    href: "/store/orders",
-    icon: History,
-    roles: [UserRole.CLIENT],
-  },
-  {
-    label: "Orders",
-    href: "/admin/orders",
-    icon: Package,
-    roles: [UserRole.ADMIN],
-  },
-  {
-    label: "Sales Analytics",
-    href: "/admin/sales",
-    icon: TrendingUp,
-    roles: [UserRole.ADMIN],
   },
   {
     label: "Settings",

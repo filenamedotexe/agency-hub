@@ -30,24 +30,14 @@ const navItems: NavItem[] = [
     icon: Home,
   },
   {
-    label: "Store",
-    href: "/store",
-    icon: ShoppingCart,
-  },
-  {
-    label: "Order History",
-    href: "/store/orders",
-    icon: History,
+    label: "Services",
+    href: "/services",
+    icon: Briefcase,
   },
   {
     label: "Forms",
     href: "/client-dashboard/forms",
     icon: FileText,
-  },
-  {
-    label: "Services",
-    href: "/client-dashboard/services",
-    icon: Briefcase,
   },
 ];
 
@@ -135,7 +125,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         <nav className="space-y-1 px-4 py-4">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -177,7 +167,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -207,11 +197,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* Welcome message */}
-            <div className="hidden lg:block">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Welcome back!
-              </h1>
-            </div>
+            <h1 className="hidden text-xl font-semibold text-gray-900 lg:block">
+              Welcome back!
+            </h1>
 
             {/* User menu */}
             <div className="relative">
@@ -273,10 +261,10 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile bottom navigation */}
         <nav className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white shadow-lg lg:hidden">
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-3 gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const isActive = pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}

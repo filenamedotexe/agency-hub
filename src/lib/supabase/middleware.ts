@@ -14,7 +14,7 @@ const protectedRoutes: Record<string, UserRole[]> = {
     UserRole.VA,
   ],
   "/clients": [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
-  "/services": [UserRole.ADMIN, UserRole.SERVICE_MANAGER],
+  "/services": [UserRole.ADMIN, UserRole.SERVICE_MANAGER, UserRole.CLIENT],
   "/requests": [
     UserRole.ADMIN,
     UserRole.SERVICE_MANAGER,
