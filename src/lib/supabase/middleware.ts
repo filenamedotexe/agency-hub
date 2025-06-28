@@ -63,6 +63,7 @@ const authenticatedApiRoutes = [
   "/api/availability",
   "/api/calendar",
   "/api/cart",
+  "/api/cart/items",
   "/api/checkout",
   "/api/contracts",
   "/api/store",
